@@ -1,0 +1,2 @@
+# djangochat
+Django chat
