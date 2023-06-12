@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     'djoser',
-    # "knox",
 ]
 
 MIDDLEWARE = [
@@ -120,9 +119,10 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         # token authentication
         'rest_framework.authentication.TokenAuthentication',
-        # session authentication
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+
+        # # session authentication
+        # 'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
     ],
 }
 
