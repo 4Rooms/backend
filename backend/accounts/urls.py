@@ -13,17 +13,17 @@ router.register(r"groups", GroupViewSet)
 print(router.urls)
 
 urlpatterns = [
-    path("", include(router.urls)),
+    # users, groups
+    # http://127.0.0.1:8000/api/users/
+    path("api/", include(router.urls)),
 
     # session authentication
-    path("api-session-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    # path("api/session/auth/", include("rest_framework.urls", namespace="rest_framework")),
 
     # Token authentication
+    # api/auth/users/
+    path(r'api/auth/', include('djoser.urls')),
 
-    # http://127.0.0.1:8000/api-auth/users/
-    path(r'api-auth/', include('djoser.urls')),
-
-    # http://127.0.0.1:8000/auth/token/login/
-    # http://127.0.0.1:8000/auth/token/logout/
-    re_path(r'^auth/', include('djoser.urls.authtoken')),
+    # api/auth/token/  login, logout, users, user/<int:id>/
+    re_path(r'^api/auth/', include('djoser.urls.authtoken')),
 ]
