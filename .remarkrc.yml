@@ -1,0 +1,8 @@
+---
+# https://github.com/remarkjs/remark-lint
+plugins:
+  preset-lint-recommended:
+
+  # https://github.com/remarkjs/remark-lint/tree/main/packages/remark-lint-list-item-indent
+  lint-list-item-indent: space
+
