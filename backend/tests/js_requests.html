@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JS Requests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        button {
+            margin-right: 10px;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #tokenDisplay,
+        #usersDisplay,
+        #myInfoDisplay {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        .error {
+            color: red;
+        }
+        
+        .input-container {
+            margin-bottom: 10px;
+        }
+
+        .input-container label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .input-container input {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>JS Requests</h1>
+
+    <p>Select host</p>
+    <div class="input-container">
+        <label for="host">Host:</label>
+        <select id="host">
+            <option value="http://127.0.0.1:8000">http://127.0.0.1:8000</option>
+            <option value="http://olalab.hopto.org:8888" selected>olalab.hopto.org:8888</option>
+        </select>
+    </div>
+
+    <div class="input-container">
+        <label for="username">Username:</label>
+        <input type="text" id="username" value="test">
+    </div>
+
+    <div class="input-container">
+        <label for="password">Password:</label>
+        <input type="password" id="password" value="W12345678">
+    </div>
+
+    <button onclick="getToken()">Get Token</button>
+    <button onclick="getUsers()">Get All Users</button>
+    <button onclick="getMyInfo()">Get My Info</button>
+    <button onclick="logout()">Logout</button>
+
+    <p id="tokenDisplay"></p>
+    <div id="usersDisplay"></div>
+    <div id="myInfoDisplay"></div>
+
+    <script>
+        let token = ''; // Variable to store the token
+
+        function displayError(message) {
+            const errorElement = document.createElement('p');
+            errorElement.className = 'error';
+            errorElement.innerText = `Error: ${message}`;
+            document.body.appendChild(errorElement);
+        }
+
+        function clearErrors() {
+            const errorElements = document.querySelectorAll('.error');
+            errorElements.forEach(element => {
+                element.remove();
+            });
+        }
+
+        function makeRequest(url, method, headers = {}, body = null, noJson = false) {
+            return fetch(url, {
+                method: method,
+                headers: headers,
+                body: body
+            })
+            .then(response => {
+                console.log("Response is ok: " + response.ok);
+                if (!response.ok) {
+                    throw new Error(response.statusText);
+                }
+                clearErrors();
+                if (noJson) {
+                    return response;
+                }
+
+                return response.json();
+            })
+            .catch(error => {
+                console.log("Caught error in makeRequest: " + error.message);
+                displayError(error.message);
+                throw error;
+            });
+        }
+
+        function getToken() {
+            const host = document.getElementById('host').value;
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const loginData = new URLSearchParams();
+            loginData.append('username', username);
+            loginData.append('password', password);
+
+            const loginUrl = `${host}/api/auth/token/login/`;
+
+            makeRequest(loginUrl, 'POST', {'Content-Type': 'application/x-www-form-urlencoded'}, loginData)
+            .then(data => {
+                token = data.auth_token;
+                document.getElementById('tokenDisplay').innerText = `Token: ${token}`;
+            }).catch(error => {
+                console.log("Caught error in getToken: " + error.message);
+            });
+        }
+
+        function getUsers() {
+            const host = document.getElementById('host').value;
+            const usersUrl = `${host}/api/auth/users/`;
+
+            makeRequest(usersUrl, 'GET', {'Authorization': `Token ${token}`})
+            .then(data => {
+                const usersElement = document.getElementById('usersDisplay');
+                usersElement.innerHTML = '';
+                // check if data is an array
+                if (!Array.isArray(data)) {
+                    data = [data];
+                }
+                data.forEach(user => {
+                    const userElement = document.createElement('p');
+                    userElement.innerText = `${user.id}: ${user.username}`;
+                    usersElement.appendChild(userElement);
+                });
+                clearErrors();
+            }).catch(error => {
+                console.log("Caught error in getUsers: " + error.message);
+            })
+        }
+
+        function getMyInfo() {
+            const host = document.getElementById('host').value;
+            const myInfoUrl = `${host}/api/auth/users/me/`;
+
+            makeRequest(myInfoUrl, 'GET', {'Authorization': `Token ${token}`})
+            .then(data => {
+                clearErrors();
+                const myInfoElement = document.getElementById('myInfoDisplay');
+                myInfoElement.innerText = `My Info: ${data.username}`;
+            }).catch(error => {
+                console.log("Caught error in getMyInfo: " + error.message);
+            })
+        }
+
+        function logout() {
+            const host = document.getElementById('host').value;
+            const logoutUrl = `${host}/api/auth/token/logout/`;
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const loginData = new URLSearchParams();
+            loginData.append('username', username);
+            loginData.append('password', password);
+
+            makeRequest(logoutUrl, 'POST', {'Authorization': `Token ${token}`,'Content-Type': 'application/x-www-form-urlencoded'}, loginData, true)
+            .then(data => {
+                clearErrors();
+                document.getElementById('tokenDisplay').innerText = '';
+                document.getElementById('usersDisplay').innerText = '';
+                document.getElementById('myInfoDisplay').innerText = '';
+            }).catch(error => {
+                console.log("Caught error in logout: " + error.message);
+            })
+        }
+
+    </script>
+</body>
+</html>

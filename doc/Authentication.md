@@ -26,7 +26,7 @@ headers = {'Authorization': 'Token ' + token}
 
 ```python
 data = {'username': 'test',
-        'password': '12345'} 
+        'password': 'W12345678'} 
 ```
 
 Method: Post (URL, data=data)  
@@ -41,8 +41,8 @@ URL: http://olalab.hopto.org:8888/api/auth/token/login/
 ```python
 token = '9944b09199c62bcf9418ad846dd0e4bbdfc6ee4b'
 data = {'username': 'test',
-        'password': '12345'}          
-headers={'Authorization': 'Token ' + token} 
+        'password': 'W12345678'}
+headers={'Authorization': 'Token ' + token}
 ```
 
 Method: Post (URL, data=data, headers=headers)  
