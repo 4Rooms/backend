@@ -1,10 +1,10 @@
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
 class CustomUserManager(BaseUserManager):
-    """Define a model manager for User model without username field."""
+    """Define a model manager for Custom User model without username field."""
 
     def _create_user(self, email, password=None, **extra_fields):
         """Create and save a User with the given email and password."""
@@ -37,7 +37,7 @@ class CustomUserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
-class CustomUser(AbstractUser):
+class CustomUser(AbstractUser, PermissionsMixin):
     """Custom user model"""
 
     # we don't need username
