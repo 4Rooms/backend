@@ -11,6 +11,7 @@ from .serializers import UserSerializer
 class RegisterUserView(APIView):
     parser_classes = [JSONParser, MultiPartParser, FormParser]
     permission_classes = (AllowAny,)
+    serializer_class = UserSerializer
 
     def post(self, request):
         # if email is already in use
@@ -29,6 +30,7 @@ class UserView(APIView):
 
     permission_classes = (IsAuthenticated,)
     parser_classes = [JSONParser, MultiPartParser, FormParser]
+    serializer_class = UserSerializer
 
     def get(self, request):
         serializer = UserSerializer(request.user, many=False)
@@ -48,6 +50,7 @@ class AllUsersView(APIView):
     """Return list of users"""
 
     permission_classes = (IsAuthenticated,)
+    serializer_class = UserSerializer
 
     def get(self, request):
         users = CustomUser.objects.all()
