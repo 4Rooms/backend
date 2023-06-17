@@ -1,0 +1,132 @@
+---
+- name: deploy
+  hosts: all
+
+  vars:
+    domain: "{{ PROD_DOMAIN if BRANCH == 'master' else TEST_DOMAIN }}"
+    router: "{{ 'prod' if BRANCH == 'master' else 'test' }}"
+
+  tasks:
+    - name: Debug
+      ansible.builtin.debug:
+        var: domain
+
+    - name: Build an image
+      delegate_to: localhost
+      community.docker.docker_image:
+        source: build
+        build:
+          path: ../../../
+          nocache: true
+          pull: true
+          rm: true
+
+        force_source: true
+        force_tag: true
+        name: chat-{{ BRANCH }}
+        tag: latest
+        archive_path: ./chat_image.tar
+
+    - name: Synchronize image
+      synchronize:
+        src: ./chat_image.tar
+        dest: /tmp/chat_image.tar
+
+    - name: Load image from archive
+      become: true
+      community.docker.docker_image:
+        name: chat-{{ BRANCH }}
+        tag: latest
+        load_path: /tmp/chat_image.tar
+        source: load
+        force_source: true
+        force_tag: true
+
+    # - name: Update domain
+    #   ansible.builtin.uri:
+    #     url: https://www.duckdns.org/update?domains={{ domain }}&token={{ DNS_TOKEN }}
+
+    - name: Create dirs
+      become: true
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - /opt/django-chat
+        - /opt/django-chat/db
+        - /opt/django-chat/ui
+        - /etc/traefik
+        - /etc/traefik/certificates
+
+    - name: Recreate chat container
+      become: true
+      vars:
+        container_labels:
+          - key: "traefik.enable"
+            value: "true"
+          - key: "traefik.http.routers.{{ router }}.rule"
+            value: "Host(`{{ domain }}`)"
+          - key: "traefik.http.routers.{{ router }}.tls"
+            value: "true"
+          - key: "traefik.http.routers.{{ router }}.tls.certresolver"
+            value: "letsencrypt"
+
+
+      community.docker.docker_container:
+        name: chat-{{ BRANCH }}
+        image: chat-{{ BRANCH }}
+        state: "started"
+        restart: true
+        recreate: true
+
+        env:
+          DJANGO_SECRET_KEY: "{{ DJANGO_SECRET_KEY }}"
+
+        mounts:
+          - type: bind
+            read_only: false
+            source: /opt/django-chat
+            target: /opt/django-chat
+
+        labels: "{{ container_labels | items2dict }}"
+
+    - name: Synchronize traefik config
+      become: true
+      synchronize:
+        src: files/traefik.toml
+        dest: /etc/traefik/traefik.toml
+
+    - name: Start traefik
+      become: true
+      community.docker.docker_container:
+        name: traefik
+        image: traefik:v2.10
+        state: "started"
+        recreate: true
+
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+
+        mounts:
+          - type: bind
+            read_only: false
+            source: /etc/traefik/
+            target: /etc/traefik/
+
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.dashboard.rule: "Host(`traefik-chat.duckdns.org`)"
+          traefik.http.routers.dashboard.tls: "true"
+          traefik.http.routers.dashboard.tls.certresolver: "letsencrypt"
+          traefik.http.routers.dashboard.service: "api@internal"
+          # traefik.http.routers.dashboard.middlewares: "auth"
+          # traefik.http.middlewares.auth.basicauth.users: "testuser:$$apr1$$jIKW.bdS$$eKXe4Lxjgy/rH65wP1iQe1"
+
+
+        exposed_ports:
+          - 80
+          - 443
+
+        published_ports:
+          - 80:80
+          - 443:443

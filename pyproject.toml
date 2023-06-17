@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "djangochat"
+name = "backend"
 version = "0.1.0"
 description = ""
 authors = ["Approximator <alex@nls.la>", "Olha Aliakina <olusiabn@gmail.com"]
@@ -14,6 +14,7 @@ djoser = "^2.2.0"
 django-cors-headers = "^4.1.0"
 djangorestframework-simplejwt = "^5.2.2"
 drf-spectacular = "^0.26.2"
+whitenoise = "^6.5.0"
 
 [tool.poetry.dev-dependencies]
 black = "^23.3.0"
