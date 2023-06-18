@@ -12,7 +12,7 @@ from rest_framework_simplejwt.views import (
 from .views import AllUsersView, RegisterUserView, UserView
 
 urlpatterns = [
-    path("api/users/", AllUsersView.as_view()),
+    path("api/users/", AllUsersView.as_view(), name="get_user_list"),
     path("api/user/", UserView.as_view(), name="get_current_user"),
     path("api/register/", RegisterUserView.as_view(), name="register"),
     # JWT authentication
