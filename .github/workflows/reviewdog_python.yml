@@ -10,12 +10,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       # Install specific version black (this step is not required. default is "black[jupyter]")
-      - run: pip install black
+      # - run: pip install black
       - uses: reviewdog/action-black@v3
         with:
           github_token: ${{ secrets.github_token }}
           # Change reviewdog reporter if you need [github-pr-check, github-check].
-          reporter: github-pr-check
+          reporter: github-pr-review
           # Change reporter level if you need.
           # GitHub Status Check won't become failure with a warning.
           level: warning
