@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -44,9 +46,18 @@ class CustomUser(AbstractUser, PermissionsMixin):
     username = None
     # email should be unique
     email = models.EmailField(_("email address"), unique=True)
+    is_email_confirmed = models.BooleanField(default=False)
 
     # for default authentication
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
+
+
+class EmailConfirmationToken(models.Model):
+    """Token for email confirmation"""
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
