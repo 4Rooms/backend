@@ -9,12 +9,13 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 
-from .views import AllUsersView, RegisterUserView, UserView
+from .views import AllUsersView, ConfirmEmailApiView, RegisterUserView, UserView
 
 urlpatterns = [
     path("api/users/", AllUsersView.as_view(), name="get_user_list"),
     path("api/user/", UserView.as_view(), name="get_current_user"),
     path("api/register/", RegisterUserView.as_view(), name="register"),
+    path("api/confirm-email/", ConfirmEmailApiView.as_view(), name="confirm-email"),
     # JWT authentication
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

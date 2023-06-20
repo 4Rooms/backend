@@ -3,13 +3,15 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 
+from .models import EmailConfirmationToken
+
 
 class CustomUserAdmin(UserAdmin):
     """Define admin model for custom User model without username field.
     Without this, the admin panel will look bad"""
 
     fieldsets = (
-        (None, {"fields": ("email", "password")}),
+        (None, {"fields": ("email", "password", "is_email_confirmed")}),
         (_("Personal info"), {"fields": ("first_name", "last_name")}),
         (_("Permissions"), {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         (_("Important dates"), {"fields": ("last_login", "date_joined")}),
@@ -23,9 +25,10 @@ class CustomUserAdmin(UserAdmin):
             },
         ),
     )
-    list_display = ("email", "first_name", "last_name", "is_staff")
+    list_display = ("email", "first_name", "is_email_confirmed", "last_name", "is_staff")
     search_fields = ("email", "first_name", "last_name")
     ordering = ("email",)
 
 
 admin.site.register(get_user_model(), CustomUserAdmin)
+admin.site.register(EmailConfirmationToken)
