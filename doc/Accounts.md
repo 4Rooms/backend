@@ -63,7 +63,7 @@
    response = request.post(URL, data)
    ```
 -  Successful response:
--  Status code: 200.
+   -  Status code: 200.
    -  Response body:
    ```
    {
@@ -82,8 +82,8 @@
   response = request.get(URL, headers)
   ```
 -  Successful response:
-  -  Status code: 200.
-  -  Response body:
+   -  Status code: 200.
+   -  Response body:
   ```
   {
       "id": 5,
