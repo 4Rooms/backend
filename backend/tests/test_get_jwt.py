@@ -5,9 +5,9 @@ from rest_framework.test import APITestCase
 User = get_user_model()
 
 
-class UserAPIViewsTests(APITestCase):
+class TokenObtainPairAPIViewsTests(APITestCase):
     def test_token_obtain_pair_view_is_working(self):
-        """Test that All Users View gets user list"""
+        """Test that token obtain pair is getting"""
 
         # create and post first user
         url = reverse("register")
