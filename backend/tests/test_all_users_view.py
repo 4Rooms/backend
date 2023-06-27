@@ -5,7 +5,7 @@ from rest_framework.test import APITestCase
 User = get_user_model()
 
 
-class UserAPIViewsTests(APITestCase):
+class AllUserAPIViewsTests(APITestCase):
     def test_all_users_view_is_working(self):
         """Test that All Users View gets user list"""
 
