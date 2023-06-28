@@ -1,12 +1,13 @@
 from rest_framework import status
+from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .email_sending import send_confirmation_email
-from .models import CustomUser, EmailConfirmationToken
-from .serializers import UserSerializer
+from .models import CustomUser, EmailConfirmationToken, Profile
+from .serializers import ProfileAvatarSerializer, ProfileSerializer, UserSerializer
 
 
 class RegisterUserView(APIView):
@@ -85,3 +86,29 @@ class ConfirmEmailApiView(APIView):
             # if token does not exist
             data = {"is_email_confirmed": False, "error": "Token is wrong"}
             return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserProfileAPIView(RetrieveUpdateAPIView):
+    """
+    Get, Update user profile (nickname)
+    """
+
+    permission_classes = (IsAuthenticated,)
+    queryset = Profile.objects.all()
+    serializer_class = ProfileSerializer
+
+    def get_object(self):
+        return self.request.user.profile
+
+
+class UserAvatarAPIView(RetrieveUpdateAPIView):
+    """
+    Get, Update user avatar
+    """
+
+    permission_classes = (IsAuthenticated,)
+    queryset = Profile.objects.all()
+    serializer_class = ProfileAvatarSerializer
+
+    def get_object(self):
+        return self.request.user.profile

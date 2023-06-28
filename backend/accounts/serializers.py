@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import CustomUser
+from .models import CustomUser, Profile
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -14,3 +14,23 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = CustomUser.objects.create_user(**validated_data)
         return user
+
+
+class ProfileSerializer(UserSerializer):
+    """
+    Serializer class to serialize the user Profile model
+    """
+
+    class Meta:
+        model = Profile
+        fields = ("nickname",)
+
+
+class ProfileAvatarSerializer(serializers.ModelSerializer):
+    """
+    Serializer class to serialize the avatar
+    """
+
+    class Meta:
+        model = Profile
+        fields = ("avatar",)
