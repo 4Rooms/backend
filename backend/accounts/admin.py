@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.utils.translation import gettext_lazy as _
 
-from .models import EmailConfirmationToken
+from .models import EmailConfirmationToken, Profile
 
 
 class CustomUserAdmin(UserAdmin):
@@ -30,5 +30,12 @@ class CustomUserAdmin(UserAdmin):
     ordering = ("email",)
 
 
+class ProfileInline(admin.StackedInline):
+    model = Profile
+    can_delete = False
+    verbose_name_plural = "Profile"
+
+
 admin.site.register(get_user_model(), CustomUserAdmin)
 admin.site.register(EmailConfirmationToken)
+admin.site.register(Profile)
