@@ -38,7 +38,7 @@ class User(AbstractUser, PermissionsMixin):
     objects = UserManager()
 
     # for default authentication
-    USERNAME_FIELD = "email"
+    USERNAME_FIELD = "username"
     REQUIRED_FIELDS = []
 
     class Meta:
@@ -74,7 +74,7 @@ class Profile(models.Model):
     """User profile"""
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    avatar = models.ImageField(upload_to=get_image_filename, blank=True)
+    avatar = models.ImageField(upload_to=get_image_filename, null=True)
 
     def __str__(self):
         return self.user.email
