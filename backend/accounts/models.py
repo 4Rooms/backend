@@ -2,60 +2,47 @@ import os
 from uuid import uuid4
 
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractUser, PermissionsMixin
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 
-
-class CustomUserManager(BaseUserManager):
-    """Define a model manager for Custom User model without username field."""
-
-    def _create_user(self, email, password=None, **extra_fields):
-        """Create and save a User with the given email and password."""
-
-        if not email:
-            raise ValueError("The given email must be set")
-
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_user(self, email, password=None, **extra_fields):
-        extra_fields.setdefault("is_staff", False)
-        extra_fields.setdefault("is_superuser", False)
-        return self._create_user(email, password, **extra_fields)
-
-    def create_superuser(self, email, password=None, **extra_fields):
-        """Create and save a SuperUser with the given email and password."""
-
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_superuser", True)
-
-        if extra_fields.get("is_staff") is not True:
-            raise ValueError("Superuser must have is_staff=True.")
-        if extra_fields.get("is_superuser") is not True:
-            raise ValueError("Superuser must have is_superuser=True.")
-
-        return self._create_user(email, password, **extra_fields)
+from .user_manager import UserManager
 
 
-class CustomUser(AbstractUser, PermissionsMixin):
+class User(AbstractUser, PermissionsMixin):
     """Custom user model"""
 
-    # we don't need username
-    username = None
+    # username should be unique
+    username = models.CharField(
+        _("login"),
+        max_length=20,
+        validators=[
+            UnicodeUsernameValidator,
+        ],
+        unique=True,
+    )
     # email should be unique
-    email = models.EmailField(_("email address"), unique=True)
+    email = models.EmailField(
+        _("email"),
+        unique=True,
+    )
     is_email_confirmed = models.BooleanField(default=False)
+    # extra fields
+    is_staff = models.BooleanField(default=False)
+    is_superuser = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    date_joined = models.DateTimeField(auto_now_add=True)
+
+    objects = UserManager()
 
     # for default authentication
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
-    objects = CustomUserManager()
+    class Meta:
+        ordering = ["-date_joined"]
 
 
 class EmailConfirmationToken(models.Model):
@@ -63,7 +50,7 @@ class EmailConfirmationToken(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 def get_image_filename(instance, filename):
@@ -88,7 +75,6 @@ class Profile(models.Model):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     avatar = models.ImageField(upload_to=get_image_filename, blank=True)
-    nickname = models.CharField(max_length=200, blank=True)
 
     def __str__(self):
         return self.user.email

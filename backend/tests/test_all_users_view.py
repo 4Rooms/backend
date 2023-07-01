@@ -11,11 +11,11 @@ class AllUserAPIViewsTests(APITestCase):
 
         # create and post first user
         url = reverse("register")
-        body = {"email": "user1@gmail.com", "password": "user1user1user1"}
+        body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
         response = self.client.post(url, body, format="json")
 
         # create and post second user
-        body = {"email": "user2@gmail.com", "password": "user2user2user2"}
+        body = {"username": "user2", "email": "user2@gmail.com", "password": "user2user2user2"}
         response = self.client.post(url, body, format="json")
 
         # get token for get user list request
@@ -31,15 +31,15 @@ class AllUserAPIViewsTests(APITestCase):
         # print("response", response.status_code, response.json())
         self.assertEquals(response.status_code, 200)
         self.assertEquals(len(response.json()), 2)
-        self.assertEquals(response.json()[0]["email"], "user1@gmail.com")
-        self.assertEquals(response.json()[1]["id"], 2)
+        self.assertEquals(response.json()[0]["email"], "user2@gmail.com")
+        self.assertEquals(response.json()[1]["username"], "user1")
 
     def test_all_users_view_not_working_without_right_token(self):
         """Test that All Users View doesn't work without right token"""
 
         # create and post first user
         url = reverse("register")
-        body = {"email": "user1@gmail.com", "password": "user1user1user1"}
+        body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
         response = self.client.post(url, body, format="json")
 
         # bed token for get user list request

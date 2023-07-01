@@ -14,7 +14,6 @@ from .views import (
     ConfirmEmailApiView,
     RegisterUserView,
     UserAvatarAPIView,
-    UserProfileAPIView,
     UserView,
 )
 
@@ -24,7 +23,6 @@ urlpatterns = [
     path("api/user/", UserView.as_view(), name="get_current_user"),
     # profile
     path("api/profile/avatar/", UserAvatarAPIView.as_view(), name="user_avatar"),
-    path("api/profile/", UserProfileAPIView.as_view(), name="user_profile"),
     # register
     path("api/register/", RegisterUserView.as_view(), name="register"),
     path("api/confirm-email/", ConfirmEmailApiView.as_view(), name="confirm-email"),
