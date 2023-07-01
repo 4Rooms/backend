@@ -11,7 +11,7 @@ class RegisterUserAPIViewsTests(APITestCase):
         """Test user registration"""
 
         url = reverse("register")
-        body = {"email": "user1@gmail.com", "password": "user1user1user1"}
+        body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
         response = self.client.post(url, body, format="json")
         # print(response)
         self.assertEquals(response.status_code, 201)
@@ -25,7 +25,7 @@ class RegisterUserAPIViewsTests(APITestCase):
 
         # create and post user
         url = reverse("register")
-        body = {"email": "user1@gmail.com", "password": "user1user1user1"}
+        body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
         response = self.client.post(url, body, format="json")
 
         # try to post user with a used email
@@ -38,7 +38,7 @@ class RegisterUserAPIViewsTests(APITestCase):
 
         # create and post user
         url = reverse("register")
-        body = {"email": "user1@gmail.com", "password": "user1user1user1"}
+        body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
         response = self.client.post(url, body, format="json")
         user = User.objects.filter(email=body["email"]).first()
 

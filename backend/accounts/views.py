@@ -1,3 +1,5 @@
+from django.contrib.auth import password_validation
+from django.core.exceptions import ValidationError
 from rest_framework import status
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -6,8 +8,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .email_sending import send_confirmation_email
-from .models import CustomUser, EmailConfirmationToken, Profile
-from .serializers import ProfileAvatarSerializer, ProfileSerializer, UserSerializer
+from .models import EmailConfirmationToken, Profile, User
+from .serializers import ProfileAvatarSerializer, UserSerializer
 
 
 class RegisterUserView(APIView):
@@ -23,8 +25,17 @@ class RegisterUserView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # if email is already in use
-        if CustomUser.objects.filter(email=request.data["email"]).exists():
+        if User.objects.filter(email=request.data["email"]).exists():
             return Response({"error": "Email already registered"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # if username is already in use
+        if User.objects.filter(username=request.data["username"]).exists():
+            return Response({"error": "Username already registered"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # if password is invalid
+        password_errors = self.is_invalid_password(password=request.data["password"], user=request.data)
+        if password_errors:
+            return Response({"error": password_errors}, status=status.HTTP_400_BAD_REQUEST)
 
         user = serializer.save()
         # create token for email confirmation
@@ -32,6 +43,18 @@ class RegisterUserView(APIView):
         # send link for email confirmation
         send_confirmation_email(email=user.email, token_id=token.pk)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def is_invalid_password(self, password, user):
+        """
+        Password validation. Returns False if the password has passed validation.
+        Returns error/errors if the password has not passed the validation.
+        """
+
+        try:
+            password_validation.validate_password(password, user)
+            return False
+        except ValidationError as error:
+            return error
 
 
 class UserView(APIView):
@@ -48,9 +71,10 @@ class UserView(APIView):
     def put(self, request):
         """Update user email"""
 
-        user = CustomUser.objects.get(email=request.user.email)
+        user = User.objects.get(email=request.user.email)
         # Email Validating????
         user.email = request.data["email"]
+        user.username = request.data["username"]
         user.save()
         return Response({"message": "Email updated"}, status=status.HTTP_200_OK)
 
@@ -62,7 +86,7 @@ class AllUsersView(APIView):
     serializer_class = UserSerializer
 
     def get(self, request):
-        users = CustomUser.objects.all()
+        users = User.objects.all()
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -86,19 +110,6 @@ class ConfirmEmailApiView(APIView):
             # if token does not exist
             data = {"is_email_confirmed": False, "error": "Token is wrong"}
             return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
-
-
-class UserProfileAPIView(RetrieveUpdateAPIView):
-    """
-    Get, Update user profile (nickname)
-    """
-
-    permission_classes = (IsAuthenticated,)
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
-
-    def get_object(self):
-        return self.request.user.profile
 
 
 class UserAvatarAPIView(RetrieveUpdateAPIView):

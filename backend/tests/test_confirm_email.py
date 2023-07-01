@@ -14,7 +14,7 @@ class ConfirmEmailApiViewTests(APITestCase):
 
         # create and post user
         url = reverse("register")
-        body = {"email": "user1@gmail.com", "password": "user1user1user1"}
+        body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
         response = self.client.post(url, body, format="json")
         user = User.objects.filter(email=body["email"]).first()
 

@@ -11,7 +11,7 @@ class TokenObtainPairAPIViewsTests(APITestCase):
 
         # create and post first user
         url = reverse("register")
-        body = {"email": "user1@gmail.com", "password": "user1user1user1"}
+        body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
         response = self.client.post(url, body, format="json")
 
         # get token for get user list request
