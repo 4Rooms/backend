@@ -1,0 +1,46 @@
+---
+- name: Test image
+  block:
+    - name: Load image from archive
+      community.docker.docker_image:
+        name: chat-{{ img_name }}
+        tag: latest
+        load_path: /tmp/chat_image.tar
+        source: load
+        force_source: true
+        force_tag: true
+
+    - name: Recreate chat container
+      community.docker.docker_container:
+        name: chat-{{ img_name }}
+        image: chat-{{ img_name }}
+        state: "started"
+        restart: true
+        recreate: true
+
+        env:
+          DJANGO_SECRET_KEY: "{{ DJANGO_SECRET_KEY }}"
+          HOST_USER_EMAIL: "{{ HOST_USER_EMAIL }}"
+          HOST_APP_PASSWORD: "{{ HOST_APP_PASSWORD }}"
+          DJANGO_HOST: "{{ django_host }}"
+
+        published_ports:
+          - "8020:8020"
+
+    - name: Wait until service is started
+      ansible.builtin.uri:
+        url: "http://localhost:8020/swagger-ui/"
+        follow_redirects: none
+        method: GET
+      register: _result
+      until: _result.status == 200
+      retries: 10  # 10 * 5 seconds = 50 seconds
+      delay: 5  # Every 5 seconds
+
+  always:
+    - name: Remove container
+      community.docker.docker_container:
+        name: chat-{{ img_name }}
+        state: "absent"
+
+  delegate_to: localhost
