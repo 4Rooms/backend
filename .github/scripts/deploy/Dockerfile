@@ -15,7 +15,7 @@ RUN apk add --no-cache curl ca-certificates
 COPY --from=builder /app/dist/*.whl ./
 RUN pip install gunicorn && pip install *.whl && rm *.whl
 
-COPY start-server.sh /start-server.sh
+COPY .github/scripts/deploy/files/start-server.sh /start-server.sh
 
 EXPOSE 8020
 STOPSIGNAL SIGTERM

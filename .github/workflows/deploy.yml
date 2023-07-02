@@ -1,0 +1,56 @@
+---
+name: Deploy
+'on':
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+permissions: write-all
+
+jobs:
+  black:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install ansible-core requests docker
+          cd .github/scripts/deploy
+          ansible-galaxy collection install -r requirements.yml
+
+      - name: run playbook
+        run: |
+          eval `ssh-agent -s`
+          cd .github/scripts/deploy
+          echo "${{ secrets.VAULT_PASS }}" > $RUNNER_TEMP/.vault_pass
+
+          export ANSIBLE_HOST_KEY_CHECKING=False
+          ansible-vault view --vault-password-file=$RUNNER_TEMP/.vault_pass files/vault1 | ssh-add -
+          ansible-playbook deploy.yml \
+            -i ./inventory \
+            --vault-password-file $RUNNER_TEMP/.vault_pass \
+            -e BRANCH=$GITHUB_REF_NAME
+
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            const branch = context.ref.replace('refs/heads/', '');
+            const msg = branch === 'master' ?
+              '🚀 Deployed here: https://prod-chat.duckdns.org/' :
+              '🚀 Deployed here: https://test-chat.duckdns.org/';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: msg
+            })

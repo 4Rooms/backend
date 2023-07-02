@@ -5,6 +5,8 @@
   vars:
     domain: "{{ PROD_DOMAIN if BRANCH == 'master' else TEST_DOMAIN }}"
     router: "{{ 'prod' if BRANCH == 'master' else 'test' }}"
+    img_name: "{{ 'prod' if BRANCH == 'master' else 'test' }}"
+    django_host: "https://{{ domain }}/"
 
   tasks:
     - name: Debug
@@ -17,25 +19,28 @@
         source: build
         build:
           path: ../../../
+          dockerfile: .github/scripts/deploy/Dockerfile
           nocache: true
           pull: true
           rm: true
 
         force_source: true
         force_tag: true
-        name: chat-{{ BRANCH }}
+        name: chat-{{ img_name }}
         tag: latest
-        archive_path: ./chat_image.tar
+        archive_path: /tmp/chat_image.tar
+
+    - import_tasks: test_image.yml
 
     - name: Synchronize image
       synchronize:
-        src: ./chat_image.tar
+        src: /tmp/chat_image.tar
         dest: /tmp/chat_image.tar
 
     - name: Load image from archive
       become: true
       community.docker.docker_image:
-        name: chat-{{ BRANCH }}
+        name: chat-{{ img_name }}
         tag: latest
         load_path: /tmp/chat_image.tar
         source: load
@@ -71,16 +76,18 @@
           - key: "traefik.http.routers.{{ router }}.tls.certresolver"
             value: "letsencrypt"
 
-
       community.docker.docker_container:
-        name: chat-{{ BRANCH }}
-        image: chat-{{ BRANCH }}
+        name: chat-{{ img_name }}
+        image: chat-{{ img_name }}
         state: "started"
         restart: true
         recreate: true
 
         env:
           DJANGO_SECRET_KEY: "{{ DJANGO_SECRET_KEY }}"
+          HOST_USER_EMAIL: "{{ HOST_USER_EMAIL }}"
+          HOST_APP_PASSWORD: "{{ HOST_APP_PASSWORD }}"
+          DJANGO_HOST: "{{ django_host }}"
 
         mounts:
           - type: bind
