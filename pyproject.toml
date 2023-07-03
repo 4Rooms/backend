@@ -15,7 +15,7 @@ django-cors-headers = "^4.1.0"
 djangorestframework-simplejwt = "^5.2.2"
 drf-spectacular = "^0.26.2"
 whitenoise = "^6.5.0"
-pillow = "^9.5.0"
+pillow = "^10.0.0"
 
 [tool.poetry.dev-dependencies]
 black = "^23.3.0"
