@@ -39,7 +39,7 @@ class User(AbstractUser, PermissionsMixin):
 
     # for default authentication
     USERNAME_FIELD = "username"
-    REQUIRED_FIELDS = []
+    REQUIRED_FIELDS = ["email"]
 
     class Meta:
         ordering = ["-date_joined"]

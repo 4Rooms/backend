@@ -222,7 +222,6 @@
 -   Requests:
     -   Get(URL, headers={"Authorization": "Bearer " + access_token})
     -   Put(URL, headers={"Authorization": "Bearer " + access_token}, data={"avatar": file.jpg})
-    -   Patch(URL, headers={"Authorization": "Bearer " + access_token}, data={"avatar": file.jpg})
 -   Successful response:
     -   Status code: 200.
     -   Response body:
@@ -244,3 +243,39 @@
             ]
         }
         ```
+
+## Change password
+-   URL: https://prod-chat.duckdns.org/api/user/change-password
+-   Requests:
+    -   Put(URL, headers={"Authorization": "Bearer " + access_token}, data={oldPassword, newPassword})
+-   Successful response:
+    -   Status code: 200.
+    -   Response body:
+
+        ```
+         {
+            "message": "Password updated successfully"
+         }
+        ```
+
+-   Unsuccessful responses:
+    -   Status code: 400 Bad Request.
+      -   Response body:
+
+          ```
+          {
+              "old password error": [
+                  "Old password is wrong"
+              ]
+          }
+          ```
+
+          ```
+          {
+              "new password error": [
+              "This password is too short. It must contain at least 8 characters.",
+              "This password is too common.",
+              "This password is entirely numeric."
+              ]
+          }
+          ```
