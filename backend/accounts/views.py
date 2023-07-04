@@ -1,7 +1,7 @@
-from django.contrib.auth import password_validation
+from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -9,7 +9,11 @@ from rest_framework.views import APIView
 
 from .email_sending import send_confirmation_email
 from .models import EmailConfirmationToken, Profile, User
-from .serializers import ProfileAvatarSerializer, UserSerializer
+from .serializers import (
+    ChangePasswordSerializer,
+    ProfileAvatarSerializer,
+    UserSerializer,
+)
 
 
 class RegisterUserView(APIView):
@@ -51,7 +55,7 @@ class RegisterUserView(APIView):
         """
 
         try:
-            password_validation.validate_password(password, user)
+            validate_password(password, user)
             return False
         except ValidationError as error:
             return error
@@ -76,7 +80,7 @@ class UserView(APIView):
         user.email = request.data["email"]
         user.username = request.data["username"]
         user.save()
-        return Response({"message": "Email updated"}, status=status.HTTP_200_OK)
+        return Response({"message": "Email updated successfully"}, status=status.HTTP_200_OK)
 
 
 class AllUsersView(APIView):
@@ -120,6 +124,53 @@ class UserAvatarAPIView(RetrieveUpdateAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = Profile.objects.all()
     serializer_class = ProfileAvatarSerializer
+    http_method_names = ["put"]
 
     def get_object(self):
         return self.request.user.profile
+
+
+class ChangePasswordView(UpdateAPIView):
+    """
+    Changing password endpoint.
+    """
+
+    serializer_class = ChangePasswordSerializer
+    model = User
+    permission_classes = (IsAuthenticated,)
+    http_method_names = ["put"]
+
+    def is_invalid_password(self, password, user):
+        """
+        Password validation. Returns False if the password has passed validation.
+        Returns error/errors if the password has not passed the validation.
+        """
+
+        try:
+            validate_password(password, user)
+            return False
+        except ValidationError as error:
+            return error
+
+    def update(self, request, *args, **kwargs):
+        self.user = self.request.user
+        serializer = ChangePasswordSerializer(data=request.data)
+
+        if serializer.is_valid():
+            # check old password
+            if not self.user.check_password(serializer.data.get("old_password")):
+                return Response({"old password error": ["Old password is wrong"]}, status=status.HTTP_400_BAD_REQUEST)
+
+            # if password is invalid
+            password_errors = self.is_invalid_password(password=request.data["new_password"], user=self.user)
+            if password_errors:
+                return Response({"new password error": password_errors}, status=status.HTTP_400_BAD_REQUEST)
+
+            # set_password also hashes the password that the user will get
+            self.user.set_password(serializer.data.get("new_password"))
+            self.user.save()
+
+            data = {"message": "Password updated successfully"}
+            return Response(data=data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

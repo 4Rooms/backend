@@ -11,6 +11,7 @@ from rest_framework_simplejwt.views import (
 
 from .views import (
     AllUsersView,
+    ChangePasswordView,
     ConfirmEmailApiView,
     RegisterUserView,
     UserAvatarAPIView,
@@ -21,6 +22,7 @@ urlpatterns = [
     # user
     path("api/users/", AllUsersView.as_view(), name="get_user_list"),
     path("api/user/", UserView.as_view(), name="get_current_user"),
+    path("api/user/change-password", ChangePasswordView.as_view(), name="change_password"),
     # profile
     path("api/profile/avatar/", UserAvatarAPIView.as_view(), name="user_avatar"),
     # register
