@@ -11,6 +11,7 @@
     data = {"username": "userName",
             "email": "user@gmail.com",
             "password": "userPassword"}
+
     response = request.post(URL, data)
     ```
 
@@ -36,6 +37,14 @@
                 "This password is too short. It must contain at least 8 characters.",
                 "This password is too common.",
                 "This password is entirely numeric."
+            ]
+        }
+        ```
+
+        ```
+        {
+            "password": [
+                "This field may not be blank."
             ]
         }
         ```
@@ -91,6 +100,7 @@
     URL = "https://prod-chat.duckdns.org/api/token/"
     data = {"username": "user@gmail.com",
             "password": "UserPassword"}
+
     response = request.post(URL, data)
     ```
 
@@ -98,6 +108,7 @@
     URL = "https://prod-chat.duckdns.org/api/token/"
     data = {"username": "userName",
             "password": "UserPassword"}
+
     response = request.post(URL, data)
     ```
 
@@ -158,6 +169,7 @@
     ```
     URL = "https://prod-chat.duckdns.org/api/token/refresh/"
     data = {"refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTY4ODIxMTEzMiwiaWF0IjoxNjg3MzQ3MTMyLCJqdGkiOiIxMDBkODBlYzgzNTg0ZGI1YmExODQ5Njc3ODg0OWNjYSIsInVzZXJfaWQiOjEzfQ.aL849Cdf-s8htmOjimA9fqQ643in3K7kO_YeNbNzGmM"}
+
     response = request.post(URL, data)
     ```
 
@@ -182,7 +194,7 @@
         }
         ```
 
-## Get the current user info
+## Get the current user info (username, email, is_email_confirmed")
 ![img.png](img/get_user.png)
 -   URL: https://prod-chat.duckdns.org/api/user/
 -   Request: Get(URL, headers={"Authorization": "Bearer " + access_token}).  
@@ -191,6 +203,7 @@
     ```
     access_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg3NDM1OTU0LCJpYXQiOjE2ODczNDcxMzIsImp0aSI6IjkwM2FhNmRhNjhjZDQxZGY4ZjNhODYzNGY5MzhkNzc3IiwidXNlcl9pZCI6MTN9.TDFu-WU9shZr0VvpGOkGadMysavc5nKxDxR8ASxeaWs"
     headers = {"Authorization": "Bearer " + access_token}
+
     response = request.get(URL, headers)
     ```
 
@@ -214,6 +227,41 @@
         {
             "detail": "Authorization header must contain two space-delimited values",
             "code": "bad_authorization_header"
+        }
+        ```
+
+## Change username / email.
+-   URL: https://prod-chat.duckdns.org/api/user/
+-   Request: Put(URL, headers={"Authorization": "Bearer " + access_token}, data={username, email}).  
+    Request requires access token in headers.
+
+    ```
+    access_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg3NDM1OTU0LCJpYXQiOjE2ODczNDcxMzIsImp0aSI6IjkwM2FhNmRhNjhjZDQxZGY4ZjNhODYzNGY5MzhkNzc3IiwidXNlcl9pZCI6MTN9.TDFu-WU9shZr0VvpGOkGadMysavc5nKxDxR8ASxeaWs"
+    headers = {"Authorization": "Bearer " + access_token}
+    data = {"username": "userName", "email": "userEmail"}
+
+    response = request.put(URL, headers, data)
+    ```
+
+-   Successful response:
+    -   Status code: 200.
+    -   Response body:
+
+        ```
+        {
+            "message": "Email, Username updated successfully"
+        }
+        ```
+
+-   Unsuccessful response:
+    -   Status code: 400 Bad Request.
+    -   Response body:
+
+        ```
+        {
+            "email": [
+                "Enter a valid email address."
+            ]
         }
         ```
 

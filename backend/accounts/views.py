@@ -1,5 +1,6 @@
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from rest_framework import status
 from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -36,10 +37,11 @@ class RegisterUserView(APIView):
         if User.objects.filter(username=request.data["username"]).exists():
             return Response({"error": "Username already registered"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # if password is invalid
-        password_errors = self.is_invalid_password(password=request.data["password"], user=request.data)
-        if password_errors:
-            return Response({"error": password_errors}, status=status.HTTP_400_BAD_REQUEST)
+        # validate password
+        try:
+            validate_password(password=request.data["password"], user=request.data)
+        except ValidationError as errors:
+            return Response({"password error": errors}, status=status.HTTP_400_BAD_REQUEST)
 
         user = serializer.save()
         # create token for email confirmation
@@ -47,18 +49,6 @@ class RegisterUserView(APIView):
         # send link for email confirmation
         send_confirmation_email(email=user.email, token_id=token.pk)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def is_invalid_password(self, password, user):
-        """
-        Password validation. Returns False if the password has passed validation.
-        Returns error/errors if the password has not passed the validation.
-        """
-
-        try:
-            validate_password(password, user)
-            return False
-        except ValidationError as error:
-            return error
 
 
 class UserView(APIView):
@@ -76,11 +66,18 @@ class UserView(APIView):
         """Update user email"""
 
         user = User.objects.get(email=request.user.email)
-        # Email Validating????
-        user.email = request.data["email"]
+
+        # validate email
+        email = request.data["email"]
+        try:
+            validate_email(email)
+        except ValidationError as error:
+            return Response({"email error": error}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.email = email
         user.username = request.data["username"]
         user.save()
-        return Response({"message": "Email updated successfully"}, status=status.HTTP_200_OK)
+        return Response({"message": "Email, Username updated successfully"}, status=status.HTTP_200_OK)
 
 
 class AllUsersView(APIView):
@@ -124,7 +121,7 @@ class UserAvatarAPIView(RetrieveUpdateAPIView):
     permission_classes = (IsAuthenticated,)
     queryset = Profile.objects.all()
     serializer_class = ProfileAvatarSerializer
-    http_method_names = ["put"]
+    http_method_names = ["get", "put"]
 
     def get_object(self):
         return self.request.user.profile
