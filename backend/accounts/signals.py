@@ -1,5 +1,7 @@
+import os
+
 from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from .models import Profile
@@ -24,3 +26,27 @@ def save_profile(sender, instance, **kwargs):
     """
 
     instance.profile.save()
+
+
+@receiver(pre_save, sender=Profile)
+def delete_old_avatar(sender, instance, **kwargs):
+    """
+    Delete old avatar when setting up a new one if the old avatar is
+    """
+
+    # on creation, signal callback won't be triggered
+    if instance._state.adding and not instance.pk:
+        return False
+
+    try:
+        old_avatar = sender.objects.get(pk=instance.pk).avatar
+        if not old_avatar:
+            return False
+    except sender.DoesNotExist:
+        return False
+
+    # comparing the new file with the old one
+    new_avatar = instance.avatar
+    if not old_avatar == new_avatar:
+        if os.path.isfile(old_avatar.path):
+            os.remove(old_avatar.path)
