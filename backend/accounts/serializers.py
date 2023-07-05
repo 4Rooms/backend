@@ -27,10 +27,11 @@ class ProfileAvatarSerializer(serializers.ModelSerializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    model = User
-
     """
     Serializer for password change endpoint.
     """
+
+    model = User
+
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
