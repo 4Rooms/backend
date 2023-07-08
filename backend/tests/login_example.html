@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>4Rooms</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding-bottom: 80px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content {
+            flex-grow: 1;
+        }
+
+        h1 {
+            margin-top: 40px;
+        }
+
+        p {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        #signin-button {
+            margin-top: 40px;
+        }
+
+        #signout-button {
+            margin-top: 40px;
+            background-color: #f5f5f5;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4285f4;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+        }
+
+        footer {
+            background-color: #f5f5f5;
+            padding: 20px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body onload="onLoad()">
+    <!-- Logo in the center-->
+    <img src="https://avatars.githubusercontent.com/u/136704824?s=200&v=4" alt="4Rooms logo" width="200" height="200"
+        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: -1;" />
+
+    <h1>Login example</h1>
+
+    <div>
+        <div id="message"></div>
+
+        <div id="signin-button">
+            <button onclick="signInWithGoogle()">Sign in with Google</button>
+        </div>
+
+        <div id="signout-button" style="display: none;">
+            <button onclick="signOut()">Logout</button>
+        </div>
+    </div>
+
+    <script>
+        // Utils
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function onLoad() {
+            // if there is a refresh_token in the url, handle the oauth callback
+            handleOauthCallback();
+        }
+
+
+        async function signInWithGoogle() {
+            // disable button
+            document.getElementById('signin-button').innerHTML = "<button disabled>Signing in...</button>";
+
+            // Redirect to /oauth/login/google-oauth2/
+            url = new URL("/oauth/login/google-oauth2/", window.location.href)
+            document.getElementById('message').innerText = "Redirecting to " + url;
+
+            // sleep for 2 second
+            await sleep(2000);
+
+            // redirect to url
+            window.location.href = url;
+        }
+
+        async function handleOauthCallback() {
+            var urlParams = new URLSearchParams(window.location.search);
+            var refresh_token = urlParams.get('refresh_token');
+
+            if (refresh_token) {
+                // remove refresh_token from url
+                window.history.replaceState({}, document.title, "/");
+                document.getElementById('message').innerText = "Received refresh_token: " + refresh_token;
+                // hide signin button
+                document.getElementById('signin-button').style.display = "none";
+                await sleep(2000);
+
+                // get access_token
+                document.getElementById('message').innerText = "Getting access_token...";
+                await sleep(2000);
+                var access_token = await getAccessToken(refresh_token);
+
+                // save tokens to local storage
+                localStorage.setItem('access_token', access_token);
+                localStorage.setItem('refresh_token', refresh_token);
+
+                // set message
+                document.getElementById('message').innerText = "Received access_token: " + access_token;
+                await sleep(2000);
+
+                // get user info
+                document.getElementById('message').innerText = "Getting user_info...";
+                await sleep(2000);
+                var user_info = await getUserInfo(access_token);
+
+                // set message
+                msg = "<b>Received user_info</b>:<br /><code>" + JSON.stringify(user_info, null, 2) + "</code>" +
+                    "<br /><b>✅ <i>You are now logged in!</i></b>";
+                document.getElementById('message').innerHTML = msg;
+
+                // show signout button
+                document.getElementById('signout-button').style.display = "block";
+            }
+        }
+
+        async function getAccessToken(refresh_token) {
+            var response = await fetch("/api/token/refresh/", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "refresh": refresh_token
+                })
+            });
+
+            var data = await response.json();
+            return data.access;
+        }
+
+        async function getUserInfo(access_token) {
+            var response = await fetch("/api/user/", {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + access_token
+                }
+            });
+
+            var data = await response.json();
+            return data;
+        }
+
+        async function signOut() {
+            // disable button
+            document.getElementById('signout-button').innerHTML = "<button disabled>Signing out...</button>";
+            await sleep(1000);
+
+            // just forget the tokens (remove from local storage)
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            url = new URL("/", window.location.href)
+            // redirect to url
+            window.location.href = url;
+        }
+    </script>
+</body>
+
+</html>

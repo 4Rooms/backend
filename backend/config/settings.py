@@ -35,24 +35,46 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 CORS_ORIGIN_ALLOW_ALL = True
 
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"]
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"]
+SOCIAL_AUTH_URL_NAMESPACE = "social"
+SOCIAL_AUTH_STRATEGY = "accounts.auth_strategy.AuthStrategy"
+SOCIAL_AUTH_REDIRECT_IS_HTTPS = os.environ["SOCIAL_AUTH_REDIRECT_IS_HTTPS"] == "true"
+
 AUTH_USER_MODEL = "accounts.User"
-AUTHENTICATION_BACKENDS = ("accounts.authentication_backend.AuthBackend",)
+AUTHENTICATION_BACKENDS = [
+    "accounts.authentication_backend.AuthBackend",
+    "social_core.backends.google.GoogleOAuth2",
+]
+
+SOCIAL_AUTH_PIPELINE = (
+    "social_core.pipeline.social_auth.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.social_user",
+    "social_core.pipeline.user.get_username",
+    "social_core.pipeline.social_auth.associate_by_email",
+    "social_core.pipeline.user.create_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+    "social_core.pipeline.user.user_details",
+    # "social_core.pipeline.debug.debug",
+)
 
 # Application definition
 
 INSTALLED_APPS = [
+    "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
-    "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.sessions",
     "django.contrib.staticfiles",
     "drf_spectacular",
-    # my apps
-    "corsheaders",
-    "rest_framework",
     "rest_framework_simplejwt",
-    # "rest_framework.authtoken",
+    "rest_framework",
+    "social_django",
+    # my apps
     "accounts",
 ]
 
@@ -91,11 +113,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
+DB_PATH = os.environ.get("DJANGO_DB_PATH", BASE_DIR / "db.sqlite3")
+print(f"DB_PATH: {DB_PATH}")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": DB_PATH,
     }
 }
 
@@ -129,9 +152,6 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         # JWT authentication
         "rest_framework_simplejwt.authentication.JWTAuthentication",
-        # # session authentication
-        # 'rest_framework.authentication.BasicAuthentication',
-        # 'rest_framework.authentication.SessionAuthentication',
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -195,7 +215,8 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = os.environ.get("DJANGO_MEDIA_ROOT", BASE_DIR / "media")
+print(f"MEDIA_ROOT: {MEDIA_ROOT}")
 MEDIA_URL = "/media/"
 
 # Default primary key field type

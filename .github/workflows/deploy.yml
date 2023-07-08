@@ -40,7 +40,14 @@ jobs:
             --vault-password-file $RUNNER_TEMP/.vault_pass \
             -e BRANCH=$GITHUB_REF_NAME
 
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          path: /tmp/*.log
+
       - uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
         with:
           script: |
             const branch = context.ref.replace('refs/heads/', '');

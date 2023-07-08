@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>4Rooms</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding-bottom: 80px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content {
+            flex-grow: 1;
+        }
+
+        h1 {
+            margin-top: 40px;
+        }
+
+        p {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        #signin-button {
+            margin-top: 40px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4285f4;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+        }
+
+        footer {
+            background-color: #f5f5f5;
+            padding: 20px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: left;
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/8.0.20/jsrsasign-all-min.js"></script>
+</head>
+
+<body onload="onLoad()">
+    <h1>Login example</h1>
+
+    <div>
+        <div id="message"></div>
+
+        <div id="signin-button">
+            <button onclick="signInWithGoogle()">Sign in with Google</button>
+        </div>
+    </div>
+
+    <footer>
+        <ul>
+            <li><a href="https://aaronparecki.com/oauth-2-simplified/" target="_blank">OAuth 2.0 Simplified</a></li>
+            <li><a href="https://auth0.com/docs/get-started/authentication-and-authorization-flow/authorization-code-flow-with-proof-key-for-code-exchange-pkce"
+                    target="_blank">Authorization Code Flow with Proof Key for Code Exchange (PKCE)</a></li>
+            <li><a href="https://developers.google.com/identity/protocols/oauth2/native-app" target="_blank">Google
+                    OAuth 2.0 for Native Apps</a></li>
+        </ul>
+    </footer>
+
+    <script>
+        // Utils
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function onLoad() {
+            // if there is a code in the url, handle the oauth callback
+            handleOauthCallback();
+        }
+
+        // Google auth with PKCE
+        function generateCodeVerifier() {
+            var array = new Uint32Array(56 / 2);
+            window.crypto.getRandomValues(array);
+            return Array.from(array, dec => ('0' + dec.toString(16)).substr(-2)).join('');
+        }
+
+        function generateCodeChallenge(codeVerifier) {
+            var hash = KJUR.crypto.Util.hashString(codeVerifier, 'sha256');
+            var hashInBase64 = hextob64u(hash);
+            return hashInBase64;
+        }
+
+        async function signInWithGoogle() {
+            // disable button
+            document.getElementById('signin-button').disabled = true;
+
+            // Step 1: Generate a code verifier and challenge
+            // https://developers.google.com/identity/protocols/oauth2/native-app#step1-code-verifier
+            var codeVerifier = generateCodeVerifier();
+            var codeChallenge = generateCodeChallenge(codeVerifier);
+
+            // save code verifier in session storage
+            sessionStorage.setItem('code_verifier', codeVerifier);
+
+            // Step 2: Send a request to Google's OAuth 2.0 server
+            // https://developers.google.com/identity/protocols/oauth2/native-app#step-2:-send-a-request-to-googles-oauth-2.0-server
+            var url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+            url.searchParams.append('client_id', '1088593391280-cl3ja6r9jhuvr4g98kliqomsu9uaoh6j.apps.googleusercontent.com');
+            url.searchParams.append('redirect_uri', 'http://localhost:8000/oauth/google/callback/');
+            url.searchParams.append('response_type', 'code');
+            url.searchParams.append('code_challenge', codeChallenge);
+            url.searchParams.append('code_challenge_method', 'S256');
+            url.searchParams.append('scope', 'openid email profile');
+
+            document.getElementById('message').innerText = "Redirecting to " + url;
+
+            // sleep for 2 second
+            await sleep(2000);
+
+            // redirect to url
+            window.location.href = url;
+
+            // Step 3: Google prompts user for consent
+        }
+
+        function handleOauthCallback() {
+            // Step 4: Handle the OAuth 2.0 server response
+            // https://developers.google.com/identity/protocols/oauth2/native-app#handlingresponse
+            var urlParams = new URLSearchParams(window.location.search);
+            var code = urlParams.get('code');
+            var error = urlParams.get('error');
+
+            if (error) {
+                document.getElementById('message').innerText = "Error: " + error;
+                return;
+            }
+
+            if (code) {
+                // Step 5: Exchange authorization code for refresh and access tokens
+                // https://developers.google.com/identity/protocols/oauth2/native-app#exchange-authorization-code
+            }
+        }
+    </script>
+</body>
+
+</html>
