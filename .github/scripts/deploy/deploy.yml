@@ -29,6 +29,13 @@
         name: chat-{{ img_name }}
         tag: latest
         archive_path: /tmp/chat_image.tar
+      register: build_result
+      changed_when: build_result is changed
+
+    - name: Save build logs to a file
+      copy:
+        content: "{{ build_result.stdout }}"
+        dest: /tmp/image_build.log
 
     - import_tasks: test_image.yml
 
@@ -57,11 +64,16 @@
         path: "{{ item }}"
         state: directory
       with_items:
-        - /opt/django-chat
-        - /opt/django-chat/db
-        - /opt/django-chat/ui
         - /etc/traefik
         - /etc/traefik/certificates
+
+    - name: Create a volume for data
+      community.docker.docker_volume:
+        name: chat-{{ img_name }}-data
+
+    - name: Create a volume for db
+      community.docker.docker_volume:
+        name: chat-{{ img_name }}-db
 
     - name: Recreate chat container
       become: true
@@ -84,16 +96,29 @@
         recreate: true
 
         env:
+          DJANGO_MEDIA_ROOT: "/data/"
+          DJANGO_DB_PATH: "/db/db.sqlite3"
           DJANGO_SECRET_KEY: "{{ DJANGO_SECRET_KEY }}"
           HOST_USER_EMAIL: "{{ HOST_USER_EMAIL }}"
           HOST_APP_PASSWORD: "{{ HOST_APP_PASSWORD }}"
           DJANGO_HOST: "{{ django_host }}"
+          SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: "{{ SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}"
+          SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "{{ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}"
+          SOCIAL_AUTH_REDIRECT_IS_HTTPS: "true"
+          DJANGO_SUPERUSER_USERNAME: "{{ DJANGO_SUPERUSER_USERNAME }}"
+          DJANGO_SUPERUSER_PASSWORD: "{{ DJANGO_SUPERUSER_PASSWORD }}"
+          DJANGO_SUPERUSER_EMAIL: "{{ DJANGO_SUPERUSER_EMAIL }}"
 
         mounts:
-          - type: bind
+          - type: volume
             read_only: false
-            source: /opt/django-chat
-            target: /opt/django-chat
+            source: chat-{{ img_name }}-data
+            target: /data/
+
+          - type: volume
+            read_only: false
+            source: chat-{{ img_name }}-db
+            target: /db/
 
         labels: "{{ container_labels | items2dict }}"
 
@@ -109,7 +134,7 @@
         name: traefik
         image: traefik:v2.10
         state: "started"
-        recreate: true
+        # recreate: true
 
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock

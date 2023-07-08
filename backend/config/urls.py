@@ -15,9 +15,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from pathlib import Path
+
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.http import HttpResponse
+from django.urls import include, path, re_path
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -25,6 +28,8 @@ from drf_spectacular.views import (
 )
 
 from . import settings
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -37,3 +42,8 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# for react router
+urlpatterns += [
+    re_path(r"^(?:.*)/?$", lambda request: HttpResponse(open(BASE_DIR / "tests" / "login_example.html").read())),
+]

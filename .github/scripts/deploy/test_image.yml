@@ -23,9 +23,19 @@
           HOST_USER_EMAIL: "{{ HOST_USER_EMAIL }}"
           HOST_APP_PASSWORD: "{{ HOST_APP_PASSWORD }}"
           DJANGO_HOST: "{{ django_host }}"
+          SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: "{{ SOCIAL_AUTH_GOOGLE_OAUTH2_KEY }}"
+          SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "{{ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}"
+          SOCIAL_AUTH_REDIRECT_IS_HTTPS: "false"
+          DJANGO_SUPERUSER_USERNAME: "{{ DJANGO_SUPERUSER_USERNAME }}"
+          DJANGO_SUPERUSER_PASSWORD: "{{ DJANGO_SUPERUSER_PASSWORD }}"
+          DJANGO_SUPERUSER_EMAIL: "{{ DJANGO_SUPERUSER_EMAIL }}"
 
         published_ports:
           - "8020:8020"
+
+    - name: Save container logs to artifacts
+      ansible.builtin.shell: |
+        nohup docker logs -f chat-{{ img_name }} > /tmp/chat_container_test.log 2>&1 &
 
     - name: Wait until service is started
       ansible.builtin.uri:
@@ -34,7 +44,7 @@
         method: GET
       register: _result
       until: _result.status == 200
-      retries: 10  # 10 * 5 seconds = 50 seconds
+      retries: 11  # 11 * 5 seconds = 55 seconds
       delay: 5  # Every 5 seconds
 
   always:
