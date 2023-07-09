@@ -63,19 +63,35 @@ class UserView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def put(self, request):
-        """Update user email"""
+        """Update user email/username"""
 
         user = User.objects.get(email=request.user.email)
+        new_email = request.data["email"]
+        new_username = request.data["username"]
+
+        # if email is already in use
+        if User.objects.filter(email=new_email).exists():
+            another_user = User.objects.get(email=new_email)
+            # is it another user
+            if user.id != another_user.id:
+                return Response({"email error": "That email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # if username is already in use
+        if User.objects.filter(username=new_username).exists():
+            another_user = User.objects.get(username=new_username)
+            if user.id != another_user.id:
+                return Response(
+                    {"username error": "That username already registered"}, status=status.HTTP_400_BAD_REQUEST
+                )
 
         # validate email
-        email = request.data["email"]
         try:
-            validate_email(email)
+            validate_email(new_email)
         except ValidationError as error:
             return Response({"email error": error}, status=status.HTTP_400_BAD_REQUEST)
 
-        user.email = email
-        user.username = request.data["username"]
+        user.email = new_email
+        user.username = new_username
         user.save()
         return Response({"message": "Email, Username updated successfully"}, status=status.HTTP_200_OK)
 
