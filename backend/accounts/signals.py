@@ -40,7 +40,7 @@ def delete_old_avatar(sender, instance, **kwargs):
 
     try:
         old_avatar = sender.objects.get(pk=instance.pk).avatar
-        if not old_avatar:
+        if not old_avatar or old_avatar == "default-user-avatar.jpg":
             return False
     except sender.DoesNotExist:
         return False
