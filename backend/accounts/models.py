@@ -76,7 +76,7 @@ class Profile(models.Model):
     """User profile"""
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    avatar = models.ImageField(upload_to=get_image_filename, null=True)
+    avatar = models.ImageField(default="default-user-avatar.jpg", upload_to=get_image_filename, null=True)
 
     def __str__(self):
         return self.user.email
