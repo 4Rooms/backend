@@ -265,6 +265,18 @@
         }
         ```
 
+        ```
+        {
+            "username error": "That username already registered"
+        }
+        ```
+
+        ```
+        {
+            "email error": "That email already exists"
+        }
+        ```
+
 ## Set/Get user avatar
 -   URL: https://prod-chat.duckdns.org/api/profile/avatar/
 -   Requests:
