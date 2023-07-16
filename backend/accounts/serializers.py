@@ -1,6 +1,5 @@
+from accounts.models import Profile, User
 from rest_framework import serializers
-
-from .models import Profile, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -8,7 +7,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["username", "email", "password", "is_email_confirmed"]
+        fields = ["id", "username", "email", "password", "is_email_confirmed"]
         extra_kwargs = {"password": {"write_only": True}, "is_email_confirmed": {"read_only": True}}
 
     def create(self, validated_data):

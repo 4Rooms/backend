@@ -1,6 +1,7 @@
 import os
 from uuid import uuid4
 
+from accounts.user_manager import UserManager
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.contrib.auth.validators import UnicodeUsernameValidator
@@ -8,8 +9,6 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from PIL import Image
-
-from .user_manager import UserManager
 
 
 class User(AbstractUser, PermissionsMixin):
@@ -44,6 +43,7 @@ class User(AbstractUser, PermissionsMixin):
 
     class Meta:
         ordering = ["-date_joined"]
+        app_label = "accounts"
 
 
 class EmailConfirmationToken(models.Model):

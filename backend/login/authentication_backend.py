@@ -1,6 +1,6 @@
+from accounts.models import User
 from django.db.models import Q
-
-from .models import User
+from rest_framework import authentication
 
 
 class AuthBackend(object):
@@ -30,7 +30,7 @@ class AuthBackend(object):
 
         try:
             user = User.objects.get(Q(username=username) | Q(email=username))
-            print(user)
+            # print("AuthBackend", user)
 
         except User.DoesNotExist:
             return None
