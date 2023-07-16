@@ -34,6 +34,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 CORS_ORIGIN_ALLOW_ALL = True
+# Server allows cookies in the cross-site HTTP requests.
+CORS_ALLOW_CREDENTIALS = True
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"]
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"]
@@ -43,7 +45,7 @@ SOCIAL_AUTH_REDIRECT_IS_HTTPS = os.environ["SOCIAL_AUTH_REDIRECT_IS_HTTPS"] == "
 
 AUTH_USER_MODEL = "accounts.User"
 AUTHENTICATION_BACKENDS = [
-    "accounts.authentication_backend.AuthBackend",
+    "login.authentication_backend.AuthBackend",
     "social_core.backends.google.GoogleOAuth2",
 ]
 
@@ -76,6 +78,7 @@ INSTALLED_APPS = [
     "social_django",
     # my apps
     "accounts",
+    "login",
 ]
 
 MIDDLEWARE = [
@@ -151,7 +154,7 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         # JWT authentication
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "login.authenticate.CustomJWTAuthentication",
     ],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
@@ -182,12 +185,21 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
     "SLIDING_TOKEN_LIFETIME": timedelta(days=1),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=10),
-    "TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainPairSerializer",
-    "TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSerializer",
-    "TOKEN_VERIFY_SERIALIZER": "rest_framework_simplejwt.serializers.TokenVerifySerializer",
-    "TOKEN_BLACKLIST_SERIALIZER": "rest_framework_simplejwt.serializers.TokenBlacklistSerializer",
-    "SLIDING_TOKEN_OBTAIN_SERIALIZER": "rest_framework_simplejwt.serializers.TokenObtainSlidingSerializer",
-    "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
+    # Custom
+    # Cookie name. Enables cookies if value is set.
+    "AUTH_COOKIE": "access_token",
+    # A string like "example.com", or None for standard domain cookie.
+    "AUTH_COOKIE_DOMAIN": None,
+    # Whether the auth cookies should be secure (https:// only).
+    "AUTH_COOKIE_SECURE": False,
+    # Http only cookie flag. It's not fetch by javascript.
+    "AUTH_COOKIE_HTTP_ONLY": True,
+    # The path of the auth cookie.
+    "AUTH_COOKIE_PATH": "/",
+    # Whether to set the flag restricting cookie leaks on cross-site requests.
+    # This can be 'Lax', 'Strict', or None to disable the flag.
+    # Samesite "Lax" - Protection against csrf attacks
+    "AUTH_COOKIE_SAMESITE": "Lax",
 }
 
 SPECTACULAR_SETTINGS = {

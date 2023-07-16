@@ -27,12 +27,13 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from . import settings
+from backend.config import settings
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/", include("login.urls")),
     path("", include("accounts.urls")),
     # swagger
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

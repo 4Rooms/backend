@@ -1,3 +1,10 @@
+from accounts.email_sending import send_confirmation_email
+from accounts.models import EmailConfirmationToken, Profile, User
+from accounts.serializers import (
+    ChangePasswordSerializer,
+    ProfileAvatarSerializer,
+    UserSerializer,
+)
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -7,14 +14,6 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from .email_sending import send_confirmation_email
-from .models import EmailConfirmationToken, Profile, User
-from .serializers import (
-    ChangePasswordSerializer,
-    ProfileAvatarSerializer,
-    UserSerializer,
-)
 
 
 class RegisterUserView(APIView):
@@ -94,18 +93,6 @@ class UserView(APIView):
         user.username = new_username
         user.save()
         return Response({"message": "Email, Username updated successfully"}, status=status.HTTP_200_OK)
-
-
-class AllUsersView(APIView):
-    """Return list of users"""
-
-    permission_classes = (IsAuthenticated,)
-    serializer_class = UserSerializer
-
-    def get(self, request):
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class ConfirmEmailApiView(APIView):
