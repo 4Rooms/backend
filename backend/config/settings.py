@@ -36,6 +36,12 @@ ALLOWED_HOSTS = ["*"]
 CORS_ORIGIN_ALLOW_ALL = True
 # Server allows cookies in the cross-site HTTP requests.
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8000",
+    "http://localhost:3000",
+    "https://prod-chat.duckdns.org",
+    "https://test-chat.duckdns.org",
+]
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"]
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"]
@@ -191,7 +197,7 @@ SIMPLE_JWT = {
     # A string like "example.com", or None for standard domain cookie.
     "AUTH_COOKIE_DOMAIN": None,
     # Whether the auth cookies should be secure (https:// only).
-    "AUTH_COOKIE_SECURE": False,
+    "AUTH_COOKIE_SECURE": True,
     # Http only cookie flag. It's not fetch by javascript.
     "AUTH_COOKIE_HTTP_ONLY": True,
     # The path of the auth cookie.
@@ -199,7 +205,7 @@ SIMPLE_JWT = {
     # Whether to set the flag restricting cookie leaks on cross-site requests.
     # This can be 'Lax', 'Strict', or None to disable the flag.
     # Samesite "Lax" - Protection against csrf attacks
-    "AUTH_COOKIE_SAMESITE": "Lax",
+    "AUTH_COOKIE_SAMESITE": "None",
 }
 
 SPECTACULAR_SETTINGS = {
