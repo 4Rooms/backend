@@ -34,7 +34,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("login.urls")),
+    path("api/", include("registration.urls")),
     path("", include("accounts.urls")),
+    path("oauth/", include("social_django.urls", namespace="social")),
     # swagger
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path("swagger-ui/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),

@@ -1,6 +1,5 @@
 from accounts.models import User
 from django.db.models import Q
-from rest_framework import authentication
 
 
 class AuthBackend(object):
