@@ -22,7 +22,7 @@ def get_tokens(user):
 class LoginAPIView(APIView):
     """Login. Authenticate user and return a user info"""
 
-    authentication_classes = ([])
+    authentication_classes = []
     parser_classes = [JSONParser, MultiPartParser, FormParser]
     serializer_class = UserSerializer
     permission_classes = (AllowAny,)

@@ -40,7 +40,8 @@ CORS_ALLOW_CREDENTIALS = True
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"]
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"]
 SOCIAL_AUTH_URL_NAMESPACE = "social"
-SOCIAL_AUTH_STRATEGY = "accounts.auth_strategy.AuthStrategy"
+SOCIAL_AUTH_STRATEGY = "login.social_auth_strategy.AuthStrategy"
+LOGIN_REDIRECT_URL = "/logged-in/"
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = os.environ["SOCIAL_AUTH_REDIRECT_IS_HTTPS"] == "true"
 
 AUTH_USER_MODEL = "accounts.User"
@@ -48,6 +49,8 @@ AUTHENTICATION_BACKENDS = [
     "login.authentication_backend.AuthBackend",
     "social_core.backends.google.GoogleOAuth2",
 ]
+
+STAFF_USERS = os.environ.get("STAFF_USERS", "").split(",")
 
 SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.social_details",
@@ -117,7 +120,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 DB_PATH = os.environ.get("DJANGO_DB_PATH", BASE_DIR / "db.sqlite3")
-print(f"DB_PATH: {DB_PATH}")
+# print(f"DB_PATH: {DB_PATH}")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",

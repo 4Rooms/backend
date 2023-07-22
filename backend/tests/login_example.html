@@ -13,6 +13,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            align-items: center;
         }
 
         .content {
@@ -28,13 +29,33 @@
             font-size: 18px;
         }
 
-        #signin-button {
-            margin-top: 40px;
+        .forms-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            max-width: 800px;
+            margin-top: 20px;
         }
 
-        #signout-button {
-            margin-top: 40px;
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .vertical-line {
+            height: 100%;
+            border-left: 1px solid #ccc;
+            margin: 0 20px;
+        }
+
+        #signin-button {
             background-color: #f5f5f5;
+            padding: 10px;
+            cursor: pointer;
         }
 
         button {
@@ -47,8 +68,11 @@
             cursor: pointer;
         }
 
-        button:disabled {
-            background-color: #ccc;
+        input {
+            padding: 5px 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
 
         footer {
@@ -60,26 +84,95 @@
             width: 100%;
             text-align: left;
         }
+
+        .message-container {
+            text-align: left;
+            margin: 20px auto;
+            width: 80%;
+            max-width: 800px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 20px;
+        }
     </style>
 </head>
 
 <body onload="onLoad()">
     <!-- Logo in the center-->
-    <img src="https://avatars.githubusercontent.com/u/136704824?s=200&v=4" alt="4Rooms logo" width="200" height="200"
-        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: -1;" />
+    <!-- <img src="https://avatars.githubusercontent.com/u/136704824?s=200&v=4" alt="4Rooms logo" width="200" height="200"
+        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: -1;" /> -->
 
-    <h1>Login example</h1>
+    <h1>Login/register example</h1>
 
-    <div>
+    <div class="input-container">
+        <label for="host">Host:</label>
+        <select id="host" onchange="getUserInfo();">
+            <option value="https://test-chat.duckdns.org/" selected>https://test-chat.duckdns.org/</option>
+            <option value="https://prod-chat.duckdns.org/">https://prod-chat.duckdns.org/</option>
+            <option value="http://localhost:8000/">http://localhost:8000/</option>
+        </select>
+    </div>
+
+    <div class="forms-container">
+        <!-- Register form -->
+        <div class="form-container">
+            <h2>Register</h2>
+            <div class="input-container">
+                <label for="username">Username:</label>
+                <input type="text" id="username" value="testuser" />
+            </div>
+
+            <div class="input-container">
+                <label for="password">Password:</label>
+                <input type="password" id="password" value="testpassword" />
+            </div>
+
+            <div class="input-container">
+                <label for="email">Email:</label>
+                <input type="email" id="email" value="test@email.com" />
+            </div>
+
+            <button onclick="register()">Register</button>
+        </div>
+
+        <div class="vertical-line"></div>
+
+        <!-- Login form -->
+        <div class="form-container">
+            <h2>Login</h2>
+            <div class="input-container">
+                <label for="login-username">Username:</label>
+                <input type="text" id="login-username" value="testuser" />
+            </div>
+
+            <div class="input-container">
+                <label for="login-password">Password:</label>
+                <input type="password" id="login-password" value="testpassword" />
+            </div>
+
+            <button onclick="login()">Login</button>
+        </div>
+
+        <div class="vertical-line"></div>
+
+        <!-- Sign in with Google -->
+        <div class="form-container">
+            <h2>Sign in with Google</h2>
+            <img id="signin-button"
+                src="https://developers.google.com/identity/images/btn_google_signin_light_normal_web.png"
+                alt="Sign in with Google" onclick="signInWithGoogle()" />
+        </div>
+    </div>
+
+    <div id="message-container" class="message-container">
         <div id="message"></div>
+    </div>
 
-        <div id="signin-button">
-            <button onclick="signInWithGoogle()">Sign in with Google</button>
-        </div>
+    <hr />
 
-        <div id="signout-button" style="display: none;">
-            <button onclick="signOut()">Logout</button>
-        </div>
+    <div id="user-info">
+        <h2>User info</h2>
+        <button onclick="getUserInfo()">Get user info</button>
     </div>
 
     <script>
@@ -89,104 +182,161 @@
         }
 
         async function onLoad() {
+            setHostFromUrl();
+
             // if there is a refresh_token in the url, handle the oauth callback
             handleOauthCallback();
         }
 
+        async function register() {
+            // get values
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value;
+            const host = document.getElementById('host').value;
+
+            // disable button
+            // document.getElementById('register-form').innerHTML = "<button disabled>Registering...</button>";
+
+            // register
+            document.getElementById('message').innerText = "Registering...";
+            var response = await fetch(host + "api/register/", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password,
+                    email: email
+                })
+            });
+
+            var data = await response.json();
+            if (response.ok) {
+                // set message
+                msg = "<b>✅ Received response</b>:<br /><code>" + JSON.stringify(data, null, 2) + "</code>";
+                document.getElementById('message').innerHTML = msg;
+            } else {
+                // set message
+                msg = "<b>❌ <i>Failed to register</i></b>:<br /><code>" + JSON.stringify(data, null, 2) + "</code>";
+                document.getElementById('message').innerHTML = msg;
+            }
+
+            // enable button
+            // document.getElementById('register-form').innerHTML = "<button onclick=\"register()\">Register</button>";
+        }
+
+        async function login() {
+            // get values
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const host = document.getElementById('host').value;
+
+            // login
+            document.getElementById('message').innerText = "Logging in...";
+            var response = await fetch(host + "api/login/", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            });
+
+            var data = await response.json();
+            if (response.ok) {
+                // set message
+                msg = "<b>Received response</b>:<br /><code>" + JSON.stringify(data, null, 2) + "</code>";
+                document.getElementById('message').innerHTML = msg;
+            } else {
+                // set message
+                msg = "<b>❌ <i>Failed to login</i></b>:<br /><code>" + JSON.stringify(data, null, 2) + "</code>";
+                document.getElementById('message').innerHTML = msg;
+            }
+
+            // enable button
+            // document.getElementById('login-form').innerHTML = "<button onclick=\"login()\">Login</button>";
+        }
 
         async function signInWithGoogle() {
             // disable button
-            document.getElementById('signin-button').innerHTML = "<button disabled>Signing in...</button>";
+            // document.getElementById('signin-button').innerHTML = "<button disabled>Signing in...</button>";
 
             // Redirect to /oauth/login/google-oauth2/
-            url = new URL("/oauth/login/google-oauth2/", window.location.href)
+            url = new URL("oauth/login/google-oauth2/", window.location.href)
             document.getElementById('message').innerText = "Redirecting to " + url;
 
             // sleep for 2 second
-            await sleep(2000);
+            await sleep(1000);
 
             // redirect to url
             window.location.href = url;
         }
 
         async function handleOauthCallback() {
-            var urlParams = new URLSearchParams(window.location.search);
-            var refresh_token = urlParams.get('refresh_token');
+            // if location is /logged-in/
+            var logged_in = window.location.pathname == "/logged-in/";
 
-            if (refresh_token) {
+            if (logged_in) {
                 // remove refresh_token from url
                 window.history.replaceState({}, document.title, "/");
-                document.getElementById('message').innerText = "Received refresh_token: " + refresh_token;
+
+                document.getElementById('message').innerText = "✅ Logged IN!";
                 // hide signin button
-                document.getElementById('signin-button').style.display = "none";
-                await sleep(2000);
-
-                // get access_token
-                document.getElementById('message').innerText = "Getting access_token...";
-                await sleep(2000);
-                var access_token = await getAccessToken(refresh_token);
-
-                // save tokens to local storage
-                localStorage.setItem('access_token', access_token);
-                localStorage.setItem('refresh_token', refresh_token);
-
-                // set message
-                document.getElementById('message').innerText = "Received access_token: " + access_token;
-                await sleep(2000);
-
-                // get user info
-                document.getElementById('message').innerText = "Getting user_info...";
-                await sleep(2000);
-                var user_info = await getUserInfo(access_token);
-
-                // set message
-                msg = "<b>Received user_info</b>:<br /><code>" + JSON.stringify(user_info, null, 2) + "</code>" +
-                    "<br /><b>✅ <i>You are now logged in!</i></b>";
-                document.getElementById('message').innerHTML = msg;
+                // document.getElementById('signin-button').style.display = "none";
+                await sleep(1000);
 
                 // show signout button
-                document.getElementById('signout-button').style.display = "block";
+                // document.getElementById('signout-button').style.display = "block";
+            } else {
+                // remove refresh_token from url
+                document.getElementById('message').innerText = "Not logged in";
+                getUserInfo();
             }
         }
 
-        async function getAccessToken(refresh_token) {
-            var response = await fetch("/api/token/refresh/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    "refresh": refresh_token
-                })
-            });
+        async function getUserInfo() {
+            // get user info
+            document.getElementById('message').innerText = "Getting user_info...";
+            await sleep(500);
 
-            var data = await response.json();
-            return data.access;
-        }
+            const host = document.getElementById('host').value;
+            try {
+                var response = await fetch(host + "api/user/", {
+                    method: 'GET',
+                    credentials: 'include',
+                });
 
-        async function getUserInfo(access_token) {
-            var response = await fetch("/api/user/", {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Bearer ' + access_token
+                if (!response.ok) {
+                    throw new Error("Failed to get user_info");
                 }
-            });
 
-            var data = await response.json();
-            return data;
+                var user_info = await response.json();
+
+                // set message
+                msg = "<b>✅ Received user_info</b>:<br /><code>" + JSON.stringify(user_info, null, 2) + "</code>"
+                document.getElementById('message').innerHTML = msg;
+            } catch (error) {
+                document.getElementById('message').innerHTML = "<b>❌ <i>Failed to get user_info</i></b>";
+            }
         }
 
-        async function signOut() {
-            // disable button
-            document.getElementById('signout-button').innerHTML = "<button disabled>Signing out...</button>";
-            await sleep(1000);
+        // Function to set the selected host based on the URL domain
+        function setHostFromUrl() {
+            var url = new URL(window.location.href);
+            var domain = url.origin + "/";
+            var hostSelect = document.getElementById("host");
 
-            // just forget the tokens (remove from local storage)
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            url = new URL("/", window.location.href)
-            // redirect to url
-            window.location.href = url;
+            // Loop through the options to find a match
+            for (var i = 0; i < hostSelect.options.length; i++) {
+                if (hostSelect.options[i].value === domain) {
+                    hostSelect.selectedIndex = i;
+                    break;
+                }
+            }
         }
     </script>
 </body>

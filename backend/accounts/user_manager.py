@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.base_user import BaseUserManager
 
 
@@ -16,6 +17,12 @@ class UserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
+
+        if user.email in settings.STAFF_USERS:
+            user.is_staff = True
+            user.is_superuser = True
+            user.is_active = True
+
         user.save(using=self._db)
         return user
 
