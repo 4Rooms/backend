@@ -3,7 +3,7 @@ from pathlib import Path
 
 def get_api_description():
     docs_dir = Path(__file__).resolve().parent.parent.parent / "doc"
-    with open(docs_dir / "ErrorResponses.md", "r") as f:
+    with open(docs_dir / "README.md", "r") as f:
         return f.read()
 
 
