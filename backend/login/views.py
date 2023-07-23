@@ -7,6 +7,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from jwt import decode
+from datetime import datetime
 
 
 def get_tokens(user):
@@ -17,6 +19,16 @@ def get_tokens(user):
         "refresh": str(refresh),
         "access": str(refresh.access_token),
     }
+
+
+def get_token_expire_time(access_token):
+    """Get token expire time"""
+
+    key = settings.SECRET_KEY
+    algorithms = settings.SIMPLE_JWT["ALGORITHM"]
+    decoded_access_token = decode(access_token, key, algorithms)
+    token_exp_time = datetime.utcfromtimestamp(decoded_access_token["exp"])
+    return token_exp_time
 
 
 class LoginAPIView(APIView):
@@ -40,13 +52,13 @@ class LoginAPIView(APIView):
         if user is None:
             return Response({"Invalid": "Invalid username or password"}, status=status.HTTP_404_NOT_FOUND)
 
-        data = get_tokens(user)
+        token = get_tokens(user)
         # set cookie for response
         response = Response()
         response.set_cookie(
             key=settings.SIMPLE_JWT["AUTH_COOKIE"],
-            value=data["access"],
-            expires=settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"],
+            value=token["access"],
+            expires=get_token_expire_time(token["access"]),
             secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
             httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
             samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
