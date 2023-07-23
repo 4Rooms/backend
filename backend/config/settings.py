@@ -32,6 +32,12 @@ SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
+
+CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+
+
 ALLOWED_HOSTS = ["*"]
 CORS_ORIGIN_ALLOW_ALL = True
 # Server allows cookies in the cross-site HTTP requests.
@@ -42,6 +48,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://prod-chat.duckdns.org",
     "https://test-chat.duckdns.org",
 ]
+
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"]
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"]
@@ -74,6 +81,8 @@ SOCIAL_AUTH_PIPELINE = (
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
+    "channels",
     "corsheaders",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -88,6 +97,7 @@ INSTALLED_APPS = [
     # my apps
     "accounts",
     "login",
+    "chat",
 ]
 
 MIDDLEWARE = [
@@ -119,9 +129,6 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = "config.wsgi.application"
-
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases

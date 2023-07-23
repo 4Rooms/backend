@@ -19,4 +19,4 @@ echo "Apply database migrations"
 python manage.py migrate
 
 # Start server
-gunicorn config.wsgi --bind=0.0.0.0:8020 --workers 3
+daphne -b 0.0.0.0 -p 8020 config.asgi:application
