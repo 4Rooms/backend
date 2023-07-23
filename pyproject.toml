@@ -18,6 +18,8 @@ social-auth-core = "^4.4.2"
 social-auth-app-django = "^5.2.0"
 whitenoise = "^6.5.0"
 pillow = "^10.0.0"
+daphne = "^4.0.0"
+channels = "^4.0.0"
 
 [tool.poetry.dev-dependencies]
 black = "^23.3.0"
