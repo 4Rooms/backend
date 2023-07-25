@@ -84,19 +84,9 @@ class ChangePasswordView(UpdateAPIView):
     permission_classes = (IsAuthenticated,)
     http_method_names = ["put"]
 
-    def is_invalid_password(self, password, user):
-        """
-        Password validation. Returns False if the password has passed validation.
-        Returns error/errors if the password has not passed the validation.
-        """
-
-        try:
-            validate_password(password, user)
-            return False
-        except ValidationError as error:
-            return error
-
     def update(self, request, *args, **kwargs):
+        """Change password"""
+
         self.user = self.request.user
         serializer = ChangePasswordSerializer(data=request.data)
 
@@ -105,10 +95,11 @@ class ChangePasswordView(UpdateAPIView):
             if not self.user.check_password(serializer.data.get("old_password")):
                 return Response({"old password error": ["Old password is wrong"]}, status=status.HTTP_400_BAD_REQUEST)
 
-            # if password is invalid
-            password_errors = self.is_invalid_password(password=request.data["new_password"], user=self.user)
-            if password_errors:
-                return Response({"new password error": password_errors}, status=status.HTTP_400_BAD_REQUEST)
+            # validate password
+            try:
+                validate_password(request.data["new_password"], self.user)
+            except ValidationError as errors:
+                return Response({"new password error": errors}, status=status.HTTP_400_BAD_REQUEST)
 
             # set_password also hashes the password that the user will get
             self.user.set_password(serializer.data.get("new_password"))
