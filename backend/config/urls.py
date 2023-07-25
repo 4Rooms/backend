@@ -48,5 +48,8 @@ if settings.DEBUG:
 
 # for react router
 urlpatterns += [
-    re_path(r"^(?:.*)/?$", lambda request: HttpResponse(open(BASE_DIR / "tests" / "login_example.html").read())),
+    re_path(
+        r"^(?:.*)/?$",
+        lambda request: HttpResponse(open(BASE_DIR / "tests" / "login_example.html", encoding="UTF-8").read()),
+    ),
 ]
