@@ -86,11 +86,15 @@ class Profile(models.Model):
 
         super().save(*args, **kwargs)
 
-        # Open image
+        if self.avatar.name == "default-user-avatar.jpg":
+            return
+
+        # open image
         img = Image.open(self.avatar.path)
         # resize image
-        img = self.resize_image(img, 200)
-        img.save(self.avatar.path)
+        if img.size != (200, 200):
+            img = self.resize_image(img, 200)
+            img.save(self.avatar.path)
 
     @property
     def filename(self):
