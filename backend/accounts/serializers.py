@@ -15,7 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 
-class ProfileAvatarSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
     """
     Serializer class to serialize the avatar
     """

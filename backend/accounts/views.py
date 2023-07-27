@@ -1,7 +1,7 @@
 from accounts.models import Profile, User
 from accounts.serializers import (
     ChangePasswordSerializer,
-    ProfileAvatarSerializer,
+    ProfileSerializer,
     UserSerializer,
 )
 from django.contrib.auth.password_validation import validate_password
@@ -60,14 +60,14 @@ class UserView(APIView):
         return Response({"message": "Email, Username updated successfully"}, status=status.HTTP_200_OK)
 
 
-class UserAvatarAPIView(RetrieveUpdateAPIView):
+class ProfileAPIView(RetrieveUpdateAPIView):
     """
     Get, Update user avatar
     """
 
     permission_classes = (IsAuthenticated,)
     queryset = Profile.objects.all()
-    serializer_class = ProfileAvatarSerializer
+    serializer_class = ProfileSerializer
     http_method_names = ["get", "put"]
 
     def get_object(self):
