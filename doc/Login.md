@@ -1,7 +1,7 @@
-## Authorization using a JWT (JSON Web Token).
+# Login
 
-## Login
 
+# User login
 -   URL: https://prod-chat.duckdns.org/api/login/
 -   Request: Post(URL, {username, password}).  
     __The username field can contain a username or email__.
@@ -49,7 +49,7 @@
         ```
 
 -   Additional information:  
-    Upon successful user login, the access token is set in cookies as HttpOnly=True
+    After successful user login, the access token is set in cookies as HttpOnly=True
 
     ```
     access_token = access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg5ODUyODEzLCJpYXQiOjE2ODk3NjY0MTMsImp0aSI6ImY1ZGZlY2NkM2FkNzQ5YTc4Zjg4OWIyNDhjNDBjYWJmIiwidXNlcl9pZCI6Mzl9.Rswt9Iss_WmtpSgV8hVi798NYv7Xz69r0Z1_BMnJ9pQ; 
