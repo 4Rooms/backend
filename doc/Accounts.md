@@ -3,8 +3,7 @@
 
 ## Get the current user info (username, email, is_email_confirmed")
 -   URL: https://prod-chat.duckdns.org/api/user/
--   Request: Get(URL, headers={"Authorization": "Bearer " + access_token}).  
-    Request requires access token in headers.
+-   Request: Get(URL).  
 
     ```
     response = request.get(URL)
@@ -33,10 +32,9 @@
         }
         ```
 
-## Change username / email.
+## Change username/email.
 -   URL: https://prod-chat.duckdns.org/api/user/
--   Request: Put(URL, headers={"Authorization": "Bearer " + access_token}, data={username, email}).  
-    Request requires access token in headers.
+-   Request: Put(URL, data).
 
     ```
     data = {"username": "userName", "email": "userEmail"}
