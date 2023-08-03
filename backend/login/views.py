@@ -1,5 +1,8 @@
+from datetime import datetime
+
 from accounts.serializers import UserSerializer
 from django.conf import settings
+from jwt import decode
 from login.authentication_backend import AuthBackend
 from rest_framework import status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -7,8 +10,6 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from jwt import decode
-from datetime import datetime
 
 
 def get_tokens(user):
