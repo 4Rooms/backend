@@ -28,7 +28,7 @@ class Chat(models.Model):
     def get_url(self):
         """Return absolute url of chat"""
 
-        return f"/chat/{self.title}/{self.pk}/{self.room}/"
+        return f"/chat/{self.room}/{self.pk}/"
 
     def save(self, *args, **kwargs):
         """Redefined the save method to save the absolute URL in the url field"""
