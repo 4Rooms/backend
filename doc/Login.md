@@ -1,7 +1,7 @@
 # Login
 
 
-# User login
+## User login
 -   URL: https://prod-chat.duckdns.org/api/login/
 -   Request: Post(URL, {username, password}).  
     __The username field can contain a username or email__.

@@ -1,7 +1,7 @@
 # Chat API
 
 
-# Create chat
+## Create chat
 -   URL: https://prod-chat.duckdns.org/api/create-chat/
 -   Request: Post(URL, data)  
     data: title, room, description (optional), img (optional)  
