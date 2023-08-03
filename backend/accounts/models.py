@@ -45,6 +45,9 @@ class User(AbstractUser, PermissionsMixin):
         ordering = ["-date_joined"]
         app_label = "accounts"
 
+    def __str__(self):
+        return f"{self.username}"
+
 
 class EmailConfirmationToken(models.Model):
     """Token for email confirmation"""
@@ -98,7 +101,7 @@ class Profile(models.Model):
 
     @property
     def filename(self):
-        return os.path.basename(self.image.name)
+        return os.path.basename(self.avatar.name)
 
     @staticmethod
     def resize_image(image: Image, length: int) -> Image:
