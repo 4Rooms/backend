@@ -2,7 +2,7 @@
 
 
 ## Create chat
--   URL: https://prod-chat.duckdns.org/api/create-chat/
+-   URL: https://prod-chat.duckdns.org/api/chat/
 -   Request: Post(URL, data)  
     data: title, room, description (optional), img (optional)  
     __room__ must have one of the following string values:
@@ -12,7 +12,7 @@
     -   "games"
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/create-chat/"
+    URL = "https://prod-chat.duckdns.org/api/chat/
     data = {"title": "Harry Potter",
             "room": "films",
             "description": "Discussion of characters",
@@ -34,11 +34,13 @@
                 "img": "https://prod-chat.duckdns.org/media/file.jpg",
                 "creator": "userName",
                 "description": "Discussion of characters",
-                "timestamp": "2023-08-03T08:51:26.593514Z",
-                "url": "/chat/Harry Potter/42/films/"
-            }
+                "timestamp": "2023-08-03T08:51:26.593514Z"
+            },
+            "url": "/chat/films/3/"
         }
         ```
+        __url__ - path for connection to chat by Websocket
+
 
 -   Unsuccessful response:
     -   Status code: 400 Bad Request.

@@ -1,5 +1,3 @@
-import os
-
 from config.settings import CHOICE_ROOM
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -9,7 +7,7 @@ from PIL import Image
 class Chat(models.Model):
     """Chat table"""
 
-    title = models.CharField(max_length=70)
+    title = models.CharField(max_length=70, unique=True)
     room = models.CharField(choices=CHOICE_ROOM, max_length=50)
     img = models.ImageField(
         null=True,
@@ -17,16 +15,15 @@ class Chat(models.Model):
         default="default-user-avatar.jpg",
         upload_to="chat_img",
     )
-    creator = models.ForeignKey(get_user_model(), null=True, on_delete=models.CASCADE)
+    creator = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
     description = models.TextField(blank=True, null=True)
-    url = models.CharField(max_length=255, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"id: {self.pk}, title: {self.title}, room: {self.room}"
 
     def get_url(self):
-        """Return absolute url of chat"""
+        """Return url of chat"""
 
         return f"/chat/{self.room}/{self.pk}/"
 
@@ -39,8 +36,6 @@ class Chat(models.Model):
 
         # Save chat to DB
         super().save(*args, **kwargs)
-        # Save url
-        self.url = self.get_url()
 
         # Not resize the img if it is the default img
         if self.img.name == "default-user-avatar.jpg":
