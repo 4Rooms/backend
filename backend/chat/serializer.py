@@ -10,13 +10,17 @@ class ChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ["id", "title", "room", "img", "creator", "description", "timestamp", "url"]
-        extra_kwargs = {"id": {"read_only": True}, "creator": {"read_only": True}, "url": {"read_only": True}}
+        fields = ["id", "title", "room", "img", "creator", "description", "timestamp"]
+        extra_kwargs = {"id": {"read_only": True}, "creator": {"read_only": True}}
 
     def get_creator(self, obj):
         """Return creator username (instead id)"""
 
-        return obj.creator.username
+        if obj.creator:
+            return obj.creator.username
+        else:
+            # if user was deleted
+            return "Unknown"
 
     def get_img(self, obj):
         """Return absolute url of chat img"""

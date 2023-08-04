@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
-class CreateChatAPIView(APIView):
+class ChatAPIView(APIView):
     """API to create chat"""
 
     permission_classes = (IsAuthenticated,)
@@ -20,8 +20,8 @@ class CreateChatAPIView(APIView):
 
         if serializer.is_valid():
             # Optional fields
-            img = None if not "img" in request.data else request.data["img"]
-            description = None if not "description" in request.data else request.data["description"]
+            img = request.data.get("img", None)
+            description = request.data.get("description", None)
 
             new_chat = Chat.objects.create(
                 title=request.data["title"],
@@ -30,6 +30,8 @@ class CreateChatAPIView(APIView):
                 img=img,
                 description=description,
             )
-            return Response({"chat": ChatSerializer(new_chat, context={"request": request}).data})
+            return Response(
+                {"chat": ChatSerializer(new_chat, context={"request": request}).data, "url": new_chat.get_url()}
+            )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
