@@ -162,6 +162,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # REST Framework
 REST_FRAMEWORK = {
+    # Pagination class
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    # PAGE_SIZE - how many records are on one page in "results" field
+    "PAGE_SIZE": 100,
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
     "DEFAULT_PERMISSION_CLASSES": [
