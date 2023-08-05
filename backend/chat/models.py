@@ -7,7 +7,7 @@ from PIL import Image
 class Chat(models.Model):
     """Chat table"""
 
-    title = models.CharField(max_length=70, unique=True)
+    title = models.CharField(max_length=70)
     room = models.CharField(choices=CHOICE_ROOM, max_length=50)
     img = models.ImageField(
         null=True,
@@ -17,18 +17,17 @@ class Chat(models.Model):
     )
     creator = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
     description = models.TextField(blank=True, null=True)
+    url = models.CharField(max_length=50, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('room', 'title',)
 
     def __str__(self):
         return f"id: {self.pk}, title: {self.title}, room: {self.room}"
 
-    def get_url(self):
-        """Return url of chat"""
-
-        return f"/chat/{self.room}/{self.pk}/"
-
     def save(self, *args, **kwargs):
-        """Redefined the save method to save the absolute URL in the url field"""
+        """Redefined the save method to resize img"""
 
         # Save default chat img
         if not self.img:
