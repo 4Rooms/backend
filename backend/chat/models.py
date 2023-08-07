@@ -21,7 +21,10 @@ class Chat(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('room', 'title',)
+        unique_together = (
+            "room",
+            "title",
+        )
 
     def __str__(self):
         return f"id: {self.pk}, title: {self.title}, room: {self.room}"

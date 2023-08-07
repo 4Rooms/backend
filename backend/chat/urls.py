@@ -1,4 +1,5 @@
 from django.urls import path
+
 from backend.chat.views import ChatAPIView
 
 urlpatterns = [
