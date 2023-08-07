@@ -36,7 +36,7 @@ urlpatterns = [
     path("api/", include("login.urls")),
     path("api/", include("registration.urls")),
     path("api/", include("chat.urls")),
-    path("", include("accounts.urls")),
+    path("api/", include("accounts.urls")),
     path("oauth/", include("social_django.urls", namespace="social")),
     # swagger
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

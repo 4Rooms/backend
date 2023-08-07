@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
-class UserView(APIView):
+class UserAPIView(APIView):
     """Return current authenticated user"""
 
     permission_classes = (IsAuthenticated,)
@@ -74,7 +74,7 @@ class ProfileAPIView(RetrieveUpdateAPIView):
         return self.request.user.profile
 
 
-class ChangePasswordView(UpdateAPIView):
+class ChangePasswordAPIView(UpdateAPIView):
     """
     Changing password endpoint.
     """

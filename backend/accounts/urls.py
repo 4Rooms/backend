@@ -4,12 +4,12 @@ URL configuration for accounts.
 
 from django.urls import path
 
-from backend.accounts.views import ChangePasswordView, ProfileAPIView, UserView
+from backend.accounts.views import ChangePasswordAPIView, ProfileAPIView, UserAPIView
 
 urlpatterns = [
     # user
-    path("api/user/", UserView.as_view(), name="user"),
-    path("api/user/change-password", ChangePasswordView.as_view(), name="change_password"),
+    path("user/", UserAPIView.as_view(), name="user"),
+    path("user/change-password", ChangePasswordAPIView.as_view(), name="change_password"),
     # profile
-    path("api/profile/", ProfileAPIView.as_view(), name="profile"),
+    path("profile/", ProfileAPIView.as_view(), name="profile"),
 ]
