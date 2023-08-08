@@ -75,6 +75,17 @@
         }
         ```
 
+        ```json
+        {
+            "description": [
+                "Ensure this field has no more than 400 characters."
+            ],
+            "title": [
+                "Ensure this field has no more than 70 characters."
+            ]
+        }
+        ```
+
 ## Get chats from the certain room
 -   URL: https://prod-chat.duckdns.org/api/chat/<room>/
     -   __room__ must have one of the following string values:
@@ -146,5 +157,56 @@
         ```json
         {
             "Error": "wrong room"
+        }
+        ```
+
+## Update chat description
+-   URL: https://prod-chat.duckdns.org/api/chat/<room>/<chatId>/
+    -   __room__ must have one of the following string values:
+        -   "films"
+        -   "music"
+        -   "books"
+        -   "games"
+-   Request: Patch(URL)
+    -   data: description
+
+    ```
+    URL = "https://prod-chat.duckdns.org/api/chat/music/10/
+    data = {"description": "Chat description"}
+    response = request.post(URL, data)
+    ```
+
+-   Successful response:
+    -   Status code: 200.
+    -   Response body:
+
+        ```json
+        {
+            "id": 10,
+            "title": "Imagine Dragons",
+            "room": "music",
+            "img": "https://prod-chat.duckdns.org/media/chat_img/file.jpg",
+            "creator": "Leslie",
+            "description": "Chat description",
+            "url": "/chat/music/10/",
+            "timestamp": "2023-08-07T12:16:40.385811Z"
+        }
+        ```
+
+-   Unsuccessful response:
+    -   Status code: 400 Bad Request.
+    -   Response body:
+
+        ```json
+        {
+            "detail": "You do not have permission to perform this action."
+        }
+        ```
+
+        ```json
+        {
+            "description": [
+                "Ensure this field has no more than 400 characters."
+            ]
         }
         ```

@@ -1,4 +1,5 @@
 from chat.models import Chat
+from chat.permissions import IsCreatorOrReadOnly, IsOnlyDescriptionInRequestData
 from chat.serializer import ChatSerializer
 from config.settings import CHOICE_ROOM
 from rest_framework import generics, status
@@ -13,7 +14,7 @@ class ChatAPIView(generics.GenericAPIView):
     permission_classes = (IsAuthenticated,)
     parser_classes = [JSONParser, MultiPartParser, FormParser]
     serializer_class = ChatSerializer
-    http_method_names = ["get", "post", "update"]
+    http_method_names = ["get", "post"]
 
     def get(self, request, room_name):
         """Get chat list from the certain room"""
@@ -46,6 +47,17 @@ class ChatAPIView(generics.GenericAPIView):
                 description=description,
             )
             serializer.update_url(obj=new_chat)
-            return Response({"chat": ChatSerializer(new_chat, context={"request": request}).data})
+            return Response(
+                {"chat": ChatSerializer(new_chat, context={"request": request}).data}, status=status.HTTP_201_CREATED
+            )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UpdateChatApiView(generics.UpdateAPIView):
+    """Update chat description"""
+
+    permission_classes = (IsAuthenticated, IsCreatorOrReadOnly, IsOnlyDescriptionInRequestData)
+    queryset = Chat.objects.all()
+    serializer_class = ChatSerializer
+    http_method_names = ["patch"]
