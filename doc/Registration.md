@@ -83,4 +83,5 @@
         ```
 
 -   Additional information:  
-    In case of a response with a status code of 201, the user will be sent a link to confirm his email. If the user follows the link, the value of the variable is_email_confirm will change to True.
+    In case of a response with a status code of 201, the user will be sent a link to confirm his email. Link in mail: URL = http://<UIHost>/confirm-email/?token_id=<token>.  
+    To confirm email and change the variable is_email_confirm to True you should do Get request to URL = https://prod-chat.duckdns.org/api/confirm-email/?token_id=<token>.
