@@ -35,9 +35,10 @@ jobs:
 
           export ANSIBLE_HOST_KEY_CHECKING=False
           ansible-vault view --vault-password-file=$RUNNER_TEMP/.vault_pass files/vault1 | ssh-add -
-          ansible-playbook deploy.yml \
-            -i ./inventory \
-            --vault-password-file $RUNNER_TEMP/.vault_pass \
+          ansible-playbook deploy.yml                        \
+            -i ./inventory                                   \
+            --vault-password-file $RUNNER_TEMP/.vault_pass   \
+            -e CI=true                                       \
             -e BRANCH=$GITHUB_REF_NAME
 
       - name: Upload logs
