@@ -10,6 +10,8 @@
         force_source: true
         force_tag: true
 
+    - import_tasks: redis.yml
+
     - name: Recreate chat container
       community.docker.docker_container:
         name: chat-{{ img_name }}
@@ -27,9 +29,14 @@
           SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: "{{ SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET }}"
           SOCIAL_AUTH_REDIRECT_IS_HTTPS: "false"
           STAFF_USERS: "{{ STAFF_USERS }}"
+          REDIS_HOST: "redis-{{ img_name }}"
+          DJANGO_SETTINGS_MODULE: "config.settings_prod"
 
         published_ports:
           - "8020:8020"
+
+        links:
+          - "redis-{{ img_name }}"
 
     - name: Save container logs to artifacts
       ansible.builtin.shell: |
@@ -45,10 +52,18 @@
       retries: 11  # 11 * 5 seconds = 55 seconds
       delay: 5  # Every 5 seconds
 
+    - name: Sleep for 5 minutes to test the service
+      ansible.builtin.wait_for:
+        timeout: 300
+      when: CI is undefined
+
   always:
-    - name: Remove container
+    - name: Remove containers
       community.docker.docker_container:
-        name: chat-{{ img_name }}
+        name: "{{ item }}"
         state: "absent"
+      loop:
+        - "chat-{{ img_name }}"
+        - "redis-{{ img_name }}"
 
   delegate_to: localhost

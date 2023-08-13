@@ -1,0 +1,7 @@
+---
+- name: Start redis
+  community.docker.docker_container:
+    name: redis-{{ img_name }}
+    image: redis
+    state: "started"
+    restart_policy: "unless-stopped"

@@ -248,7 +248,6 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_ROOT = os.environ.get("DJANGO_MEDIA_ROOT", BASE_DIR / "media")
-print(f"MEDIA_ROOT: {MEDIA_ROOT}")
 MEDIA_URL = "/media/"
 
 # Default primary key field type
