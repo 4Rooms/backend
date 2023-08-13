@@ -7,7 +7,8 @@
     docker_edition: 'ce'
     docker_install_compose_plugin: true
 
-  tasks:
+  # Setup packages
+  pre_tasks:
     - name: Update apt cache.
       ansible.builtin.apt: update_cache=true cache_valid_time=600
       changed_when: false
@@ -43,6 +44,66 @@
       ansible.builtin.pip:
         name: docker
 
-
+  # Docker
   roles:
     - geerlingguy.docker
+
+  tasks:
+    # Loki Docker Driver
+    # https://grafana.com/docs/loki/latest/clients/docker-driver/
+    - name: Install Loki Docker Driver
+      community.docker.docker_plugin:
+        plugin_name: grafana/loki-docker-driver:latest
+        alias: loki
+        state: enable
+      notify:
+        - restart docker
+
+    - name: Configure Default Docker Logging Driver
+      ansible.builtin.template:
+        src: templates/daemon.json.j2
+        dest: /etc/docker/daemon.json
+      notify:
+        - restart docker
+
+    # Traefik
+    - name: Create dirs for traefik
+      become: true
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - /etc/traefik
+        - /etc/traefik/certificates
+
+    - name: Synchronize traefik config
+      become: true
+      synchronize:
+        src: files/traefik.toml
+        dest: /etc/traefik/traefik.toml
+
+    - name: Start traefik
+      become: true
+      community.docker.docker_container:
+        name: traefik
+        image: traefik:v2.10
+        state: "started"
+        restart_policy: "unless-stopped"
+        recreate: true
+
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+
+        mounts:
+          - type: bind
+            read_only: false
+            source: /etc/traefik/
+            target: /etc/traefik/
+
+        exposed_ports:
+          - 80
+          - 443
+
+        published_ports:
+          - 80:80
+          - 443:443

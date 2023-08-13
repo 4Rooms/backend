@@ -54,19 +54,6 @@
         force_source: true
         force_tag: true
 
-    # - name: Update domain
-    #   ansible.builtin.uri:
-    #     url: https://www.duckdns.org/update?domains={{ domain }}&token={{ DNS_TOKEN }}
-
-    - name: Create dirs
-      become: true
-      ansible.builtin.file:
-        path: "{{ item }}"
-        state: directory
-      with_items:
-        - /etc/traefik
-        - /etc/traefik/certificates
-
     - name: Create a volume for data
       community.docker.docker_volume:
         name: chat-{{ img_name }}-data
@@ -119,44 +106,3 @@
             target: /db/
 
         labels: "{{ container_labels | items2dict }}"
-
-    - name: Synchronize traefik config
-      become: true
-      synchronize:
-        src: files/traefik.toml
-        dest: /etc/traefik/traefik.toml
-
-    - name: Start traefik
-      become: true
-      community.docker.docker_container:
-        name: traefik
-        image: traefik:v2.10
-        state: "started"
-        # recreate: true
-
-        volumes:
-          - /var/run/docker.sock:/var/run/docker.sock
-
-        mounts:
-          - type: bind
-            read_only: false
-            source: /etc/traefik/
-            target: /etc/traefik/
-
-        labels:
-          traefik.enable: "true"
-          traefik.http.routers.dashboard.rule: "Host(`traefik-chat.duckdns.org`)"
-          traefik.http.routers.dashboard.tls: "true"
-          traefik.http.routers.dashboard.tls.certresolver: "letsencrypt"
-          traefik.http.routers.dashboard.service: "api@internal"
-          # traefik.http.routers.dashboard.middlewares: "auth"
-          # traefik.http.middlewares.auth.basicauth.users: "testuser:$$apr1$$jIKW.bdS$$eKXe4Lxjgy/rH65wP1iQe1"
-
-
-        exposed_ports:
-          - 80
-          - 443
-
-        published_ports:
-          - 80:80
-          - 443:443
