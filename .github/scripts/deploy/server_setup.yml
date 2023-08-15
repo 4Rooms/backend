@@ -107,3 +107,61 @@
         published_ports:
           - 80:80
           - 443:443
+
+
+    # Grafana agent
+    # https://grafana.com/docs/agent/latest/static/configuration/integrations/node-exporter-config/
+
+    - name: Create dirs for grafana agent
+      become: true
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - /etc/grafana-agent
+    
+    - name: Create config for grafana agent
+      become: true
+      ansible.builtin.template:
+        src: templates/grafana-agent.yaml.j2
+        dest: /etc/grafana-agent/grafana-agent.yaml
+
+    - name: Start grafana agent
+      become: true
+      community.docker.docker_container:
+        name: grafana-agent
+        image: grafana/agent:v0.35.4
+        command: ["--config.file=/etc/grafana-agent/grafana-agent.yaml"]
+        state: "started"
+        restart_policy: "unless-stopped"
+        recreate: true
+
+        network_mode: "host"
+        pid_mode: "host"
+
+        capabilities:
+          - sys_time
+
+        mounts:
+          - type: bind
+            source: /etc/grafana-agent/
+            target: /etc/grafana-agent/
+            read_only: true
+
+          - type: bind
+            source: /
+            target: /host/root/
+            read_only: true
+            propagation: rslave
+
+          - type: bind
+            source: /proc/
+            target: /host/proc/
+            read_only: true
+            propagation: rslave
+
+          - type: bind
+            source: /sys/
+            target: /host/sys/
+            read_only: true
+            propagation: rslave
