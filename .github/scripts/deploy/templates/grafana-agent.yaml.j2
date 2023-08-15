@@ -1,0 +1,20 @@
+---
+server:
+  log_level: info
+
+metrics:
+  wal_directory: /tmp/agent
+  global:
+    scrape_interval: 33s
+    remote_write:
+    - url: https://{{ PROMETHEUS_HOST }}/api/prom/push
+      basic_auth:
+        username: {{ PROMETHEUS_USER }}
+        password: {{ PROMETHEUS_TOKEN }}
+
+integrations:
+  node_exporter:
+    enabled: true
+    rootfs_path: /host/root
+    sysfs_path: /host/sys
+    procfs_path: /host/proc
