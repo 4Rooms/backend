@@ -2,6 +2,7 @@ from urllib.parse import urlencode
 
 from accounts.models import EmailConfirmationToken
 from django.contrib.auth import get_user_model
+from django.core import mail
 from django.urls import reverse
 from rest_framework.test import APITestCase
 
@@ -16,6 +17,14 @@ class ConfirmEmailApiViewTests(APITestCase):
         url = reverse("register")
         body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
         response = self.client.post(url, body, format="json")
+
+        # Test that one message has been sent.
+        self.assertEqual(len(mail.outbox), 1)
+
+        email = mail.outbox[0]
+        self.assertEqual(email.to, [body["email"]])
+        self.assertEqual(email.subject, "Please confirm email")
+
         user = User.objects.filter(email=body["email"]).first()
 
         # get token for email confirmation
@@ -26,17 +35,15 @@ class ConfirmEmailApiViewTests(APITestCase):
         response = self.client.get(url + "?" + urlencode({"token_id": token.id}))
         self.assertEquals(response.status_code, 200)
 
-        # get token for get user info
-        url = reverse("token_obtain_pair")
-        response = self.client.post(url, data=body, format="json")
-        token_obtain_pair = response.json()
-        access_token = token_obtain_pair["access"]
-        # print(access_token)
+        # login user
+        url = reverse("login")
+        body = {"username": "user1", "password": "user1user1user1"}
+        response = self.client.post(url, body, format="json")
+        self.assertEquals(response.status_code, 200)
 
-        # get user info to check is_email_confirm
-        url = reverse("get_current_user")
-        headers = {"Authorization": "Bearer " + access_token}
-        response = self.client.get(url, headers=headers, format="json")
+        # get user info to check is_email_confirmed
+        url = reverse("user")
+        response = self.client.get(url, format="json")
         print(response.json())
         is_email_confirmed = response.json()["is_email_confirmed"]
         self.assertTrue(is_email_confirmed)
