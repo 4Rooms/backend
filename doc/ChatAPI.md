@@ -220,7 +220,6 @@
 -   Successful response:
     -   Status code: 204 No Content.
     -   Response body: Empty
-
 -   Unsuccessful response:
     -   Status code: 404 Not Found (There is no chat with such id), 403 Forbidden.
     -   Response body:
