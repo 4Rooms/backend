@@ -57,6 +57,14 @@ class EmailConfirmationToken(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
+class PasswordResetToken(models.Model):
+    """Token for email confirmation"""
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+
 def get_image_filename(instance, filename):
     """
     Function for upload_to arg in avatar field of profile.

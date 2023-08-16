@@ -1,6 +1,7 @@
-from accounts.models import EmailConfirmationToken, Profile, User
+from accounts.models import EmailConfirmationToken, PasswordResetToken, Profile, User
 from django.contrib import admin
 
-admin.site.register(User)
 admin.site.register(EmailConfirmationToken)
+admin.site.register(PasswordResetToken)
 admin.site.register(Profile)
+admin.site.register(User)
