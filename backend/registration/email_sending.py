@@ -1,8 +1,8 @@
 import os
-from urllib.parse import urlencode, urljoin
+from urllib.parse import urlencode
 
+from config.settings import UI_HOST
 from django.core.mail import send_mail
-from django.urls import reverse
 
 
 def send_confirmation_email(email, token_id):
@@ -12,8 +12,7 @@ def send_confirmation_email(email, token_id):
     # host = os.getenv("DJANGO_HOST")
 
     # url = urljoin(host, reverse("confirm-email"))
-    ui_host = "http://localhost:5173/"
-    url = ui_host + "confirm-email/" + "?" + urlencode({"token_id": token_id})
+    url = UI_HOST + "confirm-email/" + "?" + urlencode({"token_id": token_id})
     message = f"Please confirm your email by going to the following link: {url}"
 
     send_mail(
