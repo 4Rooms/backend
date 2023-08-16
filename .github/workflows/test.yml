@@ -31,7 +31,8 @@ jobs:
         run: |
           cp -v backend/config/.env_template backend/config/.env
           sed -i "s/DJANGO_SECRET_KEY=/DJANGO_SECRET_KEY=$(openssl rand -hex 32)/" backend/config/.env
-          $POETRY_HOME/bin/poetry run python backend/manage.py test
+          cd backend
+          $POETRY_HOME/bin/poetry run pytest tests
 
   deploy:
     uses: ./.github/workflows/deploy.yml
