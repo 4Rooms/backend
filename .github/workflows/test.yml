@@ -1,0 +1,41 @@
+---
+name: Test
+'on':
+  push:
+  pull_request:
+
+env:
+  POETRY_HOME: ${{ github.workspace }}/.poetry
+
+permissions: write-all
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          curl -sSL https://install.python-poetry.org | python -
+          $POETRY_HOME/bin/poetry install
+
+      - name: Run Tests
+        run: |
+          cp -v backend/config/.env_template backend/config/.env
+          sed -i "s/DJANGO_SECRET_KEY=/DJANGO_SECRET_KEY=$(openssl rand -hex 32)/" backend/config/.env
+          $POETRY_HOME/bin/poetry run python backend/manage.py test
+
+  deploy:
+    uses: ./.github/workflows/deploy.yml
+    needs: test
+    if: (github.event_name == 'pull_request') || (github.event_name == 'push' && github.ref == 'refs/heads/master')
+    secrets:
+      VAULT_PASS: "${{ secrets.VAULT_PASS }}"

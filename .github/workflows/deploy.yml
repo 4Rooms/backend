@@ -1,11 +1,12 @@
 ---
 name: Deploy
 'on':
-  pull_request:
   workflow_dispatch:
-  push:
-    branches:
-      - master
+  workflow_call:
+    secrets:
+      VAULT_PASS:
+        description: 'Vault password'
+        required: true
 
 permissions: write-all
 
@@ -14,6 +15,7 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     steps:
+
       - uses: actions/checkout@v3
       - name: Set up Python
         uses: actions/setup-python@v2

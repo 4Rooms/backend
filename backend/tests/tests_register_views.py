@@ -13,7 +13,7 @@ class RegisterUserAPIViewsTests(APITestCase):
         url = reverse("register")
         body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
         response = self.client.post(url, body, format="json")
-        # print(response)
+        print(response)
         self.assertEquals(response.status_code, 201)
 
         user = User.objects.filter(email=body["email"]).first()
@@ -40,6 +40,8 @@ class RegisterUserAPIViewsTests(APITestCase):
         url = reverse("register")
         body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
         response = self.client.post(url, body, format="json")
+        self.assertEquals(response.status_code, 201)
+
         user = User.objects.filter(email=body["email"]).first()
 
         # check that token is created
