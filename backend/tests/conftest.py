@@ -16,7 +16,7 @@ class UserForTests:
 
 
 @pytest.fixture
-def test_user(client: Client, django_user_model):
+def test_user_unconfirmed(client: Client, django_user_model):
     # create user
     url = reverse("register")
     body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
@@ -33,8 +33,16 @@ def test_user(client: Client, django_user_model):
     user = django_user_model.objects.filter(email=body["email"]).first()
     assert user is not None
 
+    mail.outbox.clear()
+    return UserForTests(user, name=body["username"], email=body["email"], password=body["password"])
+
+
+@pytest.fixture
+def test_user(client: Client, test_user_unconfirmed: UserForTests):
+    user = test_user_unconfirmed
+
     # get token for email confirmation
-    token = EmailConfirmationToken.objects.filter(user=user).first()
+    token = EmailConfirmationToken.objects.filter(user=user.django_user).first()
     assert token is not None
 
     # get request for email confirm
@@ -43,4 +51,4 @@ def test_user(client: Client, django_user_model):
     assert response.status_code == 200
 
     mail.outbox.clear()
-    return UserForTests(user, name=body["username"], email=body["email"], password=body["password"])
+    return user

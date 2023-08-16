@@ -34,3 +34,24 @@ class ChangePasswordSerializer(serializers.Serializer):
 
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+
+
+class EmailSerializer(serializers.Serializer):
+    """
+    Serializer for email.
+    """
+
+    model = User
+
+    email = serializers.EmailField(required=True)
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    """
+    Serializer for password reset.
+    """
+
+    model = User
+
+    password = serializers.CharField(required=True)
+    token_id = serializers.CharField(required=True)
