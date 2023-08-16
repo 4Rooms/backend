@@ -1,5 +1,6 @@
 .vault_pass
 poetry.lock
+geerlingguy*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
