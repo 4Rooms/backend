@@ -161,17 +161,12 @@
         ```
 
 ## Update chat description
--   URL: https://prod-chat.duckdns.org/api/chat/<room>/<chatId>/
-    -   __room__ must have one of the following string values:
-        -   "films"
-        -   "music"
-        -   "books"
-        -   "games"
+-   URL: https://prod-chat.duckdns.org/api/chat/<chatId>/
 -   Request: Patch(URL)
     -   data: description
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/music/10/
+    URL = "https://prod-chat.duckdns.org/api/chat/10/
     data = {"description": "Chat description"}
     response = request.post(URL, data)
     ```
@@ -194,7 +189,7 @@
         ```
 
 -   Unsuccessful response:
-    -   Status code: 400 Bad Request.
+    -   Status code: 400 Bad Request, 403 Forbidden (user isn't a creator of chat or user sent not description field).
     -   Response body:
 
         ```json
@@ -208,5 +203,36 @@
             "description": [
                 "Ensure this field has no more than 400 characters."
             ]
+        }
+        ```
+
+## Delete chat
+-   URL: https://prod-chat.duckdns.org/api/chat/<chatId>/
+-   Request: Delete(URL)
+    -   data: description
+
+    ```
+    URL = "https://prod-chat.duckdns.org/api/chat/10/
+    data = {"description": "Chat description"}
+    response = request.post(URL, data)
+    ```
+
+-   Successful response:
+    -   Status code: 204 No Content.
+    -   Response body: Empty
+
+-   Unsuccessful response:
+    -   Status code: 404 Not Found (There is no chat with such id), 403 Forbidden.
+    -   Response body:
+
+        ```json
+        {
+            "detail": "Not found."
+        }
+        ```
+
+        ```json
+        {
+            "detail": "You do not have permission to perform this action."
         }
         ```

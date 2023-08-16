@@ -54,10 +54,10 @@ class ChatAPIView(generics.GenericAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UpdateChatApiView(generics.UpdateAPIView):
-    """Update chat description"""
+class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
+    """Update chat description or delete chat"""
 
     permission_classes = (IsAuthenticated, IsCreatorOrReadOnly, IsOnlyDescriptionInRequestData)
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
-    http_method_names = ["patch"]
+    http_method_names = ["patch", "delete"]
