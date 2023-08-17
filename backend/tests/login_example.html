@@ -94,6 +94,12 @@
             border-radius: 4px;
             padding: 20px;
         }
+
+        #additional_info {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
     </style>
 </head>
 
@@ -111,6 +117,9 @@
             <option value="https://prod-chat.duckdns.org/">https://prod-chat.duckdns.org/</option>
             <option value="http://localhost:8000/">http://localhost:8000/</option>
         </select>
+    </div>
+
+    <div id="additional_info">
     </div>
 
     <div class="forms-container">
@@ -183,6 +192,7 @@
 
         async function onLoad() {
             setHostFromUrl();
+            setSwaggerUILink();
 
             // if there is a refresh_token in the url, handle the oauth callback
             handleOauthCallback();
@@ -322,6 +332,8 @@
         }
 
         async function getUserInfo() {
+            setSwaggerUILink();
+
             // get user info
             document.getElementById('message').innerText = "Getting user_info...";
             await sleep(500);
@@ -360,6 +372,14 @@
                     break;
                 }
             }
+        }
+
+        function setSwaggerUILink() {
+            const host = document.getElementById('host').value;
+            additional_info = document.getElementById("additional_info");
+
+            const swagger_url = host + "swagger-ui/";
+            additional_info.innerHTML = "API description: <a href='" + swagger_url + "'>" + swagger_url + "</a>";
         }
     </script>
 </body>

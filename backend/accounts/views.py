@@ -9,10 +9,11 @@ from accounts.serializers import (
     UserSerializer,
 )
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
@@ -145,29 +146,27 @@ class RequestPasswordResetAPIView(APIView):
         tags=["Account operations"],
     )
     def post(self, request):
-        email = request.data.get("email", "")
+        serializer = RequestPasswordResetAPIView.serializer_class(data=request.data)
 
-        # check if email is valid
-        try:
-            validate_email(email)
-        except ValidationError as error:
-            return Response({"email error": error}, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            logging.warning(f"Password reset request with invalid email: {serializer.errors}")
+            raise ValidationError(serializer.errors)
 
-        # send reset password email if user exists and email is confirmed
+        email = serializer.data.get("email")
+
         try:
             user = User.objects.get(email=email)
-
-            if user.is_email_confirmed:
-                token = PasswordResetToken.objects.create(user=user)
-                send_password_reset_email(address=email, reset_password_token=token.pk)
-            else:
-                logging.warning(f"Password reset request for unconfirmed email: {email}")
-                msg = "Email is not confirmed."
-                return Response({"message": msg}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
-            logging.error(f"Password reset request for nonexistent user with email: {email}")
-            msg = "Email does not exist."
-            return Response({"message": msg}, status=status.HTTP_400_BAD_REQUEST)
+            logging.warning(f"Password reset request for non-existent email: {email}")
+            raise ValidationError("User with this email does not exist") from None
+
+        # send reset password email if user exists and email is confirmed
+        if user.is_email_confirmed:
+            token = PasswordResetToken.objects.create(user=user)
+            send_password_reset_email(address=email, reset_password_token=token.pk)
+        else:
+            logging.warning(f"Password reset request for unconfirmed email: {email}")
+            raise ValidationError("Email is not confirmed.")
 
         msg = "If this email exists, a password reset email has been sent"
         return Response({"message": msg}, status=status.HTTP_200_OK)
@@ -187,31 +186,34 @@ class PasswordResetAPIView(APIView):
     def post(self, request):
         serializer = PasswordResetSerializer(data=request.data)
 
-        if serializer.is_valid():
-            token_id = serializer.data.get("token_id")
-            password = serializer.data.get("password")
+        if not serializer.is_valid():
+            raise ValidationError(serializer.errors)
 
-            try:
-                token = PasswordResetToken.objects.get(pk=token_id)
-                user = token.user
+        token_id = serializer.data.get("token_id")
+        password = serializer.data.get("password")
 
-                # validate password
-                try:
-                    validate_password(password, user)
-                except ValidationError as errors:
-                    return Response({"new password error": errors}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            token = PasswordResetToken.objects.get(pk=token_id)
+        except PasswordResetToken.DoesNotExist:
+            logging.warning(f"Password reset with invalid token: {token_id}")
+            raise ValidationError("Invalid token.") from None
+        except DjangoValidationError as error:
+            logging.error(f"Password reset with invalid token: {token_id}")
+            raise ValidationError(error) from None
 
-                # set_password also hashes the password that the user will get
-                user.set_password(password)
-                user.save()
+        user = token.user
 
-                token.delete()
+        try:
+            validate_password(password, user)
+        except DjangoValidationError as error:
+            logging.error(f"Password reset with invalid password.")
+            raise ValidationError(error) from None
 
-                data = {"message": "Password reset successfully"}
-                return Response(data=data, status=status.HTTP_200_OK)
-            except PasswordResetToken.DoesNotExist:
-                return Response({"message": "Token does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-            except ValidationError as ex:
-                return Response({"message": f"Validation error: {ex}"}, status=status.HTTP_400_BAD_REQUEST)
+        # set_password also hashes the password that the user will get
+        user.set_password(password)
+        user.save()
 
-        return Response({"message": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        token.delete()
+
+        data = {"message": "Password reset successfully"}
+        return Response(data=data, status=status.HTTP_200_OK)
