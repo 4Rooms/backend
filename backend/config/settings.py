@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.staticfiles",
     "drf_spectacular",
+    "drf_standardized_errors",
     "rest_framework_simplejwt",
     "rest_framework",
     "social_django",
@@ -176,7 +177,8 @@ REST_FRAMEWORK = {
         # JWT authentication
         "login.authenticate.CustomJWTAuthentication",
     ],
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_SCHEMA_CLASS": "drf_standardized_errors.openapi.AutoSchema",
+    "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler",
 }
 
 SIMPLE_JWT = {
@@ -222,13 +224,6 @@ SIMPLE_JWT = {
     "AUTH_COOKIE_SAMESITE": "None",
 }
 
-SPECTACULAR_SETTINGS = {
-    "TITLE": "Chat API",
-    "DESCRIPTION": "Chat",
-    "VERSION": "1.0.0",
-    "SERVE_INCLUDE_SCHEMA": False,
-}
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -268,3 +263,15 @@ UI_HOST = "http://localhost:5173/"
 
 # Rooms categories for models
 CHOICE_ROOM = (("books", "books"), ("films", "films"), ("music", "music"), ("games", "games"))
+
+LOGGING = {
+    "version": 1,  # the dictConfig format version
+    "disable_existing_loggers": False,  # retain the default loggers
+    "loggers": {
+        "": {
+            "level": "DEBUG",
+        },
+    },
+}
+
+from .swagger import *  # noqa
