@@ -1,0 +1,1 @@
+from login.openapi_custom_auth_extension import CustomJWTAuthenticationExtension  # noqa
