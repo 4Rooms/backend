@@ -11,8 +11,8 @@ from accounts.serializers import (
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
-from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import status
+from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
+from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -144,6 +144,12 @@ class RequestPasswordResetAPIView(APIView):
 
     @extend_schema(
         tags=["Account operations"],
+        responses=inline_serializer(
+            name="InlineOneOffSerializer",
+            fields={
+                "message": serializers.CharField(),
+            },
+        ),
     )
     def post(self, request):
         serializer = RequestPasswordResetAPIView.serializer_class(data=request.data)
@@ -182,6 +188,12 @@ class PasswordResetAPIView(APIView):
 
     @extend_schema(
         tags=["Account operations"],
+        responses=inline_serializer(
+            name="InlineOneOffSerializer",
+            fields={
+                "message": serializers.CharField(),
+            },
+        ),
     )
     def post(self, request):
         serializer = PasswordResetSerializer(data=request.data)
