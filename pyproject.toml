@@ -3,6 +3,7 @@ name = "backend"
 version = "0.1.0"
 description = ""
 authors = ["Approximator <alex@nls.la>", "Olha Aliakina <olusiabn@gmail.com"]
+include = ["doc/*.md"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -21,6 +22,7 @@ pillow = "^10.0.0"
 daphne = "^4.0.0"
 channels = "^4.0.0"
 channels-redis = "^4.1.0"
+drf-standardized-errors = {extras = ["openapi"], version = "^0.12.5"}
 
 [tool.poetry.dev-dependencies]
 black = "^23.3.0"
