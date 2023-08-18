@@ -1,4 +1,4 @@
-from chat.models import Chat
+from chat.models import Chat, Message
 from rest_framework import serializers
 
 
@@ -34,3 +34,29 @@ class ChatSerializer(serializers.ModelSerializer):
 
         request = self.context.get("request")
         return request.build_absolute_uri(obj.img.url)
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    """Serializer for websocket messages"""
+
+    class Meta:
+        model = Message
+        fields = ["id", "chat", "user", "text", "timestamp"]
+        extra_kwargs = {"timestamp": {"read_only": True}, "user": {"read_only": True}}
+
+    def create(self, validated_data):
+        """Save message with user"""
+
+        user = self.context.get("user")
+        validated_data["user"] = user
+        return super().create(validated_data)
+
+
+class WebsocketMessageSerializer(serializers.Serializer):
+    """Serializer for websocket messages"""
+
+    message = MessageSerializer()
+    type = serializers.CharField()
+
+    class Meta:
+        fields = ["type", "message"]
