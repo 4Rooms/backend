@@ -37,16 +37,23 @@ ASGI_APPLICATION = "config.asgi.application"
 
 CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
-
-ALLOWED_HOSTS = ["*"]
 CORS_ORIGIN_ALLOW_ALL = True
 # Server allows cookies in the cross-site HTTP requests.
 CORS_ALLOW_CREDENTIALS = True
+
+ALLOWED_HOSTS = [
+    "localhost",
+    "prod-chat.duckdns.org",
+    "test-chat.duckdns.org",
+    "team-challenge-web-chat-my.netlify.app",
+]
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
-    "http://localhost:3000",
+    "http://localhost:5173",
     "https://prod-chat.duckdns.org",
     "https://test-chat.duckdns.org",
+    "https://team-challenge-web-chat-my.netlify.app",
 ]
 
 
@@ -64,6 +71,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 STAFF_USERS = os.environ.get("STAFF_USERS", "").split(",")
+DJANGO_HOST = os.environ.get("DJANGO_HOST", "http://localhost:8000")
 
 SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.social_details",
@@ -267,9 +275,22 @@ CHOICE_ROOM = (("books", "books"), ("films", "films"), ("music", "music"), ("gam
 LOGGING = {
     "version": 1,  # the dictConfig format version
     "disable_existing_loggers": False,  # retain the default loggers
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s [%(name)s] [%(levelname)s] %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",  # Format for the timestamp
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        },
+    },
     "loggers": {
-        "": {
+        "backend": {
             "level": "DEBUG",
+            "handlers": ["console"],
         },
     },
 }
