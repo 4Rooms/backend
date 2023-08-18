@@ -1,4 +1,5 @@
 from datetime import datetime
+from urllib.parse import urlparse
 
 from accounts.serializers import UserSerializer
 from django.conf import settings
@@ -54,6 +55,13 @@ class LoginAPIView(APIView):
             return Response({"Invalid": "Invalid username or password"}, status=status.HTTP_404_NOT_FOUND)
 
         token = get_tokens(user)
+
+        # set domain based on DJANGO_HOST
+        domain_url = settings.DJANGO_HOST
+        hostname = urlparse(domain_url).hostname
+        if hostname not in settings.ALLOWED_HOSTS:
+            hostname = None
+
         # set cookie for response
         response = Response()
         response.set_cookie(
@@ -63,6 +71,7 @@ class LoginAPIView(APIView):
             secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
             httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
             samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
+            domain=hostname,
         )
 
         # serialize the user to return it in response
