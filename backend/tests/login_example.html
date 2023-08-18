@@ -119,6 +119,9 @@
         </select>
     </div>
 
+    <div>
+        <a href="/chat_example.html">Chat example</a>
+    </div>
     <div id="additional_info">
     </div>
 
@@ -196,29 +199,6 @@
 
             // if there is a refresh_token in the url, handle the oauth callback
             handleOauthCallback();
-
-            const socket = new WebSocket(
-                'ws://'
-                + window.location.host
-                + '/ws/chat/books/BookName/');
-
-            // Connection opened
-            socket.addEventListener("open", (event) => {
-                console.log("Connected to websocket");
-                console.log("Sending message to server");
-                socket.send(JSON.stringify({
-                        'message': 'Hello world!',
-                        'user': 'test_user'},
-                    )
-                )
-                }
-            );
-
-            // Listen for messages
-            socket.addEventListener("message", (event) => {
-                console.log("Message from server ", event.data);
-            });
-
         }
 
         async function register() {

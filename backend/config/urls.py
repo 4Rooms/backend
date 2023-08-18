@@ -47,10 +47,23 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+
+def get_file_name(request_file_name: str) -> str:
+    """Return the content of the file"""
+
+    allowed_files = ["login_example.html", "chat_example.html"]
+    examples_dir = BASE_DIR / "tests"
+
+    try:
+        return examples_dir / allowed_files[allowed_files.index(request_file_name)]
+    except ValueError:
+        return examples_dir / "login_example.html"
+
+
 # for react router
 urlpatterns += [
     re_path(
-        r"^(?:.*)/?$",
-        lambda request: HttpResponse(open(BASE_DIR / "tests" / "login_example.html", encoding="UTF-8").read()),
+        r"^(?P<file_name>.*)/?$",
+        lambda request, file_name: HttpResponse(open(get_file_name(file_name), "r", encoding="utf-8").read()),
     ),
 ]
