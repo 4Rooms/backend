@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>4Rooms</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .chat-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-container h1 {
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            margin: 0;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+
+        .input-container {
+            padding: 15px;
+            background-color: #f0f0f0;
+        }
+
+        .input-container label {
+            font-weight: bold;
+        }
+
+        .chat-messages {
+            padding: 15px;
+            overflow-y: scroll;
+            max-height: 300px;
+        }
+
+        .input-message {
+            padding: 15px;
+            background-color: #f0f0f0;
+        }
+
+        .input-message input[type="text"] {
+            width: 80%;
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+        }
+
+        .input-message button {
+            padding: 5px 10px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .input-message button:hover {
+            background-color: #0056b3;
+        }
+
+        #additional_info {
+            padding: 15px;
+            font-size: 14px;
+        }
+
+        .received-message {
+            border-bottom: 1px solid #006fca;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body onload="onLoad()">
+    <div id="additional_info">
+    </div>
+
+    <h1>Chat example</h1>
+
+    <div class="input-container">
+        <label for="host">Host:</label>
+        <select id="host" onchange="getUserInfo();">
+            <option value="https://test-chat.duckdns.org/" selected>https://test-chat.duckdns.org/</option>
+            <option value="https://prod-chat.duckdns.org/">https://prod-chat.duckdns.org/</option>
+            <option value="http://localhost:8000/">http://localhost:8000/</option>
+        </select>
+    </div>
+
+    <div class="input-container">
+        <label for="room">Room:</label>
+        <select id="room" onchange="onRoomChange();">
+            <option value="books" selected>books</option>
+            <option value="films">films</option>
+            <option value="music">music</option>
+            <option value="games">games</option>
+        </select>
+    </div>
+
+    <div class="input-container">
+        <label for="selected-chat">Chat:</label>
+        <select id="selected-chat" onchange="onChatSelectionChange()">
+            <!-- Options will be dynamically added using JavaScript -->
+        </select>
+    </div>
+
+    <div class="input-container" id="connection-status"></div>
+
+    <div class="chat-container">
+        <div id="chat-messages"></div>
+        <div class="input-message">
+            <input type="text" id="message-input" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        let socket; // Declare socket variable outside onLoad function
+
+        function onLoad() {
+            setHostFromUrl();
+            setSwaggerUILink();
+
+            const selectedRoom = document.getElementById('room').value;
+            fetchChats(selectedRoom);
+        }
+
+        function fetchChats(selectedRoom) {
+            const host = document.getElementById('host').value;
+            const apiUrl = host + 'api/chat/' + selectedRoom + '/';
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const chats = data.results;
+                    populateChatDropdown(chats);
+                    onChatSelectionChange();
+                })
+                .catch(error => console.error('Error fetching chats:', error));
+        }
+
+        function getMessageHistory() {
+            const selectedChatId = document.getElementById('selected-chat').value;
+            if (!selectedChatId) {
+                console.info('Please select a chat before fetching message history.');
+                return;
+            }
+
+            const host = document.getElementById('host').value;
+            const apiUrl = host + 'api/chat/' + selectedChatId + '/messages/';
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const messages = data.results;
+                    messages.forEach(message => {
+                        console.log('Message:', message);
+                        displayMessage(message);
+                    });
+                })
+                .catch(error => console.error('Error fetching message history:', error));
+        }
+
+        function initializeWebSocket(selectedRoom, selectedChatId) {
+            if (socket) {
+                socket.close();
+            }
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const socketUrl = protocol + window.location.host + '/ws/chat/' + selectedRoom + '/' + selectedChatId + '/';
+
+            socket = new WebSocket(socketUrl);
+
+            socket.addEventListener("open", (event) => {
+                console.log("Connected to: ", event.target.url);
+                document.getElementById('connection-status').innerHTML = '🟢 Connected to: ' + event.target.url;
+
+                clearChatMessages();
+                getMessageHistory();
+            });
+
+            socket.addEventListener("message", (event) => {
+                const message = JSON.parse(event.data);
+                console.log('Received message:', message);
+                displayMessage(message.message);
+            });
+
+            socket.addEventListener("error", (event) => {
+                console.error("WebSocket error:", event);
+                document.getElementById('connection-status').innerHTML = '🔴 Connection error';
+            });
+
+            socket.addEventListener("close", (event) => {
+                console.log("WebSocket connection closed:", event);
+                document.getElementById('connection-status').innerHTML = '🔴 Connection closed';
+            });
+        }
+
+        function clearChatMessages() {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = '';
+        }
+
+        function onChatSelectionChange() {
+            const selectedRoom = document.getElementById('room').value;
+            const selectedChatId = document.getElementById('selected-chat').value;
+            initializeWebSocket(selectedRoom, selectedChatId);
+        }
+
+        function onRoomChange() {
+            const selectedRoom = document.getElementById('room').value;
+            fetchChats(selectedRoom);
+        }
+
+        function displayConnectionError() {
+            const chatMessages = document.getElementById('chat-messages');
+            const errorDiv = document.createElement('div');
+            errorDiv.innerHTML = "<p><strong>Error:</strong> Failed to connect to the chat. Please try again later.</p>";
+            chatMessages.appendChild(errorDiv);
+        }
+
+        function populateChatDropdown(chats) {
+            const chatDropdown = document.getElementById('selected-chat');
+            chatDropdown.innerHTML = '';
+
+            chats.forEach(chat => {
+                const option = document.createElement('option');
+                option.value = chat.id;
+                option.text = chat.title;
+                chatDropdown.appendChild(option);
+            });
+
+            chatDropdown.selectedIndex = 0;
+        }
+
+        function setHostFromUrl() {
+            const url = new URL(window.location.href);
+            const domain = url.origin + "/";
+            const hostSelect = document.getElementById("host");
+
+            for (let i = 0; i < hostSelect.options.length; i++) {
+                if (hostSelect.options[i].value === domain) {
+                    hostSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        function setSwaggerUILink() {
+            const host = document.getElementById('host').value;
+            const additionalInfo = document.getElementById("additional_info");
+
+            const swaggerUrl = host + "swagger-ui/";
+            additionalInfo.innerHTML = "API description: <a href='" + swaggerUrl + "'>" + swaggerUrl + "</a>";
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const selectedChatId = document.getElementById('selected-chat').value;
+
+            if (!selectedChatId) {
+                console.error('Please select a chat before sending a message.');
+                return;
+            }
+
+            const message = {
+                type: 'chat_message',
+                message: {
+                    chat: selectedChatId,
+                    text: input.value,
+                },
+            };
+
+            socket.send(JSON.stringify(message));
+            input.value = '';
+        }
+
+        function displayMessage(message) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+
+            const messageData = message;
+            messageData['timestamp'] = new Date(messageData.timestamp).toLocaleString();
+
+            messageDiv.innerHTML = `<pre class="received-message">${JSON.stringify(messageData, null, 2)}</pre>`;
+            chatMessages.appendChild(messageDiv);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,6 +1,6 @@
 from chat.models import Chat
 from chat.permissions import IsCreatorOrReadOnly, IsOnlyDescriptionInRequestData
-from chat.serializer import ChatSerializer
+from chat.serializer import ChatSerializer, MessageSerializer
 from config.settings import CHOICE_ROOM
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -61,3 +61,17 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
     http_method_names = ["patch", "delete"]
+
+
+class MessagesApiView(generics.ListAPIView):
+    """Get messages from the certain chat"""
+
+    permission_classes = (IsAuthenticated,)
+    serializer_class = MessageSerializer
+    http_method_names = ["get"]
+
+    def get_queryset(self):
+        """Get messages from the certain chat"""
+
+        chat_id = self.kwargs["chat_id"]
+        return Chat.objects.get(pk=chat_id).message_set.all()

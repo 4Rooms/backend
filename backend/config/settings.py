@@ -292,6 +292,18 @@ LOGGING = {
             "level": "DEBUG",
             "handlers": ["console"],
         },
+        "login": {
+            "level": "DEBUG",
+            "handlers": ["console"],
+        },
+        "register": {
+            "level": "DEBUG",
+            "handlers": ["console"],
+        },
+        "django.channels.server": {
+            "level": "INFO",
+            "handlers": ["console"],
+        },
     },
 }
 
