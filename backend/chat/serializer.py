@@ -36,13 +36,24 @@ class ChatSerializer(serializers.ModelSerializer):
         return request.build_absolute_uri(obj.img.url)
 
 
+class TimestampField(serializers.Field):
+    def to_representation(self, value):
+        return value.timestamp() * 1000  # in milliseconds
+
+
 class MessageSerializer(serializers.ModelSerializer):
     """Serializer for websocket messages"""
 
+    # override timestamp field to return timestamp in int format
+    timestamp = TimestampField(read_only=True)
+
+    # Add user_name field to return username instead id
+    user_name = serializers.SerializerMethodField(source="get_user_name")
+
     class Meta:
         model = Message
-        fields = ["id", "chat", "user", "text", "timestamp"]
-        extra_kwargs = {"timestamp": {"read_only": True}, "user": {"read_only": True}}
+        fields = "__all__"
+        read_only_fields = ["timestamp", "user"]
 
     def create(self, validated_data):
         """Save message with user"""
@@ -50,6 +61,14 @@ class MessageSerializer(serializers.ModelSerializer):
         user = self.context.get("user")
         validated_data["user"] = user
         return super().create(validated_data)
+
+    def get_user_name(self, obj):
+        """Return username (instead id)"""
+
+        if isinstance(obj, Message):
+            return obj.user.username
+
+        return None
 
 
 class WebsocketMessageSerializer(serializers.Serializer):
@@ -59,4 +78,4 @@ class WebsocketMessageSerializer(serializers.Serializer):
     type = serializers.CharField()
 
     class Meta:
-        fields = ["type", "message"]
+        fields = "__all__"
