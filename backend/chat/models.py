@@ -86,3 +86,15 @@ class Chat(models.Model):
             # we now have a length x length pixels image.
 
             return resized_image
+
+
+class Message(models.Model):
+    """Message table"""
+
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
+    user = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
+    text = models.TextField(max_length=1000)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"id: {self.pk}, chat: {self.chat}, user: {self.user}"
