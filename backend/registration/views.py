@@ -2,8 +2,11 @@ from accounts.models import EmailConfirmationToken, User
 from accounts.serializers import UserSerializer
 from accounts.services.email import send_confirmation_email
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError
+from drf_spectacular.utils import extend_schema
+from registration.serializers import EmailConfirmationResponseSerializer
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -17,24 +20,27 @@ class RegisterUserView(APIView):
     permission_classes = (AllowAny,)
     serializer_class = UserSerializer
 
+    @extend_schema(
+        tags=["Account operations"],
+    )
     def post(self, request):
         serializer = UserSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError(serializer.errors)
 
         # if email is already in use
         if User.objects.filter(email=request.data["email"]).exists():
-            return Response({"error": "Email already registered"}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError("Email already exists")
 
         # if username is already in use
         if User.objects.filter(username=request.data["username"]).exists():
-            return Response({"error": "Username already registered"}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError("Username already registered")
 
         # validate password
         try:
             validate_password(password=request.data["password"], user=request.data)
-        except ValidationError as errors:
-            return Response({"password error": errors}, status=status.HTTP_400_BAD_REQUEST)
+        except DjangoValidationError as error:
+            raise ValidationError(error.messages) from None
 
         user = serializer.save()
         # create token for email confirmation
@@ -48,7 +54,11 @@ class ConfirmEmailApiView(APIView):
     """When the user goes to the email confirmation link"""
 
     permission_classes = (AllowAny,)
+    serializer_class = EmailConfirmationResponseSerializer
 
+    @extend_schema(
+        tags=["Account operations"],
+    )
     def get(self, request):
         token_id = request.GET.get("token_id", None)
         try:
@@ -57,9 +67,8 @@ class ConfirmEmailApiView(APIView):
             user = token.user
             user.is_email_confirmed = True
             user.save()
-            data = {"is_email_confirmed": True}
-            return Response(data=data, status=status.HTTP_200_OK)
+
+            resp_serializer = ConfirmEmailApiView.serializer_class(instance={"is_email_confirmed": True})
+            return Response(data=resp_serializer.data, status=status.HTTP_200_OK)
         except EmailConfirmationToken.DoesNotExist:
-            # if token does not exist
-            data = {"is_email_confirmed": False, "error": "Token is wrong"}
-            return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError("Wrong email confirmation token.") from None
