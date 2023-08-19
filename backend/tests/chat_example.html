@@ -289,7 +289,7 @@
             const messageDiv = document.createElement('div');
 
             const messageData = message;
-            messageData['timestamp'] = new Date(messageData.timestamp).toLocaleString();
+            messageData['timestamp'] = new Date(messageData.timestamp * 1000).toLocaleString();
 
             messageDiv.innerHTML = `<pre class="received-message">${JSON.stringify(messageData, null, 2)}</pre>`;
             chatMessages.appendChild(messageDiv);

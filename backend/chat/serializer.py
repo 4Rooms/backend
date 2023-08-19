@@ -20,7 +20,7 @@ class ChatSerializer(serializers.ModelSerializer):
         obj.save()
         return obj
 
-    def get_creator(self, obj):
+    def get_creator(self, obj) -> str:
         """Return creator username (instead id)"""
 
         if obj.creator:
@@ -29,23 +29,18 @@ class ChatSerializer(serializers.ModelSerializer):
             # if user was deleted
             return "Unknown"
 
-    def get_img(self, obj):
+    def get_img(self, obj) -> str:
         """Return absolute url of chat img"""
 
         request = self.context.get("request")
         return request.build_absolute_uri(obj.img.url)
 
 
-class TimestampField(serializers.Field):
-    def to_representation(self, value):
-        return value.timestamp() * 1000  # in milliseconds
-
-
 class MessageSerializer(serializers.ModelSerializer):
     """Serializer for websocket messages"""
 
-    # override timestamp field to return timestamp in int format
-    timestamp = TimestampField(read_only=True)
+    # override timestamp field to return timestamp in seconds
+    timestamp = serializers.DateTimeField(format="%s", read_only=True)
 
     # Add user_name field to return username instead id
     user_name = serializers.SerializerMethodField(source="get_user_name")
@@ -62,7 +57,7 @@ class MessageSerializer(serializers.ModelSerializer):
         validated_data["user"] = user
         return super().create(validated_data)
 
-    def get_user_name(self, obj):
+    def get_user_name(self, obj) -> str:
         """Return username (instead id)"""
 
         if isinstance(obj, Message):
