@@ -113,25 +113,25 @@ class ChangePasswordAPIView(UpdateAPIView):
         self.user = self.request.user
         serializer = ChangePasswordSerializer(data=request.data)
 
-        if serializer.is_valid():
-            # check old password
-            if not self.user.check_password(serializer.data.get("old_password")):
-                return Response({"old password error": ["Old password is wrong"]}, status=status.HTTP_400_BAD_REQUEST)
+        if not serializer.is_valid():
+            raise ValidationError(serializer.errors)
 
-            # validate password
-            try:
-                validate_password(request.data["new_password"], self.user)
-            except ValidationError as errors:
-                return Response({"new password error": errors}, status=status.HTTP_400_BAD_REQUEST)
+        # check old password
+        if not self.user.check_password(serializer.data.get("old_password")):
+            raise ValidationError("Wrong password")
 
-            # set_password also hashes the password that the user will get
-            self.user.set_password(serializer.data.get("new_password"))
-            self.user.save()
+        # validate password
+        try:
+            validate_password(request.data["new_password"], self.user)
+        except ValidationError as error:
+            raise ValidationError(error.messages) from None
 
-            data = {"message": "Password updated successfully"}
-            return Response(data=data, status=status.HTTP_200_OK)
+        # set_password also hashes the password that the user will get
+        self.user.set_password(serializer.data.get("new_password"))
+        self.user.save()
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = {"message": "Password updated successfully"}
+        return Response(data=data, status=status.HTTP_200_OK)
 
 
 class RequestPasswordResetAPIView(APIView):
@@ -145,7 +145,7 @@ class RequestPasswordResetAPIView(APIView):
     @extend_schema(
         tags=["Account operations"],
         responses=inline_serializer(
-            name="InlineOneOffSerializer",
+            name="RequestPasswordResetResponse",
             fields={
                 "message": serializers.CharField(),
             },
@@ -189,7 +189,7 @@ class PasswordResetAPIView(APIView):
     @extend_schema(
         tags=["Account operations"],
         responses=inline_serializer(
-            name="InlineOneOffSerializer",
+            name="PasswordResetResponse",
             fields={
                 "message": serializers.CharField(),
             },
