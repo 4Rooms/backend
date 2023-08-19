@@ -29,10 +29,12 @@ class ChatAPIView(generics.GenericAPIView):
         page = self.paginate_queryset(serializer.data)
         return self.get_paginated_response(page)
 
-    def post(self, request):
+    def post(self, request, room_name):
         """Create Chat"""
 
-        serializer = ChatSerializer(data=request.data)
+        data = request.data.copy()
+        data["room"] = room_name
+        serializer = ChatSerializer(data=data)
 
         if serializer.is_valid():
             # Optional fields
@@ -41,7 +43,7 @@ class ChatAPIView(generics.GenericAPIView):
 
             new_chat = Chat.objects.create(
                 title=request.data["title"],
-                room=request.data["room"],
+                room=room_name,
                 creator=request.user,
                 img=img,
                 description=description,
