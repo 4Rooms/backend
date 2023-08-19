@@ -2,9 +2,9 @@
 
 
 ## Create chat
--   URL: https://prod-chat.duckdns.org/api/chat/
+-   URL: https://prod-chat.duckdns.org/api/chat/<room>/
 -   Request: Post(URL, data)  
-    -   data: title, room, description (optional), img (optional)  
+    -   data: title, description (optional), img (optional)  
     -   chat titles cannot be repeated in the same room  
     -   __room__ must have one of the following string values:
         -   "films"
@@ -13,9 +13,8 @@
         -   "games"
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/
+    URL = "https://prod-chat.duckdns.org/api/chat/books/
     data = {"title": "Harry Potter",
-            "room": "films",
             "description": "Discussion of characters",
             "img": "file.jpeg"}
 
