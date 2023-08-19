@@ -23,6 +23,7 @@ daphne = "^4.0.0"
 channels = "^4.0.0"
 channels-redis = "^4.1.0"
 drf-standardized-errors = {extras = ["openapi"], version = "^0.12.5"}
+PyYAML = "^6.0.1"
 
 [tool.poetry.dev-dependencies]
 black = "^23.3.0"
