@@ -1,10 +1,6 @@
-from datetime import datetime
-from urllib.parse import urlparse
-
 from accounts.serializers import UserSerializer
-from django.conf import settings
-from jwt import decode
 from login.authentication_backend import AuthBackend
+from login.cookie import set_auth_cookie
 from rest_framework import status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny
@@ -21,16 +17,6 @@ def get_tokens(user):
         "refresh": str(refresh),
         "access": str(refresh.access_token),
     }
-
-
-def get_token_expire_time(access_token):
-    """Get token expire time"""
-
-    key = settings.SECRET_KEY
-    algorithms = settings.SIMPLE_JWT["ALGORITHM"]
-    decoded_access_token = decode(access_token, key, algorithms)
-    token_exp_time = datetime.utcfromtimestamp(decoded_access_token["exp"])
-    return token_exp_time
 
 
 class LoginAPIView(APIView):
@@ -56,23 +42,9 @@ class LoginAPIView(APIView):
 
         token = get_tokens(user)
 
-        # set domain based on DJANGO_HOST
-        domain_url = settings.DJANGO_HOST
-        hostname = urlparse(domain_url).hostname
-        if hostname not in settings.ALLOWED_HOSTS:
-            hostname = None
-
         # set cookie for response
         response = Response()
-        response.set_cookie(
-            key=settings.SIMPLE_JWT["AUTH_COOKIE"],
-            value=token["access"],
-            expires=get_token_expire_time(token["access"]),
-            secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
-            httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
-            samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
-            domain=hostname,
-        )
+        set_auth_cookie(response, token["access"])
 
         # serialize the user to return it in response
         serializer = UserSerializer(user, many=False)

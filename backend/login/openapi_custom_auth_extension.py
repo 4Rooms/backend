@@ -13,5 +13,5 @@ class CustomJWTAuthenticationExtension(OpenApiAuthenticationExtension):
             "type": "apiKey",
             "in": "header|cookie",
             "name": "Authorization",
-            "description": 'JWT token in a cookie or JWT Authorization header using the Bearer scheme. Example: "Authorization: Bearer {token}"',
+            "description": "JWT token in a cookie or JWT Authorization header using the Bearer scheme.",
         }
