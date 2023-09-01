@@ -37,7 +37,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return
 
         # Send message to group
-        msg_json = WebsocketMessageSerializer(instance={"message": saved_message, "type": "chat_message"}).data
+        msg_json = await self._serialize_message(saved_message)
         await self.channel_layer.group_send(
             self._group_name,
             {
@@ -47,11 +47,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         )
 
     @database_sync_to_async
+    def _serialize_message(self, message) -> dict:
+        return WebsocketMessageSerializer(instance={"message": message, "type": "chat_message"}).data
+
+    @database_sync_to_async
     def _validate_and_save(self, content) -> Optional[Message]:
         # Validate websocket message
         websocket_message = WebsocketMessageSerializer(data=content)
         if not websocket_message.is_valid():
-            logger.error(f"INVALID MESSAGE: User: {self._user}. Msg: {content}. Chat {self._chat_id}.")
+            logger.error(f"INVALID MESSAGE: User: {self._user}. Chat {self._chat_id}. {websocket_message.errors}")
             return None
 
         # Validate chat message
