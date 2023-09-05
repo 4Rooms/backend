@@ -1,5 +1,5 @@
 from chat.models import Chat
-from chat.permissions import IsCreatorOrReadOnly, IsOnlyDescriptionInRequestData
+from chat.permissions import IsCreatorOrReadOnly, IsOnlyDescriptionInRequestData, IsEmailConfirm
 from chat.serializer import ChatSerializer, MessageSerializer
 from config.settings import CHOICE_ROOM
 from rest_framework import generics, status
@@ -11,7 +11,7 @@ from rest_framework.response import Response
 class ChatAPIView(generics.GenericAPIView):
     """API to get/put chat"""
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsEmailConfirm)
     parser_classes = [JSONParser, MultiPartParser, FormParser]
     serializer_class = ChatSerializer
     http_method_names = ["get", "post"]
@@ -59,7 +59,7 @@ class ChatAPIView(generics.GenericAPIView):
 class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
     """Update chat description or delete chat"""
 
-    permission_classes = (IsAuthenticated, IsCreatorOrReadOnly, IsOnlyDescriptionInRequestData)
+    permission_classes = (IsAuthenticated, IsCreatorOrReadOnly, IsOnlyDescriptionInRequestData, IsEmailConfirm)
     queryset = Chat.objects.all()
     serializer_class = ChatSerializer
     http_method_names = ["patch", "delete"]
@@ -68,7 +68,7 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
 class MessagesApiView(generics.ListAPIView):
     """Get messages from the certain chat"""
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsEmailConfirm)
     serializer_class = MessageSerializer
     http_method_names = ["get"]
 

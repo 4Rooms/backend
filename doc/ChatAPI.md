@@ -193,7 +193,27 @@
 
         ```json
         {
-            "detail": "You do not have permission to perform this action."
+            "type": "client_error",
+            "errors": [
+                {
+                    "code": "permission_denied",
+                    "detail": "The action is allowed only to the author",
+                    "attr": null
+                }
+            ]
+        }
+        ```
+
+        ```json
+        {
+            "type": "client_error",
+            "errors": [
+                {
+                    "code": "permission_denied",
+                    "detail": "Only the chat description can be changed",
+                    "attr": null
+                }
+            ]
         }
         ```
 
