@@ -27,7 +27,7 @@ class ChatSerializer(serializers.ModelSerializer):
             return obj.creator.username
         else:
             # if user was deleted
-            return "Unknown"
+            return "Deleted"
 
     def get_img(self, obj) -> str:
         """Return absolute url of chat img"""
@@ -44,6 +44,7 @@ class MessageSerializer(serializers.ModelSerializer):
 
     # Add user_name field to return username instead id
     user_name = serializers.SerializerMethodField(source="get_user_name")
+    user_avatar = serializers.SerializerMethodField(source="get_user_avatar")
 
     class Meta:
         model = Message
@@ -62,6 +63,14 @@ class MessageSerializer(serializers.ModelSerializer):
 
         if isinstance(obj, Message):
             return obj.user.username
+
+        return None
+
+    def get_user_avatar(self, obj) -> str:
+        """Return URL to user avatar"""
+
+        if isinstance(obj, Message):
+            return obj.user.profile.avatar.url
 
         return None
 
