@@ -8,6 +8,8 @@ from accounts.serializers import (
     ProfileSerializer,
     UserSerializer,
 )
+from chat.permissions import IsEmailConfirm
+
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
@@ -26,7 +28,7 @@ from backend.accounts.services.email import send_password_reset_email
 class UserAPIView(APIView):
     """Return current authenticated user"""
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsEmailConfirm)
     parser_classes = [JSONParser, MultiPartParser, FormParser]
     serializer_class = UserSerializer
 
@@ -79,7 +81,7 @@ class ProfileAPIView(RetrieveUpdateAPIView):
     Get, Update user avatar
     """
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsEmailConfirm)
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     http_method_names = ["get", "put"]
@@ -101,7 +103,7 @@ class ChangePasswordAPIView(UpdateAPIView):
 
     serializer_class = ChangePasswordSerializer
     model = User
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsEmailConfirm)
     http_method_names = ["put"]
 
     @extend_schema(
