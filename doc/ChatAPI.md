@@ -220,7 +220,7 @@
     -   Status code: 204 No Content.
     -   Response body: Empty
 -   Unsuccessful response:
-    -   Status code: 404 Not Found (There is no chat with such id), 403 Forbidden.
+    -   Status code: 404 Not Found (There is no chat with such ID), 403 Forbidden.
     -   Response body:
 
         ```json
@@ -232,5 +232,63 @@
         ```json
         {
             "detail": "You do not have permission to perform this action."
+        }
+        ```
+
+## Get message history from the chat
+-   URL: https://prod-chat.duckdns.org/api/chat/<chat-id>/messages/
+-   Request: Get(URL)
+
+    ```
+    URL = "https://prod-chat.duckdns.org/api/chat/10/messages/
+    response = request.get(URL)
+    ```
+
+-   Successful response:
+    -   Status code: 204 No Content.
+    -   Response body: Empty
+
+        ```json
+        {
+            "count": 2,
+            "next": null,
+            "previous": null,
+            "results": [
+                {
+                    "id": 1,
+                    "timestamp": "2023-08-24T14:41:56.250209Z",
+                    "user_name": "testuser",
+                    "user_avatar": "/media/avatars/user1-avatar.png",
+                    "text": "Hi",
+                    "chat": 10,
+                    "user": 1
+                },
+                {
+                    "id": 2,
+                    "timestamp": "2023-09-04T18:34:22.170972Z",
+                    "user_name": "testuser",
+                    "user_avatar": "/media/avatars/user2-avatar.png",
+                    "text": "Hello",
+                    "chat": 10,
+                    "user": 2
+                }
+            ]
+        }
+        ```
+
+-   Unsuccessful response:
+    -   Status code: 500 (There is no chat with such ID).
+    -   Response body:
+
+        ```json
+        {
+            "type": "server_error",
+            "errors": [
+                {
+                    "code": "error",
+                    "detail": "Chat matching query does not exist.",
+                    "attr": null
+                }
+            ]
         }
         ```
