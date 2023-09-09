@@ -9,7 +9,6 @@ from accounts.serializers import (
     UserSerializer,
 )
 from chat.permissions import IsEmailConfirm
-
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
