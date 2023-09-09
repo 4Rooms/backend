@@ -1,6 +1,11 @@
 from django.urls import path
 
-from backend.chat.views import ChatAPIView, MessagesApiView, UpdateDeleteChatApiView, UpdateMessageApiView
+from backend.chat.views import (
+    ChatAPIView,
+    MessagesApiView,
+    UpdateDeleteChatApiView,
+    UpdateMessageApiView,
+)
 
 urlpatterns = [
     path("chat/<int:pk>/", UpdateDeleteChatApiView.as_view(), name="update_delete_chat"),

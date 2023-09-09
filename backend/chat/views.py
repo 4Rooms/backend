@@ -1,8 +1,10 @@
 from chat.models import Chat, Message
-from chat.permissions import (IsCreatorOrReadOnly,
-                              IsOnlyDescriptionInRequestData,
-                              IsEmailConfirm,
-                              IsOnlyTextInRequestData)
+from chat.permissions import (
+    IsCreatorOrReadOnly,
+    IsEmailConfirm,
+    IsOnlyDescriptionInRequestData,
+    IsOnlyTextInRequestData,
+)
 from chat.serializers import ChatSerializer, MessageSerializer
 from config.settings import CHOICE_ROOM
 from rest_framework import generics, status
