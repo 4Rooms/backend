@@ -13,7 +13,7 @@
         -   "games"
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/books/
+    URL = "https://prod-chat.duckdns.org/api/chat/books/"
     data = {"title": "Harry Potter",
             "description": "Discussion of characters",
             "img": "file.jpeg"}
@@ -32,7 +32,7 @@
                 "title": "Harry Potter",
                 "room": "films",
                 "img": "https://prod-chat.duckdns.org/media/file.jpg",
-                "creator": "userName",
+                "user": "userName",
                 "description": "Discussion of characters",
                 "url": "/chat/films/3/",
                 "timestamp": "2023-08-03T08:51:26.593514Z"
@@ -95,7 +95,7 @@
 -   Request: Get(URL)
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/films/
+    URL = "https://prod-chat.duckdns.org/api/chat/films/"
     response = request.post(URL)
     ```
 
@@ -114,7 +114,7 @@
                     "title": "Harry Potter characters",
                     "room": "films",
                     "img": "https://prod-chat.duckdns.org/media/chat_img/Hurry.jpg",
-                    "creator": "user1",
+                    "user": "user1",
                     "description": "Who is your favorite character?",
                     "url": "/chat/films/1/",
                     "timestamp": "2023-08-04T20:12:10.777701Z"
@@ -124,7 +124,7 @@
                     "title": "The Lord of the Rings films",
                     "room": "films",
                     "img": "https://prod-chat.duckdns.org/media/chat_img/frodo.jpg",
-                    "creator": "user2",
+                    "user": "user2",
                     "description": "Which film is the best in the series?",
                     "url": "/chat/films/2/",
                     "timestamp": "2023-08-04T20:14:30.256093Z"
@@ -134,7 +134,7 @@
                     "title": "Friends",
                     "room": "films",
                     "img": "https://prod-chat.duckdns.org/media/chat_img/default.jpg",
-                    "creator": "user1",
+                    "user": "user1",
                     "description": null,
                     "url": "/chat/films/3/",
                     "timestamp": "2023-08-04T20:23:54.859836Z"
@@ -165,7 +165,7 @@
     -   data: description
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/10/
+    URL = "https://prod-chat.duckdns.org/api/chat/10/"
     data = {"description": "Chat description"}
     response = request.post(URL, data)
     ```
@@ -180,7 +180,7 @@
             "title": "Imagine Dragons",
             "room": "music",
             "img": "https://prod-chat.duckdns.org/media/chat_img/file.jpg",
-            "creator": "Leslie",
+            "user": "Leslie",
             "description": "Chat description",
             "url": "/chat/music/10/",
             "timestamp": "2023-08-07T12:16:40.385811Z"
@@ -228,30 +228,42 @@
 ## Delete chat
 -   URL: https://prod-chat.duckdns.org/api/chat/<chatId>/
 -   Request: Delete(URL)
-    -   data: description
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/10/
-    data = {"description": "Chat description"}
-    response = request.post(URL, data)
+    URL = "https://prod-chat.duckdns.org/api/chat/10/"
+    response = request.delete(URL)
     ```
 
 -   Successful response:
     -   Status code: 204 No Content.
-    -   Response body: Empty
+    -   Response body: Empty.
 -   Unsuccessful response:
     -   Status code: 404 Not Found (There is no chat with such ID), 403 Forbidden.
     -   Response body:
 
         ```json
         {
-            "detail": "Not found."
+            "type": "client_error",
+            "errors": [
+                {
+                    "code": "not_found",
+                    "detail": "Not found.",
+                    "attr": null
+                }
+            ]
         }
         ```
 
         ```json
         {
-            "detail": "You do not have permission to perform this action."
+            "type": "client_error",
+            "errors": [
+                {
+                    "code": "permission_denied",
+                    "detail": "The action is allowed only to the author",
+                    "attr": null
+                }
+            ]
         }
         ```
 
@@ -260,7 +272,7 @@
 -   Request: Get(URL)
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/10/messages/
+    URL = "https://prod-chat.duckdns.org/api/chat/10/messages/"
     response = request.get(URL)
     ```
 
@@ -307,6 +319,89 @@
                 {
                     "code": "error",
                     "detail": "Chat matching query does not exist.",
+                    "attr": null
+                }
+            ]
+        }
+        ```
+
+## Update message text
+-   URL: https://prod-chat.duckdns.org/api/chat/message/<message_id>/
+-   Request: Patch(URL, data)
+    -   data: text
+
+    ```
+    URL = "https://prod-chat.duckdns.org/api/chat/message/5/"
+    data = {"text": "Message text"}
+    response = request.patch(URL, data)
+    ```
+
+-   Successful response:
+    -   Status code: 200 Ok.
+    -   Response body: Empty
+
+        ```json
+        {
+            "id": 5,
+            "user_name": "Nik",
+            "user_avatar": "/media/avatars/avatar.jpg",
+            "text": "Changed text",
+            "timestamp": "2023-09-09T08:04:45.661872Z",
+            "chat": 5,
+            "user": 6
+        }
+        ```
+
+-   Unsuccessful response:
+    -   Status code: 405, 403, 404.
+    -   Response body:
+
+        ```json
+        {
+            "type": "client_error",
+            "errors": [
+                {
+                    "code": "method_not_allowed",
+                    "detail": "Method \"PUT\" not allowed.",
+                    "attr": null
+                }
+            ]
+        }
+        ```
+        
+        ```json
+        {
+            "type": "client_error",
+            "errors": [
+                {
+                    "code": "permission_denied",
+                    "detail": "The action is allowed only to the author",
+                    "attr": null
+                }
+            ]
+        }
+        ```
+        
+        ```json
+        {
+            "type": "client_error",
+            "errors": [
+                {
+                    "code": "permission_denied",
+                    "detail": "Only the message text can be changed",
+                    "attr": null
+                }
+            ]
+        }
+        ```
+        
+        ```json
+        {
+            "type": "client_error",
+            "errors": [
+                {
+                    "code": "not_found",
+                    "detail": "Not found.",
                     "attr": null
                 }
             ]
