@@ -1,5 +1,9 @@
-from chat.models import Chat
-from chat.permissions import IsCreatorOrReadOnly, IsOnlyDescriptionInRequestData, IsEmailConfirm
+from chat.models import Chat, Message
+from chat.permissions import (IsCreatorOrReadOnly,
+                              IsSenderOrReadOnly,
+                              IsOnlyDescriptionInRequestData,
+                              IsEmailConfirm,
+                              IsOnlyTextInRequestData)
 from chat.serializer import ChatSerializer, MessageSerializer
 from config.settings import CHOICE_ROOM
 from rest_framework import generics, status
@@ -77,3 +81,12 @@ class MessagesApiView(generics.ListAPIView):
 
         chat_id = self.kwargs["chat_id"]
         return Chat.objects.get(pk=chat_id).message_set.all()
+
+
+class UpdateMessageApiView(generics.RetrieveUpdateDestroyAPIView):
+    """Update text of message"""
+
+    permission_classes = (IsAuthenticated, IsOnlyTextInRequestData, IsSenderOrReadOnly, IsEmailConfirm)
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
+    http_method_names = ["patch"]
