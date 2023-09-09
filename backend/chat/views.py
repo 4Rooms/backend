@@ -1,6 +1,5 @@
 from chat.models import Chat, Message
 from chat.permissions import (IsCreatorOrReadOnly,
-                              IsSenderOrReadOnly,
                               IsOnlyDescriptionInRequestData,
                               IsEmailConfirm,
                               IsOnlyTextInRequestData)
@@ -48,7 +47,7 @@ class ChatAPIView(generics.GenericAPIView):
             new_chat = Chat.objects.create(
                 title=request.data["title"],
                 room=room_name,
-                creator=request.user,
+                user=request.user,
                 img=img,
                 description=description,
             )
@@ -86,7 +85,7 @@ class MessagesApiView(generics.ListAPIView):
 class UpdateMessageApiView(generics.RetrieveUpdateDestroyAPIView):
     """Update text of message"""
 
-    permission_classes = (IsAuthenticated, IsOnlyTextInRequestData, IsSenderOrReadOnly, IsEmailConfirm)
+    permission_classes = (IsAuthenticated, IsOnlyTextInRequestData, IsCreatorOrReadOnly, IsEmailConfirm)
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     http_method_names = ["patch"]

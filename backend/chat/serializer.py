@@ -5,13 +5,13 @@ from rest_framework import serializers
 class ChatSerializer(serializers.ModelSerializer):
     """Chat Serializer"""
 
-    creator = serializers.SerializerMethodField(source="get_creator")
+    user = serializers.SerializerMethodField(source="get_user")
     img = serializers.SerializerMethodField(source="get_img")
 
     class Meta:
         model = Chat
-        fields = ["id", "title", "room", "img", "creator", "description", "url", "timestamp"]
-        extra_kwargs = {"id": {"read_only": True}, "creator": {"read_only": True}}
+        fields = ["id", "title", "room", "img", "user", "description", "url", "timestamp"]
+        extra_kwargs = {"id": {"read_only": True}, "user": {"read_only": True}}
 
     def update_url(self, obj, *args, **kwargs):
         """Update chat to save url with id"""
@@ -20,14 +20,11 @@ class ChatSerializer(serializers.ModelSerializer):
         obj.save()
         return obj
 
-    def get_creator(self, obj) -> str:
-        """Return creator username (instead id)"""
+    def get_user(self, obj) -> str:
+        """Return username (instead id)"""
 
-        if obj.creator:
-            return obj.creator.username
-        else:
-            # if user was deleted
-            return "Deleted"
+        if obj.user:
+            return obj.user.username
 
     def get_img(self, obj) -> str:
         """Return absolute url of chat img"""

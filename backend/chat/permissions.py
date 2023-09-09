@@ -11,19 +11,6 @@ class IsCreatorOrReadOnly(permissions.BasePermission):
             return True
 
         # is only description field in request
-        return obj.creator == request.user
-
-
-class IsSenderOrReadOnly(permissions.BasePermission):
-    """Permission to update. Check that request is from the obj sender."""
-
-    message = "The action is allowed only to the author"
-
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-
-        # is only description field in request
         return obj.user == request.user
 
 
