@@ -3,7 +3,7 @@ from chat.permissions import (IsCreatorOrReadOnly,
                               IsOnlyDescriptionInRequestData,
                               IsEmailConfirm,
                               IsOnlyTextInRequestData)
-from chat.serializer import ChatSerializer, MessageSerializer
+from chat.serializers import ChatSerializer, MessageSerializer
 from config.settings import CHOICE_ROOM
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
