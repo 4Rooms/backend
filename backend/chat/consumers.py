@@ -4,7 +4,7 @@ from typing import Optional
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from chat.models import Message
-from chat.serializer import MessageSerializer, WebsocketMessageSerializer
+from chat.serializers import MessageSerializer, WebsocketMessageSerializer
 
 logger = logging.getLogger(__name__)
 
