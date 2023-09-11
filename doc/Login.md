@@ -2,12 +2,12 @@
 
 
 ## User login
--   URL: https://prod-chat.duckdns.org/api/login/
+-   URL: /api/login/
 -   Request: Post(URL, {username, password}).  
     __The username field can contain a username or email__.
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/login/"
+    URL = "/api/login/"
     data = {"username": "user@gmail.com",
             "password": "UserPassword"}
 
@@ -15,7 +15,7 @@
     ```
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/login/"
+    URL = "/api/login/"
     data = {"username": "userName",
             "password": "UserPassword"}
 

@@ -2,11 +2,11 @@
 
 
 ## User registration
--   URL: https://prod-chat.duckdns.org/api/register/
+-   URL: /api/register/
 -   Request: Post(URL, {username, email, password}).
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/register/"
+    URL = "/api/register/"
     data = {"username": "userName",
             "email": "user@gmail.com",
             "password": "userPassword"}
@@ -84,7 +84,7 @@
 
 -   Additional information:  
     In case of a response with a status code of 201, the user will be sent a link to confirm his email. Link in mail: URL = http://<UIHost>/confirm-email/?token_id=<token>.
-    To confirm email and change the variable is_email_confirm to True you should do Get request to URL = https://prod-chat.duckdns.org/api/confirm-email/?token_id=<token>.
+    To confirm email and change the variable is_email_confirm to True you should do Get request to URL = /api/confirm-email/?token_id=<token>.
     -   You can't get/post... information if the email is unconfirmed. You will get the following error:
 
         ```json

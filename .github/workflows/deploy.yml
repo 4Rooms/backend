@@ -55,8 +55,8 @@ jobs:
           script: |
             const branch = context.ref.replace('refs/heads/', '');
             const msg = branch === 'master' ?
-              '🚀 Deployed here: https://prod-chat.duckdns.org/' :
-              '🚀 Deployed here: https://test-chat.duckdns.org/';
+              '🚀 Deployed here: https://back.4rooms.pro/' :
+              '🚀 Deployed here: https://testback.4rooms.pro/';
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,

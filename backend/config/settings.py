@@ -43,16 +43,16 @@ CORS_ALLOW_CREDENTIALS = True
 
 ALLOWED_HOSTS = [
     "localhost",
-    "prod-chat.duckdns.org",
-    "test-chat.duckdns.org",
+    "back.4rooms.pro",
+    "testback.4rooms.pro",
     "team-challenge-web-chat-my.netlify.app",
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://localhost:5173",
-    "https://prod-chat.duckdns.org",
-    "https://test-chat.duckdns.org",
+    "https://back.4rooms.pro",
+    "https://testback.4rooms.pro",
     "https://team-challenge-web-chat-my.netlify.app",
 ]
 
