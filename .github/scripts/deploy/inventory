@@ -1,2 +1,2 @@
 [all]
-ec2-16-170-218-120.eu-north-1.compute.amazonaws.com ansible_connection=ssh ansible_ssh_user=ubuntu
+back.4rooms.pro ansible_connection=ssh ansible_ssh_user=ubuntu

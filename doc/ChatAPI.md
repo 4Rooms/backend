@@ -2,7 +2,7 @@
 
 
 ## Create chat
--   URL: https://prod-chat.duckdns.org/api/chat/<room>/
+-   URL: /api/chat/<room>/
 -   Request: Post(URL, data)  
     -   data: title, description (optional), img (optional)  
     -   chat titles cannot be repeated in the same room  
@@ -13,7 +13,7 @@
         -   "games"
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/books/"
+    URL = "/api/chat/books/"
     data = {"title": "Harry Potter",
             "description": "Discussion of characters",
             "img": "file.jpeg"}
@@ -31,7 +31,7 @@
                 "id": 3,
                 "title": "Harry Potter",
                 "room": "films",
-                "img": "https://prod-chat.duckdns.org/media/file.jpg",
+                "img": "/media/file.jpg",
                 "user": "userName",
                 "description": "Discussion of characters",
                 "url": "/chat/films/3/",
@@ -86,7 +86,7 @@
         ```
 
 ## Get chats from the certain room
--   URL: https://prod-chat.duckdns.org/api/chat/<room>/
+-   URL: /api/chat/<room>/
     -   __room__ must have one of the following string values:
         -   "films"
         -   "music"
@@ -95,7 +95,7 @@
 -   Request: Get(URL)
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/films/"
+    URL = "/api/chat/films/"
     response = request.post(URL)
     ```
 
@@ -113,7 +113,7 @@
                     "id": 1,
                     "title": "Harry Potter characters",
                     "room": "films",
-                    "img": "https://prod-chat.duckdns.org/media/chat_img/Hurry.jpg",
+                    "img": "/media/chat_img/Hurry.jpg",
                     "user": "user1",
                     "description": "Who is your favorite character?",
                     "url": "/chat/films/1/",
@@ -123,7 +123,7 @@
                     "id": 2,
                     "title": "The Lord of the Rings films",
                     "room": "films",
-                    "img": "https://prod-chat.duckdns.org/media/chat_img/frodo.jpg",
+                    "img": "/media/chat_img/frodo.jpg",
                     "user": "user2",
                     "description": "Which film is the best in the series?",
                     "url": "/chat/films/2/",
@@ -133,7 +133,7 @@
                     "id": 3,
                     "title": "Friends",
                     "room": "films",
-                    "img": "https://prod-chat.duckdns.org/media/chat_img/default.jpg",
+                    "img": "/media/chat_img/default.jpg",
                     "user": "user1",
                     "description": null,
                     "url": "/chat/films/3/",
@@ -160,12 +160,12 @@
         ```
 
 ## Update chat description
--   URL: https://prod-chat.duckdns.org/api/chat/<chatId>/
+-   URL: /api/chat/<chatId>/
 -   Request: Patch(URL)
     -   data: description
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/10/"
+    URL = "/api/chat/10/"
     data = {"description": "Chat description"}
     response = request.post(URL, data)
     ```
@@ -179,7 +179,7 @@
             "id": 10,
             "title": "Imagine Dragons",
             "room": "music",
-            "img": "https://prod-chat.duckdns.org/media/chat_img/file.jpg",
+            "img": "/media/chat_img/file.jpg",
             "user": "Leslie",
             "description": "Chat description",
             "url": "/chat/music/10/",
@@ -226,11 +226,11 @@
         ```
 
 ## Delete chat
--   URL: https://prod-chat.duckdns.org/api/chat/<chatId>/
+-   URL: /api/chat/<chatId>/
 -   Request: Delete(URL)
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/10/"
+    URL = "/api/chat/10/"
     response = request.delete(URL)
     ```
 
@@ -268,11 +268,11 @@
         ```
 
 ## Get message history from the chat
--   URL: https://prod-chat.duckdns.org/api/chat/<chat-id>/messages/
+-   URL: /api/chat/<chat-id>/messages/
 -   Request: Get(URL)
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/10/messages/"
+    URL = "/api/chat/10/messages/"
     response = request.get(URL)
     ```
 
@@ -326,12 +326,12 @@
         ```
 
 ## Update message text
--   URL: https://prod-chat.duckdns.org/api/chat/message/<message_id>/
+-   URL: /api/chat/message/<message_id>/
 -   Request: Patch(URL, data)
     -   data: text
 
     ```
-    URL = "https://prod-chat.duckdns.org/api/chat/message/5/"
+    URL = "/api/chat/message/5/"
     data = {"text": "Message text"}
     response = request.patch(URL, data)
     ```

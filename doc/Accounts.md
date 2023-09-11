@@ -2,7 +2,7 @@
 
 
 ## Get the current user info (username, email, is_email_confirmed")
--   URL: https://prod-chat.duckdns.org/api/user/
+-   URL: /api/user/
 -   Request: Get(URL).  
 
     ```
@@ -33,7 +33,7 @@
         ```
 
 ## Change username/email.
--   URL: https://prod-chat.duckdns.org/api/user/
+-   URL: /api/user/
 -   Request: Put(URL, data).
 
     ```
@@ -76,7 +76,7 @@
         ```
 
 ## Set/Get user profile (avatar)
--   URL: https://prod-chat.duckdns.org/api/profile/
+-   URL: /api/profile/
 -   Requests:
     -   Get(URL)
     -   Put(URL, data={"avatar": file.jpg})
@@ -86,7 +86,7 @@
 
         ```json
          {
-            "avatar": "https://prod-chat.duckdns.org/media/avatars/file.jpg"
+            "avatar": "/media/avatars/file.jpg"
          }
         ```
 
@@ -103,7 +103,7 @@
         ```
 
 ## Change password
--   URL: https://prod-chat.duckdns.org/api/user/change-password
+-   URL: /api/user/change-password
 -   Requests:
     -   Put(URL, data={oldPassword, newPassword})
 -   Successful response:
