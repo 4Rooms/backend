@@ -160,7 +160,7 @@
         ```
 
 ## Update chat description
--   URL: /api/chat/<chatId>/
+-   URL: /api/chat/<chatID>/
 -   Request: Patch(URL)
     -   data: description
 
@@ -188,7 +188,7 @@
         ```
 
 -   Unsuccessful response:
-    -   Status code: 400 Bad Request, 403 Forbidden (user isn't a creator of chat or user sent not description field).
+    -   Status codes: 400 Bad Request, 403 Forbidden (user isn't a creator of chat or user sent not description field).
     -   Response body:
 
         ```json
@@ -226,7 +226,7 @@
         ```
 
 ## Delete chat
--   URL: /api/chat/<chatId>/
+-   URL: /api/chat/<chatID>/
 -   Request: Delete(URL)
 
     ```
@@ -238,7 +238,7 @@
     -   Status code: 204 No Content.
     -   Response body: Empty.
 -   Unsuccessful response:
-    -   Status code: 404 Not Found (There is no chat with such ID), 403 Forbidden.
+    -   Status codes: 404 Not Found (There is no chat with such ID), 403 Forbidden.
     -   Response body:
 
         ```json
@@ -268,7 +268,7 @@
         ```
 
 ## Get message history from the chat
--   URL: /api/chat/<chat-id>/messages/
+-   URL: /api/chat/<chatID>/messages/
 -   Request: Get(URL)
 
     ```
@@ -288,21 +288,23 @@
             "results": [
                 {
                     "id": 1,
-                    "timestamp": "2023-08-24T14:41:56.250209Z",
-                    "user_name": "testuser",
-                    "user_avatar": "/media/avatars/user1-avatar.png",
-                    "text": "Hi",
-                    "chat": 10,
+                    "user_name": "user1",
+                    "user_avatar": "/media/avatars/user1-avatar.jpg",
+                    "text": null,
+                    "timestamp": "2023-09-12T14:28:35.244410Z",
+                    "is_deleted": true,
+                    "chat": 1,
                     "user": 1
                 },
                 {
-                    "id": 2,
-                    "timestamp": "2023-09-04T18:34:22.170972Z",
-                    "user_name": "testuser",
-                    "user_avatar": "/media/avatars/user2-avatar.png",
+                   "id": 2,
+                    "user_name": "user2",
+                    "user_avatar": "/media/avatars/user2-avatar.jpg",
                     "text": "Hello",
-                    "chat": 10,
-                    "user": 2
+                    "timestamp": "2023-09-12T14:28:35.244410Z",
+                    "is_deleted": false,
+                    "chat": 1,
+                    "user": 1
                 }
             ]
         }
@@ -326,7 +328,7 @@
         ```
 
 ## Update message text
--   URL: /api/chat/message/<message_id>/
+-   URL: /api/chat/message/<messageID>/
 -   Request: Patch(URL, data)
     -   data: text
 
@@ -347,13 +349,14 @@
             "user_avatar": "/media/avatars/avatar.jpg",
             "text": "Changed text",
             "timestamp": "2023-09-09T08:04:45.661872Z",
+            "is_deleted": false,
             "chat": 5,
             "user": 6
         }
         ```
 
 -   Unsuccessful response:
-    -   Status code: 405, 403, 404.
+    -   Status codes: 405, 403, 404.
     -   Response body:
 
         ```json
@@ -407,3 +410,75 @@
             ]
         }
         ```
+        
+        ```json
+        {
+           "type": "client_error",
+            "errors": [
+                {
+                    "code": "permission_denied",
+                    "detail": "The object was deleted",
+                    "attr": null
+                }
+            ]
+        }
+        ```
+        
+## Delete message
+-   URL: /api/chat/message/<messageID>/
+-   Request: Delete(URL)
+
+    ```
+    URL = "/api/chat/message/10/"
+    response = request.delete(URL)
+    ```
+
+-   Successful response:
+    -   Status code: 204 No Content.
+    -   Response body: Empty.
+-   Unsuccessful response:
+    -   Status codes: 404 Not Found (There is no chat with such ID), 403 Forbidden.
+    -   Response body:
+
+        ```json
+        {
+            "type": "client_error",
+            "errors": [
+                {
+                    "code": "not_found",
+                    "detail": "Not found.",
+                    "attr": null
+                }
+            ]
+        }
+        ```
+
+        ```json
+        {
+            "type": "client_error",
+            "errors": [
+                {
+                    "code": "permission_denied",
+                    "detail": "The action is allowed only to the author",
+                    "attr": null
+                }
+            ]
+        }
+        ```
+        
+        ```json
+        {
+           "type": "client_error",
+            "errors": [
+                {
+                    "code": "permission_denied",
+                    "detail": "The object was deleted",
+                    "attr": null
+                }
+            ]
+        }
+        ```
+
+-   Additional information:  
+    When a message is deleted, it is stored in the database, it changed -> is_deleted=true, text=null.  
+    When you call the get method to see the messages of a certain chat, all messages, including deleted ones, will be displayed.

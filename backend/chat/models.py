@@ -93,8 +93,16 @@ class Message(models.Model):
 
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     user = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
-    text = models.TextField(max_length=1000)
+    text = models.TextField(max_length=1000, null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return f"id: {self.pk}, chat: {self.chat}, user: {self.user}"
+
+    def delete(self):
+        """Soft delete: delete message text, is_deleted = True"""
+
+        self.is_deleted = True
+        self.text = None
+        self.save()
