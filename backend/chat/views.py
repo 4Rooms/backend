@@ -2,9 +2,9 @@ from chat.models import Chat, Message
 from chat.permissions import (
     IsCreatorOrReadOnly,
     IsEmailConfirm,
+    IsNotDeleted,
     IsOnlyDescriptionInRequestData,
     IsOnlyTextInRequestData,
-    IsNotDeleted,
 )
 from chat.serializers import ChatSerializer, MessageSerializer
 from config.settings import CHOICE_ROOM
