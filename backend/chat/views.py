@@ -4,6 +4,7 @@ from chat.permissions import (
     IsEmailConfirm,
     IsOnlyDescriptionInRequestData,
     IsOnlyTextInRequestData,
+    IsNotDeleted,
 )
 from chat.serializers import ChatSerializer, MessageSerializer
 from config.settings import CHOICE_ROOM
@@ -84,10 +85,10 @@ class MessagesApiView(generics.ListAPIView):
         return Chat.objects.get(pk=chat_id).message_set.all()
 
 
-class UpdateMessageApiView(generics.RetrieveUpdateDestroyAPIView):
-    """Update text of message"""
+class UpdateDeleteMessageApiView(generics.RetrieveUpdateDestroyAPIView):
+    """Update text of message and Soft delete of message"""
 
-    permission_classes = (IsAuthenticated, IsOnlyTextInRequestData, IsCreatorOrReadOnly, IsEmailConfirm)
+    permission_classes = (IsAuthenticated, IsOnlyTextInRequestData, IsCreatorOrReadOnly, IsEmailConfirm, IsNotDeleted)
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
-    http_method_names = ["patch"]
+    http_method_names = ["patch", "delete"]

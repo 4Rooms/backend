@@ -47,3 +47,16 @@ class IsEmailConfirm(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return request.user.is_email_confirmed
+
+
+class IsNotDeleted(permissions.BasePermission):
+    """Permission. Checking that object is not deleted (in soft delete case)"""
+
+    message = "The object was deleted"
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # is not deleted
+        return not obj.is_deleted
