@@ -73,6 +73,39 @@
             ]
         }
         ```
+        
+        ```json
+        {
+            "type": "client_error",
+            "errors": [
+                {
+                    "code": "token_not_valid",
+                    "detail": "Given token not valid for any token type",
+                    "attr": "detail"
+                },
+                {
+                    "code": "token_not_valid",
+                    "detail": "token_not_valid",
+                    "attr": "code"
+                },
+                {
+                    "code": "token_not_valid",
+                    "detail": "AccessToken",
+                    "attr": "messages.0.token_class"
+                },
+                {
+                    "code": "token_not_valid",
+                    "detail": "access",
+                    "attr": "messages.0.token_type"
+                },
+                {
+                    "code": "token_not_valid",
+                    "detail": "Token is invalid or expired",
+                    "attr": "messages.0.message"
+                }
+            ]
+        }
+        ```
 
 ## Sign in With Google
 

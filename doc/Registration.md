@@ -33,51 +33,100 @@
 
         ```json
         {
-            "error": [
-                "This password is too short. It must contain at least 8 characters.",
-                "This password is too common.",
-                "This password is entirely numeric."
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": "invalid",
+                    "detail": "This password is too short. It must contain at least 8 characters.",
+                    "attr": null
+                },
+                {
+                    "code": "invalid",
+                    "detail": "This password is too common.",
+                    "attr": null
+                },
+                {
+                    "code": "invalid",
+                    "detail": "This password is entirely numeric.",
+                    "attr": null
+                }
             ]
         }
         ```
 
         ```json
         {
-            "password": [
-                "This field may not be blank."
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": "blank",
+                    "detail": "This field may not be blank.",
+                    "attr": "username"
+                },
+                {
+                    "code": "blank",
+                    "detail": "This field may not be blank.",
+                    "attr": "email"
+                },
+                {
+                    "code": "blank",
+                    "detail": "This field may not be blank.",
+                    "attr": "password"
+                }
             ]
         }
         ```
 
         ```json
         {
-            "username": [
-                "user with this login already exists."
-            ],
-            "email": [
-                "user with this email already exists."
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": "unique",
+                    "detail": "user with this login already exists.",
+                    "attr": "username"
+                },
+                {
+                    "code": "unique",
+                    "detail": "user with this email already exists.",
+                    "attr": "email"
+                }
             ]
         }
         ```
 
         ```json
         {
-            "username": [
-                "This field is required."
-            ],
-            "email": [
-                "This field is required."
-            ],
-            "password": [
-                "This field is required."
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": "required",
+                    "detail": "This field is required.",
+                    "attr": "username"
+                },
+                {
+                    "code": "required",
+                    "detail": "This field is required.",
+                    "attr": "email"
+                },
+                {
+                    "code": "required",
+                    "detail": "This field is required.",
+                    "attr": "password"
+                }
             ]
         }
         ```
 
         ```json
         {
-            "email": [
-                "Enter a valid email address."
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": "invalid",
+                    "detail": "Enter a valid email address.",
+                    "attr": "email"
+                }
             ]
         }
         ```
