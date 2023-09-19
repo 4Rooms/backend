@@ -1,9 +1,11 @@
+import logging
+
 from accounts.models import EmailConfirmationToken, User
 from accounts.serializers import UserSerializer
 from accounts.services.email import send_confirmation_email
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from registration.serializers import EmailConfirmationResponseSerializer
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -11,6 +13,8 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+logger = logging.getLogger(__name__)
 
 
 class RegisterUserView(APIView):
@@ -58,6 +62,11 @@ class ConfirmEmailApiView(APIView):
 
     @extend_schema(
         tags=["Account operations"],
+        parameters=[
+            OpenApiParameter(
+                name="token_id", location=OpenApiParameter.QUERY, description="TokenId", required=True, type=str
+            ),
+        ],
     )
     def get(self, request):
         token_id = request.GET.get("token_id", None)
@@ -70,5 +79,9 @@ class ConfirmEmailApiView(APIView):
 
             resp_serializer = ConfirmEmailApiView.serializer_class(instance={"is_email_confirmed": True})
             return Response(data=resp_serializer.data, status=status.HTTP_200_OK)
-        except EmailConfirmationToken.DoesNotExist:
+        except EmailConfirmationToken.DoesNotExist as ex:
+            logger.error(ex)
             raise ValidationError("Wrong email confirmation token.") from None
+        except DjangoValidationError as ex:
+            logger.error(ex)
+            raise ValidationError(ex.message) from None
