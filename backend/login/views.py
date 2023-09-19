@@ -1,4 +1,5 @@
 from accounts.serializers import UserSerializer
+from drf_spectacular.utils import extend_schema
 from login.authentication_backend import AuthBackend
 from login.cookie import set_auth_cookie
 from rest_framework import status
@@ -27,6 +28,9 @@ class LoginAPIView(APIView):
     serializer_class = UserSerializer
     permission_classes = (AllowAny,)
 
+    @extend_schema(
+        tags=["Account operations"],
+    )
     def post(self, request, format=None):
         """Authenticate the user, set the access token
         as an HttpOnly cookie, and return a user info"""

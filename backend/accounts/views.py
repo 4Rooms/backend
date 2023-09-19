@@ -75,6 +75,10 @@ class UserAPIView(APIView):
         return Response({"message": "Email, Username updated successfully"}, status=status.HTTP_200_OK)
 
 
+@extend_schema_view(
+    get=extend_schema(tags=["Account operations"]),
+    put=extend_schema(tags=["Account operations"]),
+)
 class ProfileAPIView(RetrieveUpdateAPIView):
     """
     Get, Update user avatar
