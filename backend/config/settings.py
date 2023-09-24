@@ -107,6 +107,7 @@ INSTALLED_APPS = [
     "accounts",
     "login",
     "chat",
+    "files",
 ]
 
 MIDDLEWARE = [
@@ -307,4 +308,5 @@ LOGGING = {
     },
 }
 
+from .files import *  # noqa
 from .swagger import *  # noqa
