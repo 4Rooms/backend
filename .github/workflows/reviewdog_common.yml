@@ -8,7 +8,9 @@ jobs:
     name: languagetool
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - uses: reviewdog/action-languagetool@v1
         with:
           github_token: ${{ secrets.github_token }}
@@ -21,7 +23,8 @@ jobs:
     name: remark-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: install remark presets
         run: npm install remark-preset-lint-recommended
         shell: bash
@@ -35,8 +38,8 @@ jobs:
     name: misspell
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code.
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: misspell
         uses: reviewdog/action-misspell@v1
         with:
@@ -49,7 +52,8 @@ jobs:
     name: yamllint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: Checkout code
+        uses: actions/checkout@v4
       - name: yamllint
         uses: reviewdog/action-yamllint@v1
         with:
