@@ -3,7 +3,7 @@ from typing import Optional
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-from chat.models import Message
+from chat.models import Message, OnlineUser
 from chat.serializers import MessageSerializer, WebsocketMessageSerializer
 
 logger = logging.getLogger(__name__)
@@ -25,8 +25,14 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # Add a user to a group of users in that chat
         await self.channel_layer.group_add(self._group_name, self.channel_name)
 
+        # Add user as online user in DB
+        await self.create_online_user()
+
     async def disconnect(self, code):
         logger.info(f"DISCONNECT: User {self._user}. Chat {self._chat_id}. Room {self._room_name}")
+
+        # Delete user as online user from DB
+        await self.delete_online_user()
         await self.channel_layer.group_discard(self._group_name, self.channel_name)
 
     async def receive_json(self, content):
@@ -48,7 +54,9 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def _serialize_message(self, message) -> dict:
-        return WebsocketMessageSerializer(instance={"message": message, "type": "chat_message"}).data
+        return WebsocketMessageSerializer(
+            instance={"message": message, "type": "chat_message", "event": "message"}
+        ).data
 
     @database_sync_to_async
     def _validate_and_save(self, content) -> Optional[Message]:
@@ -70,3 +78,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def send_message(self, event):
         logger.debug(f"Sending message to chat {self._chat_id} in room {self._room_name}")
         await self.send_json(event["message"])
+
+    @database_sync_to_async
+    def create_online_user(self):
+        new, _ = OnlineUser.objects.get_or_create(user=self._user, chat_id=self._chat_id)
+
+    @database_sync_to_async
+    def delete_online_user(self):
+        OnlineUser.objects.filter(user=self._user, chat_id=self._chat_id).delete()

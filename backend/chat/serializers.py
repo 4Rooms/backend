@@ -77,6 +77,7 @@ class WebsocketMessageSerializer(serializers.Serializer):
 
     message = MessageSerializer()
     type = serializers.CharField()
+    event = serializers.CharField()
 
     class Meta:
         fields = "__all__"
