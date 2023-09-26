@@ -79,9 +79,27 @@ Web UI will communicate with the server via Websocket API for the following func
 
 #### Message
 
+From WebSocket
 ```json
 {
-  "type": "chat_message",
+  "message": {
+    "id": 40,
+    "user_name": "testuser",
+    "user_avatar": "/media/default-user-avatar.jpg",
+    "text": "Message text",
+    "timestamp": "2023-09-26T14:17:44.250236Z",
+    "is_deleted": false,
+    "chat": 1,
+    "user": 1
+  },
+  "event_type": "chat_message",
+  "timestamp": "2023-09-26T14:17:44.250236Z"
+}
+```
+From DB
+```json
+{
+  "event_type": "chat_message",
   "messageId": "string",
   "userId": "string",
   "chatId": "string",
@@ -103,7 +121,7 @@ Web UI will communicate with the server via Websocket API for the following func
 
 ```json
 {
-  "type": "typing_indicator",
+  "event_type": "typing_indicator",
   "userId": "string",
   "chatId": "string"
 }

@@ -30,7 +30,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             self._group_name,
             {
                 "type": "send_connected_user",
-                "event": {},
+                "user": {"id": self._user.id, "username": self._user.username, "avatar": await self.get_user_avatar()},
             },
         )
 
@@ -44,7 +44,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             self._group_name,
             {
                 "type": "send_disconnected_user",
-                "event": {},
+                "user": {"id": self._user.id, "username": self._user.username, "avatar": await self.get_user_avatar()},
             },
         )
         await self.channel_layer.group_discard(self._group_name, self.channel_name)
@@ -68,9 +68,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def _serialize_message(self, message) -> dict:
-        return WebsocketMessageSerializer(
-            instance={"message": message, "type": "chat_message", "event": "message"}
-        ).data
+        return WebsocketMessageSerializer(instance={"message": message, "event_type": "chat_message"}).data
 
     @database_sync_to_async
     def _validate_and_save(self, content) -> Optional[Message]:
@@ -95,21 +93,22 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     async def send_connected_user(self, event):
         logger.debug(f"Event connected_user. Sending user joined to chat {self._chat_id} in room {self._room_name}")
-        event["event"] = {
-            "event": "connected_user",
-            "user": {"id": self._user.id, "username": self._user.username, "avatar": await self.get_user_avatar()},
+
+        connected_event = {
+            "event_type": "connected_user",
+            "user": event["user"],
         }
-        await self.send_json(event["event"])
+        await self.send_json(connected_event)
 
     async def send_disconnected_user(self, event):
         logger.debug(
             f"Event disconnected_user. Sending user joined to chat user {self._chat_id} in room {self._room_name}"
         )
-        event["event"] = {
-            "event": "disconnected_user",
-            "user": {"id": self._user.id, "username": self._user.username, "avatar": await self.get_user_avatar()},
+        disconnected_event = {
+            "event_type": "disconnected_user",
+            "user": event["user"],
         }
-        await self.send_json(event["event"])
+        await self.send_json(disconnected_event)
 
     @database_sync_to_async
     def create_online_user(self):
