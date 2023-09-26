@@ -273,8 +273,7 @@
             }
 
             const message = {
-                type: 'chat_message',
-                event: "message",
+                event_type: 'chat_message',
                 message: {
                     chat: selectedChatId,
                     text: input.value,
