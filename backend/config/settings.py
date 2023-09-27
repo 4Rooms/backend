@@ -191,8 +191,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=10),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": False,
     "UPDATE_LAST_LOGIN": False,
@@ -214,8 +214,8 @@ SIMPLE_JWT = {
     "TOKEN_USER_CLASS": "rest_framework_simplejwt.models.TokenUser",
     "JTI_CLAIM": "jti",
     "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
-    "SLIDING_TOKEN_LIFETIME": timedelta(days=1),
-    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=10),
+    "SLIDING_TOKEN_LIFETIME": timedelta(days=30),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=30),
     # Custom
     # Cookie name. Enables cookies if value is set.
     "AUTH_COOKIE": "access_token",
@@ -268,7 +268,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("HOST_USER_EMAIL")
 EMAIL_HOST_PASSWORD = os.getenv("HOST_APP_PASSWORD")
 
-UI_HOST = "http://localhost:5173/"
+UI_HOST = "https://4rooms.pro/"
 
 # Rooms categories for models
 CHOICE_ROOM = (("books", "books"), ("films", "films"), ("music", "music"), ("games", "games"))
