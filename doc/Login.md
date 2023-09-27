@@ -33,18 +33,41 @@
                 "id": 1,
                 "username": "userName",
                 "email": "user@gmail.com",
-                "is_email_confirmed": false/true
+                "is_email_confirmed": true
             }
         }
         ```
 
 -   Unsuccessful response:
     -   Status code: 404 Not Found (user).
-    -   Response body:
+    
+        Response body:
 
         ```json
         {
-            "Invalid": "Invalid username or password"
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": 404,
+                    "detail": "Invalid username or password",
+                    "attr": "Invalid"
+                }
+            ]
+        }
+        ```
+    
+    -   Status code: 400
+
+        ```json
+        {
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": "blank",
+                    "detail": "This field may not be blank.",
+                    "attr": "username"
+                }
+            ]
         }
         ```
 

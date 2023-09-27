@@ -63,3 +63,14 @@ class PasswordResetSerializer(serializers.Serializer):
 
     password = serializers.CharField(required=True)
     token_id = serializers.CharField(required=True)
+
+
+class LoginDataSerializer(serializers.Serializer):
+    """
+    Login data
+    """
+
+    model = User
+
+    username = serializers.CharField(required=True)
+    password = serializers.CharField(required=True, max_length=128)
