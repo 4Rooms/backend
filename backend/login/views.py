@@ -1,8 +1,9 @@
-from accounts.serializers import UserSerializer
+from accounts.serializers import LoginDataSerializer, UserSerializer
 from drf_spectacular.utils import extend_schema
 from login.authentication_backend import AuthBackend
 from login.cookie import set_auth_cookie
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -25,7 +26,7 @@ class LoginAPIView(APIView):
 
     authentication_classes = []
     parser_classes = [JSONParser, MultiPartParser, FormParser]
-    serializer_class = UserSerializer
+    serializer_class = LoginDataSerializer
     permission_classes = (AllowAny,)
 
     @extend_schema(
@@ -37,12 +38,15 @@ class LoginAPIView(APIView):
 
         # authenticate user
         data = request.data
-        username = data.get("username", None)
-        password = data.get("password", None)
-        user = AuthBackend.authenticate(self, request, username=username, password=password)
+
+        serializer = self.serializer_class(data=data)
+        serializer.is_valid(raise_exception=True)
+        login_data = serializer.validated_data
+
+        user = AuthBackend.authenticate(self, request, username=login_data["username"], password=login_data["password"])
 
         if user is None:
-            return Response({"Invalid": "Invalid username or password"}, status=status.HTTP_404_NOT_FOUND)
+            raise ValidationError({"Invalid": "Invalid username or password"}, code=status.HTTP_404_NOT_FOUND)
 
         token = get_tokens(user)
 
