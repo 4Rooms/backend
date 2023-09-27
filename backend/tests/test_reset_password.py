@@ -43,7 +43,7 @@ def test_password_reset(client: Client, test_user: UserForTests, new_password, e
     logging.debug(f"Password reset email: \n{email.body}\n")
 
     # get token for password reset from email
-    token = re.match(r".*http://.+/password-reset/\?token_id=(?P<token>.+)", email.body).groupdict()["token"]
+    token = re.match(r".*https://.+/password-reset/\?token_id=(?P<token>.+)", email.body).groupdict()["token"]
     assert token is not None
 
     # reset password
