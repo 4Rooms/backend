@@ -130,6 +130,19 @@
             ]
         }
         ```
+        
+        ```json
+        {
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": "max_length",
+                    "detail": "Ensure this field has no more than 128 characters.",
+                    "attr": "password"
+                }
+            ]
+        }
+        ```
 
 -   Additional information:  
     In case of a response with a status code of 201, the user will be sent a link to confirm his email. Link in mail: URL = http://<UIHost>/confirm-email/?token_id=<token>.

@@ -79,38 +79,16 @@ Web UI will communicate with the server via Websocket API for the following func
 
 #### Message
 
-From WebSocket
 ```json
 {
-  "message": {
-    "id": 40,
-    "user_name": "testuser",
-    "user_avatar": "/media/default-user-avatar.jpg",
-    "text": "Message text",
-    "timestamp": "2023-09-26T14:17:44.250236Z",
+    "id": 11,
+    "timestamp": "1692478065",
+    "user_name": "user3",
+    "user_avatar": "/media/avatar.jpg",
+    "text": "Good book",
     "is_deleted": false,
     "chat": 1,
-    "user": 1
-  },
-  "event_type": "chat_message",
-  "timestamp": "2023-09-26T14:17:44.250236Z"
-}
-```
-From DB
-```json
-{
-  "event_type": "chat_message",
-  "messageId": "string",
-  "userId": "string",
-  "chatId": "string",
-  "text": "string",
-  "timestamp": "string",
-  "attachments": [
-    {
-      "type": "string",
-      "url": "string"
-    }
-  ],
+    "user": 3
 }
 ```
 
@@ -176,5 +154,80 @@ This is returned when the API server encounters an unexpected error. Here's how 
             "attr": null
         }
     ]
+}
+```
+
+## WebSocket Events
+
+#### Event chat_message
+The event is sent to a group of users in the chat.
+
+```json
+{
+  "message": {
+    "id": 40,
+    "user_name": "user3",
+    "user_avatar": "/media/default-user-avatar.jpg",
+    "text": "Message text",
+    "timestamp": "2023-09-26T14:17:44.250236Z",
+    "is_deleted": false,
+    "chat": 1,
+    "user": 3
+  },
+  "event_type": "chat_message",
+  "timestamp": "2023-09-26T14:17:44.250236Z"
+}
+```
+
+#### Event connected_user (the user joined to chat)
+The event is sent to a group of users in the chat, except for yourself.
+
+```json
+{
+  "event_type": "connected_user",
+  "user": {
+    "id": 1,
+    "username": "user1",
+    "avatar": "/media/avatars/ava.jpg"
+  },
+  "timestamp": "2023-09-26T14:17:44.250236Z"
+}
+```
+
+#### Event disconnected_user (the user left the chat)
+The event is sent to a group of users in the chat.
+
+```json
+{
+  "event_type": "disconnected_user",
+  "user": {
+    "id": 1,
+    "username": "user1",
+    "avatar": "/media/avatars/ava.jpg"
+  },
+  "timestamp": "2023-09-26T14:17:44.250236Z"
+}
+```
+
+#### Event online_user_list (list of users connected to a current chat)
+The event will send a dictionary with a list of online users in this chat to the user who just joined the chat.  
+The current user is not included in this list.
+
+```json
+{
+  "event_type": "online_user_list",
+  "user_list": [
+    {
+      "id": 1,
+      "username": "user1",
+      "avatar": "/media/avatars/avatar1.jpg"
+    },
+    {
+      "id": 2,
+      "username": "user2",
+      "avatar": "/media/avatars/avatar2.jpg"
+    }
+  ],
+  "timestamp": "2023-09-26T14:17:44.250236Z"
 }
 ```
