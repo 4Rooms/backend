@@ -232,3 +232,16 @@
                ]
           }
           ```
+          
+          ```json
+          {
+              "type": "validation_error",
+              "errors": [
+                  {
+                      "code": "max_length",
+                      "detail": "Ensure this field has no more than 128 characters.",
+                      "attr": "password"
+                  }
+              ]
+          }
+          ```
