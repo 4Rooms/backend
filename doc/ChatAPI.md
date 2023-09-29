@@ -96,7 +96,7 @@
 
     ```
     URL = "/api/chat/films/"
-    response = request.post(URL)
+    response = request.get(URL)
     ```
 
 -   Successful response:
@@ -161,13 +161,13 @@
 
 ## Update chat description
 -   URL: /api/chat/<chatID>/
--   Request: Patch(URL)
+-   Request: Patch(URL, data)
     -   data: description
 
     ```
     URL = "/api/chat/10/"
     data = {"description": "Chat description"}
-    response = request.post(URL, data)
+    response = request.patch(URL, data)
     ```
 
 -   Successful response:
@@ -277,7 +277,7 @@
     ```
 
 -   Successful response:
-    -   Status code: 204 No Content.
+    -   Status code: 200 OK.
     -   Response body: Empty
 
         ```json
@@ -482,3 +482,116 @@
 -   Additional information:  
     When a message is deleted, it is stored in the database, it changed -> is_deleted=true, text=null.  
     When you call the get method to see the messages of a certain chat, all messages, including deleted ones, will be displayed.
+
+## Get list of saved chats
+-   URL: /api/chat/saved_chats/
+-   Request: Get(URL)
+
+    ```
+    URL = "/api/chat/saved_chats"
+    response = request.get(URL)
+    ```
+
+-   Successful response:
+    -   Status code: 200.
+    -   Response body:
+
+        ```json
+        {
+            "count": 2,
+            "next": null,
+            "previous": null,
+            "results": [
+                {
+                    "user": 7,
+                    "chat": 1,
+                    "title": "Journey to the Center of the Earth",
+                    "room": "books",
+                    "description": "Jules Verne Fans",
+                    "chat_creator": "user1",
+                    "img": "/media/chat_avatar1.jpg",
+                    "url": "/chat/books/1/"
+                },
+                {
+                    "user": 7,
+                    "chat": 10,
+                    "title": "Imagine Dragons",
+                    "room": "music",
+                    "description": "Imagine Dragons Fans",
+                    "chat_creator": "user2",
+                    "img": "/media/chat_img3.jpg",
+                    "url": "/chat/music/10/"
+                }
+            ]
+        }
+        ```
+    -   user - ID of the user saving the chat
+    -   chat_creator - username of the chat creator/owner
+    -   img - URL of chat avatar
+    -   urL - URL as WebSocket chat
+    -   count - number of all records in DB
+    -   next - link to get the next 100 records by Get request on it
+    -   previous - link to get the previous 100 records by Get request on it
+    -   results - 100 or fewer records from DB (100 or fewer chats)
+        
+## Post saved chats
+-   URL: /api/chat/saved_chats/
+-   Request: Post(URL, data)
+
+    ```
+    URL = "/api/chat/saved_chats"
+    
+    # the ID of the chat we want to save
+    data = data = {"chat_id": chatId}
+    
+    response = request.post(URL, data)
+    ```
+
+-   Successful response:
+    -   Status code: 201 Created.
+    -   Response body:
+
+        ```json
+        {
+            "saved_chat": {
+                "user": 7,
+                "chat": 10,
+                "title": "Imagine Dragons",
+                "room": "music",
+                "description": "Imagine Dragons Fans",
+                "chat_creator": "user2",
+                "img": "/media/chat_img.jpg",
+                "url": "/chat/music/10/"
+            }
+        }
+        ```
+
+-   Unsuccessful response:
+    -   Status code: 500 (If the posted chat_id field doesn't exist. If the posted chai_id field is not a number or empty).
+    -   Response body:
+
+        ```json
+        {   
+            "type": "server_error",
+            "errors": [
+                {
+                    "code": "error",
+                    "detail": "'chat_id'",
+                    "attr": null
+                }
+            ]
+        }
+        ```
+
+        ```json
+        {   
+            "type": "server_error",
+            "errors": [
+                {
+                    "code": "error",
+                    "detail": "Field 'id' expected a number but got ''.",
+                    "attr": null
+                }
+            ]
+        }
+        ```
