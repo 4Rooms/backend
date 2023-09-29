@@ -1,4 +1,4 @@
-from chat.models import Chat, Message
+from chat.models import Chat, Message, SavedChat
 from chat.permissions import (
     IsCreatorOrReadOnly,
     IsEmailConfirm,
@@ -6,7 +6,7 @@ from chat.permissions import (
     IsOnlyDescriptionInRequestData,
     IsOnlyTextInRequestData,
 )
-from chat.serializers import ChatSerializer, MessageSerializer
+from chat.serializers import ChatSerializer, MessageSerializer, SavedChatSerializer
 from config.settings import CHOICE_ROOM
 from rest_framework import generics, status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -92,3 +92,32 @@ class UpdateDeleteMessageApiView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     http_method_names = ["patch", "delete"]
+
+
+class SavedChatApiView(generics.GenericAPIView):
+    """Get/Post saved chat(s) for the user"""
+
+    permission_classes = (IsAuthenticated, IsEmailConfirm)
+    serializer_class = SavedChatSerializer
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    http_method_names = ["get", "post"]
+
+    def get(self, request):
+        """Get saved chats of users from request"""
+
+        # get saved chats, serialize, and return list of chats by pagination
+        self.queryset = SavedChat.objects.filter(user=request.user)
+        serializer = SavedChatSerializer(self.queryset, context={"request": request}, many=True)
+        page = self.paginate_queryset(serializer.data)
+        return self.get_paginated_response(page)
+
+    def post(self, request):
+        """Create a saved chat for the user from the request"""
+
+        chat_id = request.data["chat_id"]
+        chat = Chat.objects.get(pk=chat_id)
+        saved_chat, _ = SavedChat.objects.get_or_create(user=request.user, chat=chat)
+        return Response(
+            {"saved_chat": SavedChatSerializer(saved_chat, context={"request": request}).data},
+            status=status.HTTP_201_CREATED,
+        )
