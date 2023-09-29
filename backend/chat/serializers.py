@@ -1,5 +1,6 @@
 from chat.models import Chat, Message, SavedChat
 from rest_framework import serializers
+from typing import Optional
 
 
 class ChatSerializer(serializers.ModelSerializer):
@@ -13,20 +14,23 @@ class ChatSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "room", "img", "user", "description", "url", "timestamp"]
         extra_kwargs = {"id": {"read_only": True}, "user": {"read_only": True}}
 
-    def update_url(self, obj, *args, **kwargs):
+    @staticmethod
+    def update_url(obj, *args, **kwargs):
         """Update chat to save url with id"""
 
         obj.url = f"/chat/{obj.room}/{obj.pk}/"
         obj.save()
         return obj
 
-    def get_user(self, obj) -> str:
+    @staticmethod
+    def get_user(obj) -> str:
         """Return username (instead id)"""
 
         if obj.user:
             return obj.user.username
 
-    def get_img(self, obj) -> str:
+    @staticmethod
+    def get_img(obj) -> str:
         """Return url of chat img"""
 
         if obj.user:
@@ -55,14 +59,16 @@ class MessageSerializer(serializers.ModelSerializer):
         validated_data["user"] = user
         return super().create(validated_data)
 
-    def get_user_name(self, obj) -> str:
+    @staticmethod
+    def get_user_name(obj) -> Optional[str]:
         """Return username (instead id)"""
 
         if isinstance(obj, Message):
             return obj.user.username
         return None
 
-    def get_user_avatar(self, obj) -> str:
+    @staticmethod
+    def get_user_avatar(obj) -> Optional[str]:
         """Return URL to user avatar"""
 
         if isinstance(obj, Message):
@@ -93,43 +99,50 @@ class SavedChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = SavedChat
         fields = ["user", "chat", "title", "room", "description", "chat_creator", "img", "url"]
+        extra_kwargs = {"user": {"read_only": True}}
 
-    def get_title(self, obj) -> str:
+    @staticmethod
+    def get_title(obj) -> Optional[str]:
         """Return chat title"""
 
         if isinstance(obj, SavedChat):
             return obj.chat.title
         return None
 
-    def get_room(self, obj) -> str:
+    @staticmethod
+    def get_room(obj) -> Optional[str]:
         """Return chat room"""
 
         if isinstance(obj, SavedChat):
             return obj.chat.room
         return None
 
-    def get_description(self, obj) -> str:
+    @staticmethod
+    def get_description(obj) -> Optional[str]:
         """Return chat description"""
 
         if isinstance(obj, SavedChat):
             return obj.chat.description
         return None
 
-    def get_chat_creator(self, obj) -> str:
+    @staticmethod
+    def get_chat_creator(obj) -> Optional[str]:
         """Return chat creator"""
 
         if isinstance(obj, SavedChat):
             return obj.chat.user.username
         return None
 
-    def get_img(self, obj) -> str:
+    @staticmethod
+    def get_img(obj) -> Optional[str]:
         """Return url of chat avatar"""
 
         if isinstance(obj, SavedChat):
             return obj.chat.img.url
         return None
 
-    def get_url(self, obj) -> str:
+    @staticmethod
+    def get_url(obj) -> Optional[str]:
         """Return url of chat (as WebSocket chat)"""
 
         if isinstance(obj, SavedChat):
