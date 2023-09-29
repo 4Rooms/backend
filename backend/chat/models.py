@@ -116,3 +116,13 @@ class OnlineUser(models.Model):
 
     def __str__(self):
         return f"user: {self.user}, chat: {self.chat}"
+
+
+class SavedChat(models.Model):
+    """Saved user's chat"""
+
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True)
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return f"user: {self.user}, saved chat: {self.chat}"
