@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from uuid import uuid4
 
 from accounts.user_manager import UserManager
@@ -78,9 +79,13 @@ def get_image_filename(instance, filename):
           This may be taken into account when determining the final destination path.
     """
 
+    ava_dir = Path("avatars") / "uploads"
+    if not ava_dir.exists():
+        ava_dir.mkdir(parents=True)
+
     name = instance.avatar.name
     slug = slugify(name)
-    return f"avatars/{slug}-{filename}"
+    return ava_dir / f"{slug}-{filename}"
 
 
 class Profile(models.Model):

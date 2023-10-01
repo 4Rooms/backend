@@ -331,9 +331,21 @@
 
                 var user_info = await response.json();
 
+                // get avatar
+                var ava_resp = await fetch(host + "api/profile/", {
+                    method: 'GET',
+                    credentials: 'include',
+                });
+                if (!ava_resp.ok) {
+                    throw new Error("Failed to get avatar");
+                }
+                var ava_data = await ava_resp.json();
+
                 // set message
-                msg = "<b>✅ Received user_info</b>:<br /><code>" + JSON.stringify(user_info, null, 2) + "</code>"
+                msg = "<b>✅ Received user_info</b>:<br /><code>" + JSON.stringify(user_info, null, 2) + "</code>" + 
+                "<br /><img src='" + ava_data.avatar + "' alt='avatar' width='100' height='100' />";
                 document.getElementById('message').innerHTML = msg;
+
             } catch (error) {
                 document.getElementById('message').innerHTML = "<b>❌ <i>Failed to get user_info</i></b>";
             }
