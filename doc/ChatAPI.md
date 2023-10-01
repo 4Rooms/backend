@@ -503,6 +503,7 @@
             "previous": null,
             "results": [
                 {
+                    "id": 1,
                     "user": 7,
                     "chat": 1,
                     "title": "Journey to the Center of the Earth",
@@ -513,6 +514,7 @@
                     "url": "/chat/books/1/"
                 },
                 {
+                    "id": 2,
                     "user": 7,
                     "chat": 10,
                     "title": "Imagine Dragons",
@@ -554,6 +556,7 @@
         ```json
         {
             "saved_chat": {
+                "id": 3,
                 "user": 7,
                 "chat": 10,
                 "title": "Imagine Dragons",
@@ -590,6 +593,48 @@
                 {
                     "code": "error",
                     "detail": "Field 'id' expected a number but got ''.",
+                    "attr": null
+                }
+            ]
+        }
+        ```
+
+## Delete saved chats
+-   URL: /api/chat/saved_chats/<savedChatID>/
+-   Request: Post(URL)
+
+    ```
+    URL = "/api/chat/saved_chats/2/"
+    response = request.delete(URL)
+    ```
+
+-   Successful response:
+    -   Status code: 204 No Content.
+    -   Response body: Empty.
+-   Unsuccessful response:
+    -   Status code: 403 Forbidden (If the current user tries to delete another user's saved chat), 404 Not Found (Saved chat with posted ID doesn't exist)
+    -   Response body:
+
+        ```json
+        {   
+             "type": "client_error",
+             "errors": [
+                 {
+                     "code": "permission_denied",
+                     "detail": "The action is allowed only to the author",
+                     "attr": null
+                 }
+             ]
+        }
+        ```
+
+        ```json
+        {   
+            "type": "client_error",
+            "errors": [
+                {
+                    "code": "not_found",
+                    "detail": "Not found.",
                     "attr": null
                 }
             ]

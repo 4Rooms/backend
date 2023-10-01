@@ -121,3 +121,12 @@ class SavedChatApiView(generics.GenericAPIView):
             {"saved_chat": SavedChatSerializer(saved_chat, context={"request": request}).data},
             status=status.HTTP_201_CREATED,
         )
+
+
+class DeleteSavedChatApiView(generics.RetrieveUpdateDestroyAPIView):
+    """Delete saved chat as saved"""
+
+    permission_classes = (IsAuthenticated, IsCreatorOrReadOnly, IsEmailConfirm)
+    queryset = SavedChat.objects.all()
+    serializer_class = SavedChatSerializer
+    http_method_names = ["delete"]
