@@ -13,7 +13,7 @@ class ChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
         fields = ["id", "title", "room", "img", "user", "description", "url", "timestamp"]
-        extra_kwargs = {"id": {"read_only": True}, "user": {"read_only": True}}
+        extra_kwargs = {"id": {"read_only": True}, "user": {"read_only": True}, "url": {"read_only": True}}
 
     @staticmethod
     def update_url(obj, *args, **kwargs):

@@ -1,7 +1,7 @@
 # Chat API
 
 
-## Create chat
+## Post chat
 -   URL: /api/chat/<room>/
 -   Request: Post(URL, data)  
     -   data: title, description (optional), img (optional)  
