@@ -1,6 +1,7 @@
+from typing import Optional
+
 from chat.models import Chat, Message, SavedChat
 from rest_framework import serializers
-from typing import Optional
 
 
 class ChatSerializer(serializers.ModelSerializer):
@@ -98,8 +99,8 @@ class SavedChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SavedChat
-        fields = ["user", "chat", "title", "room", "description", "chat_creator", "img", "url"]
-        extra_kwargs = {"user": {"read_only": True}}
+        fields = ["id", "user", "chat", "title", "room", "description", "chat_creator", "img", "url"]
+        extra_kwargs = {"id": {"read_only": True}, "user": {"read_only": True}}
 
     @staticmethod
     def get_title(obj) -> Optional[str]:

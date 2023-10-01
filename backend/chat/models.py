@@ -88,4 +88,4 @@ class SavedChat(models.Model):
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
-        return f"user: {self.user}, saved chat: {self.chat}"
+        return f"id: {self.pk}, user: {self.user}, saved chat: {self.chat}"
