@@ -7,8 +7,8 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import File
-from .utils import generate_file_name
+from ..models import File
+from ..utils import generate_file_name
 
 logger = logging.getLogger(__name__)
 
