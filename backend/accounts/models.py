@@ -94,7 +94,7 @@ class Profile(models.Model):
     avatar = models.ImageField(default="default-user-avatar.jpg", upload_to=get_image_filename, null=True)
 
     def __str__(self):
-        return self.user.email
+        return self.user.username
 
     @property
     def filename(self):

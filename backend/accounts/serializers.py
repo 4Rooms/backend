@@ -8,7 +8,11 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["id", "username", "email", "password", "is_email_confirmed"]
-        extra_kwargs = {"password": {"write_only": True}, "is_email_confirmed": {"read_only": True}}
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "password": {"write_only": True},
+            "is_email_confirmed": {"read_only": True},
+        }
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
@@ -20,9 +24,18 @@ class ProfileSerializer(serializers.ModelSerializer):
     Serializer class to serialize the avatar
     """
 
+    avatar = serializers.SerializerMethodField(source="get_avatar")
+
     class Meta:
         model = Profile
         fields = ("avatar",)
+
+    def get_avatar(self, obj) -> str:
+        """Return user avatar url (absolute)"""
+
+        if obj.avatar:
+            request = self.context.get("request")
+            return request.build_absolute_uri(obj.avatar.url)
 
 
 class ChangePasswordSerializer(serializers.Serializer):

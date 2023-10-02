@@ -30,12 +30,12 @@ class ChatSerializer(serializers.ModelSerializer):
         if obj.user:
             return obj.user.username
 
-    @staticmethod
-    def get_img(obj) -> str:
+    def get_img(self, obj) -> str:
         """Return url of chat img"""
 
         if obj.user:
-            return obj.img.url
+            request = self.context.get("request")
+            return request.build_absolute_uri(obj.img.url)
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -68,12 +68,12 @@ class MessageSerializer(serializers.ModelSerializer):
             return obj.user.username
         return None
 
-    @staticmethod
-    def get_user_avatar(obj) -> Optional[str]:
+    def get_user_avatar(self, obj) -> Optional[str]:
         """Return URL to user avatar"""
 
         if isinstance(obj, Message):
-            return obj.user.profile.avatar.url
+            request = self.context.get("request")
+            return request.build_absolute_uri(obj.user.profile.avatar.url)
         return None
 
 
