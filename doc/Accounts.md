@@ -174,7 +174,7 @@
 ## Change password
 -   URL: /api/user/change-password
 -   Requests:
-    -   Put(URL, data={oldPassword, newPassword})
+    -   Put(URL, data={old_password, new_password})
 -   Successful response:
     -   Status code: 200.
     -   Response body:
@@ -186,16 +186,16 @@
         ```
 
 -   Unsuccessful responses:
-    -   Status code: 400 Bad Request.
+    -   Status code: 400 Bad Request (old password is wrong, new password is invalid).
       -   Response body:
 
-          ```json (old password is wrong)
+          ```json
           {
               "type": "validation_error",
               "errors": [
                   {
                       "code": "invalid",
-                      "detail": "Wrong password",
+                      "detail": "Wrong old password",
                       "attr": null
                   }
               ]
@@ -204,11 +204,21 @@
 
           ```json
           {
-              "type": "server_error",
+              "type": "validation_error",
               "errors": [
                   {
-                      "code": "error",
-                      "detail": "['This password is too short. It must contain at least 8 characters.', 'This password is too common.', 'This password is entirely numeric.']",
+                      "code": "invalid",
+                      "detail": "This password is too short. It must contain at least 8 characters.",
+                      "attr": null
+                  },
+                  {
+                      "code": "invalid",
+                      "detail": "This password is too common.",
+                      "attr": null
+                  },
+                  {
+                      "code": "invalid",
+                      "detail": "This password is entirely numeric.",
                       "attr": null
                   }
               ]
@@ -238,9 +248,9 @@
               "type": "validation_error",
               "errors": [
                   {
-                      "code": "max_length",
+                      "code": "invalid",
                       "detail": "Ensure this field has no more than 128 characters.",
-                      "attr": "password"
+                      "attr": "null"
                   }
               ]
           }
