@@ -1,7 +1,11 @@
+import logging
+
 from django.test.client import Client
 from django.urls import reverse
 
 from .conftest import UserForTests
+
+logger = logging.getLogger(__name__)
 
 
 def test_confirm_email_view_is_working(client: Client, test_user: UserForTests):
@@ -16,7 +20,11 @@ def test_confirm_email_view_is_working(client: Client, test_user: UserForTests):
     # login user
     url = reverse("login")
     body = {"username": test_user.username, "password": test_user.password}
-    response = client.post(url, body, format="json")
+
+    logger.debug(f"Login user: {body}")
+    response = client.post(url, body, format="json", headers={"origin": "http://localhost:8000"})
+
+    logger.debug(f"Login response: {response.json()}")
     assert response.status_code == 200
 
     # get user info to check is_email_confirmed

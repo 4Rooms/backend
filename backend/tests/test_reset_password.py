@@ -32,7 +32,7 @@ def test_password_reset(client: Client, test_user: UserForTests, new_password, e
 
     # request password reset email
     url = reverse("request_password_reset")
-    response = client.post(url, {"email": test_user.email}, format="json")
+    response = client.post(url, {"email": test_user.email}, format="json", headers={"origin": "http://localhost:8000"})
     logging.debug(f"response: {response.json()}\n")
 
     assert response.status_code == 200
@@ -43,13 +43,13 @@ def test_password_reset(client: Client, test_user: UserForTests, new_password, e
     logging.debug(f"Password reset email: \n{email.body}\n")
 
     # get token for password reset from email
-    token = re.match(r".*https://.+/password-reset/\?token_id=(?P<token>.+)", email.body).groupdict()["token"]
+    token = re.match(r".*/password-reset/\?token_id=(?P<token>.+)", email.body).groupdict()["token"]
     assert token is not None
 
     # reset password
     url = reverse("password_reset")
     body = {"token_id": token, "password": new_password}
-    response = client.post(url, body, format="json")
+    response = client.post(url, body, format="json", headers={"origin": "http://localhost:8000"})
     response_json = response.json()
     logging.debug(f"response: {response_json}\n")
 
@@ -89,13 +89,13 @@ def test_password_reset_with_invalid_token(
 
     # request password reset email
     url = reverse("request_password_reset")
-    response = client.post(url, {"email": test_user.email}, format="json")
+    response = client.post(url, {"email": test_user.email}, format="json", headers={"origin": "http://localhost:8000"})
     assert response.status_code == 200
 
     # reset password
     url = reverse("password_reset")
     body = {"token_id": token, "password": "new_password"}
-    response = client.post(url, body, format="json")
+    response = client.post(url, body, format="json", headers={"origin": "http://localhost:8000"})
     assert response.status_code == 400
 
     response_json = response.json()
@@ -120,7 +120,9 @@ def test_password_reset_with_unconfirmed_email(client: Client, test_user_unconfi
 
     # request password reset email
     url = reverse("request_password_reset")
-    response = client.post(url, {"email": test_user_unconfirmed.email}, format="json")
+    response = client.post(
+        url, {"email": test_user_unconfirmed.email}, format="json", headers={"origin": "http://localhost:8000"}
+    )
 
     # no emails should be sent
     assert mail.outbox == []
@@ -143,7 +145,9 @@ def test_password_reset_with_nonexistent_email(client: Client):
 
     # request password reset email
     url = reverse("request_password_reset")
-    response = client.post(url, {"email": "nonexistent@email.com"}, format="json")
+    response = client.post(
+        url, {"email": "nonexistent@email.com"}, format="json", headers={"origin": "http://localhost:8000"}
+    )
 
     # no emails should be sent
     assert mail.outbox == []
@@ -170,7 +174,7 @@ def test_password_reset_with_invalid_email(client: Client, email: str):
 
     # request password reset email
     url = reverse("request_password_reset")
-    response = client.post(url, {"email": email}, format="json")
+    response = client.post(url, {"email": email}, format="json", headers={"origin": "http://localhost:8000"})
 
     # no emails should be sent
     assert mail.outbox == []

@@ -3,6 +3,7 @@ import logging
 from accounts.models import EmailConfirmationToken, User
 from accounts.serializers import UserSerializer
 from accounts.services.email import send_confirmation_email
+from config.utils import get_ui_host
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -50,7 +51,7 @@ class RegisterUserView(APIView):
         # create token for email confirmation
         token = EmailConfirmationToken.objects.create(user=user)
         # send link for email confirmation
-        send_confirmation_email(email=user.email, token_id=token.pk)
+        send_confirmation_email(address=user.email, token_id=token.pk, ui_host=get_ui_host(request))
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
