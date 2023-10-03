@@ -25,6 +25,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from backend.accounts.services.email import send_password_reset_email
+from backend.config.utils import get_ui_host
 from backend.files.services.images import resize_image
 
 
@@ -231,7 +232,7 @@ class RequestPasswordResetAPIView(APIView):
         # send reset password email if user exists and email is confirmed
         if user.is_email_confirmed:
             token = PasswordResetToken.objects.create(user=user)
-            send_password_reset_email(address=email, reset_password_token=token.pk)
+            send_password_reset_email(address=email, reset_password_token=token.pk, ui_host=get_ui_host(request))
         else:
             logging.warning(f"Password reset request for unconfirmed email: {email}")
             raise ValidationError("Email is not confirmed.")

@@ -20,7 +20,7 @@ def test_user_unconfirmed(client: Client, django_user_model):
     # create user
     url = reverse("register")
     body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
-    response = client.post(url, body, format="json")
+    response = client.post(url, body, format="json", headers={"origin": "http://localhost:8000"})
     assert response.status_code == 201
 
     # Test that one message has been sent.

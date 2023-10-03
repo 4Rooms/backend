@@ -43,17 +43,17 @@ CORS_ALLOW_CREDENTIALS = True
 
 ALLOWED_HOSTS = [
     "localhost",
+    "4rooms.pro",
     "back.4rooms.pro",
     "testback.4rooms.pro",
-    "team-challenge-web-chat-my.netlify.app",
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://localhost:5173",
+    "https://4rooms.pro",
     "https://back.4rooms.pro",
     "https://testback.4rooms.pro",
-    "https://team-challenge-web-chat-my.netlify.app",
 ]
 
 
@@ -271,8 +271,6 @@ EMAIL_USE_TLS = True
 
 EMAIL_HOST_USER = os.getenv("HOST_USER_EMAIL")
 EMAIL_HOST_PASSWORD = os.getenv("HOST_APP_PASSWORD")
-
-UI_HOST = "https://4rooms.pro/"
 
 # Rooms categories for models
 CHOICE_ROOM = (("books", "books"), ("films", "films"), ("music", "music"), ("games", "games"))
