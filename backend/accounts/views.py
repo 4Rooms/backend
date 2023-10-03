@@ -173,16 +173,19 @@ class ChangePasswordAPIView(UpdateAPIView):
         serializer = ChangePasswordSerializer(data=request.data)
 
         if not serializer.is_valid():
+            logging.error(f"Update password. serializer.is_valid() -> false")
             raise ValidationError(serializer.errors)
 
         # check old password
         if not self.user.check_password(serializer.data.get("old_password")):
-            raise ValidationError("Wrong password")
+            logging.error(f"Update password. Invalid old password")
+            raise ValidationError("Wrong old password")
 
         # validate password
         try:
             validate_password(request.data["new_password"], self.user)
-        except ValidationError as error:
+        except DjangoValidationError as error:
+            logging.error(f"Update password. Invalid new password")
             raise ValidationError(error.messages) from None
 
         # set_password also hashes the password that the user will get
