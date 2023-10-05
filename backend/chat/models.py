@@ -67,7 +67,7 @@ class Message(models.Model):
         """Soft delete: delete message text, is_deleted = True"""
 
         self.is_deleted = True
-        self.text = None
+        self.text = "deleted"
         self.save()
 
 

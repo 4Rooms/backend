@@ -290,7 +290,7 @@
                     "id": 1,
                     "user_name": "user1",
                     "user_avatar": "/media/avatars/user1-avatar.jpg",
-                    "text": null,
+                    "text": "deleted",
                     "timestamp": "2023-09-12T14:28:35.244410Z",
                     "is_deleted": true,
                     "chat": 1,
@@ -480,7 +480,7 @@
         ```
 
 -   Additional information:  
-    When a message is deleted, it is stored in the database, it changed -> is_deleted=true, text=null.  
+    When a message is deleted, it is stored in the database, it changed -> is_deleted=true, text=deleted.  
     When you call the get method to see the messages of a certain chat, all messages, including deleted ones, will be displayed.
 
 ## Get list of saved chats
