@@ -488,7 +488,7 @@
 -   Request: Get(URL)
 
     ```
-    URL = "/api/chat/saved_chats"
+    URL = "/api/chat/saved_chats/"
     response = request.get(URL)
     ```
 
@@ -530,7 +530,7 @@
     -   user - ID of the user saving the chat
     -   chat_creator - username of the chat creator/owner
     -   img - URL of chat avatar
-    -   urL - URL as WebSocket chat
+    -   url - URL as WebSocket chat
     -   count - number of all records in DB
     -   next - link to get the next 100 records by Get request on it
     -   previous - link to get the previous 100 records by Get request on it
@@ -541,7 +541,7 @@
 -   Request: Post(URL, data)
 
     ```
-    URL = "/api/chat/saved_chats"
+    URL = "/api/chat/saved_chats/"
     
     # the ID of the chat we want to save
     data = data = {"chat_id": chatId}
@@ -640,3 +640,52 @@
             ]
         }
         ```
+        
+## Get user-created chats (my chats)
+-   URL: /api/chat/my_chat/
+-   Request: Get(URL)
+
+    ```
+    URL = "/api/chat/my_chat/"
+    response = request.get(URL)
+    ```
+
+-   Successful response:
+    -   Status code: 200.
+    -   Response body:
+
+        ```json
+        {
+            "count": 2,
+            "next": null,
+            "previous": null,
+            "results": [
+                {
+                    "id": 11,
+                    "title": "The office",
+                    "room": "films",
+                    "img": ".../media/chat-img.jpg",
+                    "user": "Carter",
+                    "description": "Best character",
+                    "url": "/chat/films/11/",
+                    "timestamp": "2023-09-29T08:56:04.494009Z"
+                },
+                {
+                    "id": 12,
+                    "title": "The witcher",
+                    "room": "games",
+                    "img": ".../media/chat-avatar.jpg",
+                    "user": "Carter",
+                    "description": "How to pass",
+                    "url": "/chat/games/12/",
+                    "timestamp": "2023-09-29T09:10:36.637421Z"
+                }
+            ]
+        }
+        ```
+    -   img - URL of chat avatar
+    -   url - URL as WebSocket chat
+    -   count - number of all records in DB
+    -   next - link to get the next 100 records by Get request on it
+    -   previous - link to get the previous 100 records by Get request on it
+    -   results - 100 or fewer records from DB (100 or fewer chats)

@@ -130,3 +130,21 @@ class DeleteSavedChatApiView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SavedChat.objects.all()
     serializer_class = SavedChatSerializer
     http_method_names = ["delete"]
+
+
+class MyChatsApiView(generics.GenericAPIView):
+    """Get a list of chats created by the user (my chats)"""
+
+    permission_classes = (IsAuthenticated, IsEmailConfirm)
+    serializer_class = ChatSerializer
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    http_method_names = ["get"]
+
+    def get(self, request):
+        """Get a list of chats created by the user (my chats)"""
+
+        # get chats, serialize, and return list of chats by pagination
+        self.queryset = Chat.objects.filter(user=request.user)
+        serializer = ChatSerializer(self.queryset, context={"request": request}, many=True)
+        page = self.paginate_queryset(serializer.data)
+        return self.get_paginated_response(page)
