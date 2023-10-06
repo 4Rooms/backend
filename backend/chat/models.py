@@ -17,7 +17,7 @@ class Chat(models.Model):
         upload_to="chat_img",
     )
     user = models.ForeignKey(get_user_model(), null=True, on_delete=models.CASCADE)
-    description = models.TextField(blank=True, null=True, max_length=400)
+    description = models.TextField(max_length=400)
     url = models.CharField(max_length=50, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 

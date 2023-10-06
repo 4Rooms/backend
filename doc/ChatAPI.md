@@ -4,7 +4,7 @@
 ## Post chat
 -   URL: /api/chat/<room>/
 -   Request: Post(URL, data)  
-    -   data: title, description (optional), img (optional)  
+    -   data: title, description, img (optional)  
     -   chat titles cannot be repeated in the same room  
     -   __room__ must have one of the following string values:
         -   "films"
@@ -58,8 +58,19 @@
             "title": [
                 "This field is required."
             ],
-            "room": [
+            "description": [
                 "This field is required."
+            ]
+        }
+        ```
+        
+        ```json
+        {
+            "title": [
+                "This field may not be blank."
+            ],
+            "description": [
+                "This field may not be blank."
             ]
         }
         ```
