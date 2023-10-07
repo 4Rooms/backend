@@ -24,18 +24,9 @@ class ProfileSerializer(serializers.ModelSerializer):
     Serializer class to serialize the avatar
     """
 
-    avatar = serializers.SerializerMethodField(source="get_avatar")
-
     class Meta:
         model = Profile
         fields = ("avatar",)
-
-    def get_avatar(self, obj) -> str:
-        """Return user avatar url (absolute)"""
-
-        if obj.avatar:
-            request = self.context.get("request")
-            return request.build_absolute_uri(obj.avatar.url)
 
 
 class ChangePasswordSerializer(serializers.Serializer):
