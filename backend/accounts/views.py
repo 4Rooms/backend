@@ -110,7 +110,7 @@ class ProfileAPIView(RetrieveUpdateAPIView):
     def put(self, request, *args, **kwargs):
         """Update user avatar"""
 
-        serializer = ProfileSerializer(self.get_object(), data=request.data)
+        serializer = ProfileSerializer(self.get_object(), data=request.data, context={"request": request})
 
         if not serializer.is_valid():
             raise ValidationError(serializer.errors)
