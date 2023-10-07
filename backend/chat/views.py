@@ -16,6 +16,7 @@ from chat.serializers import (
 )
 from config.settings import CHOICE_ROOM
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from drf_spectacular.utils import extend_schema
 from PIL import Image
 from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
@@ -49,6 +50,19 @@ class ChatAPIView(generics.GenericAPIView):
         page = self.paginate_queryset(serializer.data)
         return self.get_paginated_response(page)
 
+    @extend_schema(
+        tags=["api"],
+        request={
+            "multipart/form-data": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                    "img": {"type": "string", "format": "binary"},
+                },
+            }
+        },
+    )
     def post(self, request, room_name):
         """Create Chat"""
 
@@ -84,6 +98,18 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ChatSerializerForChatUpdate
     http_method_names = ["patch", "delete"]
 
+    @extend_schema(
+        tags=["api"],
+        request={
+            "multipart/form-data": {
+                "type": "object",
+                "properties": {
+                    "description": {"type": "string"},
+                    "img": {"type": "string", "format": "binary"},
+                },
+            }
+        },
+    )
     def patch(self, request, *args, **kwargs):
         """Update chat description/image"""
 
