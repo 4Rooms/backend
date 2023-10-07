@@ -180,10 +180,10 @@
     data = {"description": "Chat description"}
     response = request.patch(URL, data)
     
-    data = {"img": img.file}
+    data = {"img": file.jpg}
     response = request.patch(URL, data)
     
-    data = {"description": "Chat description", "img": img.file}
+    data = {"description": "Chat description", "img": file.jpg}
     response = request.patch(URL, data)
     ```
 
@@ -205,7 +205,7 @@
         ```
 
 -   Unsuccessful response:
-    -   Status codes: 400 Bad Request, 403 Forbidden (user isn't a chat creator), 404 Not Found(Absent chat with posted id).
+    -   Status codes: 400 Bad Request, 403 Forbidden (user isn't a chat creator), 404 Not Found (Absent chat with posted ID).
     -   Response body:
 
         ```json

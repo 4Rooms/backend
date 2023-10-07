@@ -1,3 +1,4 @@
+import logging
 from io import BytesIO
 
 from chat.models import Chat, Message, SavedChat
@@ -23,6 +24,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from backend.files.services.images import resize_image
+
+logger = logging.getLogger(__name__)
 
 
 class ChatAPIView(generics.GenericAPIView):
@@ -84,17 +87,17 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
     def patch(self, request, *args, **kwargs):
         """Update chat description/image"""
 
-        print("Request data:", request.data)
+        logger.info(f"PATCH CHAT: Request data: {request.data}")
         serializer = ChatSerializerForChatUpdate(self.get_object(), data=request.data, context={"request": request})
 
         if not serializer.is_valid():
             raise ValidationError(serializer.errors)
 
-        print("Validated date:", serializer.validated_data)
+        logger.debug(f"Validated date: {serializer.validated_data}")
         chat_img = serializer.validated_data.get("img", None)
 
         if chat_img:
-            print("Chat img:", chat_img)
+            logger.debug(f"Chat img: {chat_img}")
             img = Image.open(chat_img)
             img_format = img.format
 
