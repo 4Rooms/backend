@@ -1,17 +1,28 @@
+from io import BytesIO
+
 from chat.models import Chat, Message, SavedChat
 from chat.permissions import (
     IsCreatorOrReadOnly,
     IsEmailConfirm,
     IsNotDeleted,
-    IsOnlyDescriptionInRequestData,
     IsOnlyTextInRequestData,
 )
-from chat.serializers import ChatSerializer, MessageSerializer, SavedChatSerializer
+from chat.serializers import (
+    ChatSerializer,
+    ChatSerializerForChatUpdate,
+    MessageSerializer,
+    SavedChatSerializer,
+)
 from config.settings import CHOICE_ROOM
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from PIL import Image
 from rest_framework import generics, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+
+from backend.files.services.images import resize_image
 
 
 class ChatAPIView(generics.GenericAPIView):
@@ -63,12 +74,59 @@ class ChatAPIView(generics.GenericAPIView):
 
 
 class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
-    """Update chat description or delete chat"""
+    """Update chat description/image or delete chat"""
 
-    permission_classes = (IsAuthenticated, IsCreatorOrReadOnly, IsOnlyDescriptionInRequestData, IsEmailConfirm)
+    permission_classes = (IsAuthenticated, IsCreatorOrReadOnly, IsEmailConfirm)
     queryset = Chat.objects.all()
-    serializer_class = ChatSerializer
+    serializer_class = ChatSerializerForChatUpdate
     http_method_names = ["patch", "delete"]
+
+    def patch(self, request, *args, **kwargs):
+        """Update chat description/image"""
+
+        print("Request data:", request.data)
+        serializer = ChatSerializerForChatUpdate(self.get_object(), data=request.data, context={"request": request})
+
+        if not serializer.is_valid():
+            raise ValidationError(serializer.errors)
+
+        print("Validated date:", serializer.validated_data)
+        chat_img = serializer.validated_data.get("img", None)
+
+        if chat_img:
+            print("Chat img:", chat_img)
+            img = Image.open(chat_img)
+            img_format = img.format
+
+            if img.size != (200, 200):
+                # Resize the image before saving it
+                img = resize_image(img, 200)
+
+                # Create a BytesIO object to store the resized image
+                output = BytesIO()
+
+                # Save the resized image to the BytesIO object in JPEG format
+                img.save(output, format=img_format)
+
+                # Move the cursor to the beginning of the BytesIO object
+                output.seek(0)
+
+                # Create a new InMemoryUploadedFile with the resized image
+                resized_image = InMemoryUploadedFile(
+                    output,
+                    "ImageField",
+                    f"{chat_img.name.split('.')[0]}.{img_format.lower()}",
+                    f"image/{img_format.lower()}",
+                    output.tell(),
+                    None,
+                )
+
+                # Save the resized image
+                serializer.validated_data["img"] = resized_image
+
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class MessagesApiView(generics.ListAPIView):

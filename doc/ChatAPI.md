@@ -170,14 +170,20 @@
         }
         ```
 
-## Update chat description
+## Update chat description/img (Patch)
 -   URL: /api/chat/<chatID>/
 -   Request: Patch(URL, data)
-    -   data: description
+    -   data: description/img or both fields
 
     ```
     URL = "/api/chat/10/"
     data = {"description": "Chat description"}
+    response = request.patch(URL, data)
+    
+    data = {"img": img.file}
+    response = request.patch(URL, data)
+    
+    data = {"description": "Chat description", "img": img.file}
     response = request.patch(URL, data)
     ```
 
@@ -199,7 +205,7 @@
         ```
 
 -   Unsuccessful response:
-    -   Status codes: 400 Bad Request, 403 Forbidden (user isn't a creator of chat or user sent not description field).
+    -   Status codes: 400 Bad Request, 403 Forbidden (user isn't a chat creator), 404 Not Found(Absent chat with posted id).
     -   Response body:
 
         ```json
@@ -217,12 +223,12 @@
 
         ```json
         {
-            "type": "client_error",
+            "type": "validation_error",
             "errors": [
                 {
-                    "code": "permission_denied",
-                    "detail": "Only the chat description can be changed",
-                    "attr": null
+                    "code": "invalid_image",
+                    "detail": "Upload a valid image. The file you uploaded was either not an image or a corrupted image.",
+                    "attr": "img"
                 }
             ]
         }
@@ -230,8 +236,26 @@
 
         ```json
         {
-            "description": [
-                "Ensure this field has no more than 400 characters."
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": "max_length",
+                    "detail": "Ensure this field has no more than 400 characters.",
+                    "attr": "description"
+                }
+            ]
+        }
+        ```
+        
+        ```json
+        {
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": "blank",
+                    "detail": "This field may not be blank.",
+                    "attr": "description"
+                }
             ]
         }
         ```
