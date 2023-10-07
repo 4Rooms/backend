@@ -14,19 +14,6 @@ class IsCreatorOrReadOnly(permissions.BasePermission):
         return obj.user == request.user
 
 
-class IsOnlyDescriptionInRequestData(permissions.BasePermission):
-    """Permission to update chat description. Check that request has only a description field."""
-
-    message = "Only the chat description can be changed"
-
-    def has_object_permission(self, request, view, obj):
-        if request.method != "PATCH":
-            return True
-        # is only description field in request
-        is_only_description = len(request.data) == 1 and "description" in request.data
-        return is_only_description
-
-
 class IsOnlyTextInRequestData(permissions.BasePermission):
     """Permission to update message text. Check that request has only a text field."""
 

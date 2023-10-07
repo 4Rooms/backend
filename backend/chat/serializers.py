@@ -8,12 +8,11 @@ class ChatSerializer(serializers.ModelSerializer):
     """Chat Serializer"""
 
     user = serializers.SerializerMethodField(source="get_user")
-    img = serializers.SerializerMethodField(source="get_img")
 
     class Meta:
         model = Chat
         fields = ["id", "title", "room", "img", "user", "description", "url", "timestamp"]
-        extra_kwargs = {"id": {"read_only": True}, "user": {"read_only": True}, "url": {"read_only": True}}
+        read_only_fields = ["id", "user", "timestamp", "url", "title", "room"]
 
     @staticmethod
     def update_url(obj, *args, **kwargs):
@@ -30,12 +29,15 @@ class ChatSerializer(serializers.ModelSerializer):
         if obj.user:
             return obj.user.username
 
-    def get_img(self, obj) -> str:
-        """Return url of chat img"""
 
-        if obj.user:
-            request = self.context.get("request")
-            return request.build_absolute_uri(obj.img.url)
+class ChatSerializerForChatUpdate(ChatSerializer):
+    """Chat Serializer for Update chat (Patch)"""
+
+    class Meta:
+        model = Chat
+        fields = ["id", "title", "room", "img", "user", "description", "url", "timestamp"]
+        read_only_fields = ["id", "user", "timestamp", "url", "title", "room"]
+        extra_kwargs = {"description": {"required": False}, "img": {"required": False}}
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -51,7 +53,7 @@ class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message
         fields = "__all__"
-        read_only_fields = ["timestamp", "user"]
+        read_only_fields = ["id", "timestamp", "user"]
 
     def create(self, validated_data):
         """Save message with user"""
@@ -100,7 +102,7 @@ class SavedChatSerializer(serializers.ModelSerializer):
     class Meta:
         model = SavedChat
         fields = ["id", "user", "chat", "title", "room", "description", "chat_creator", "img", "url"]
-        extra_kwargs = {"id": {"read_only": True}, "user": {"read_only": True}}
+        extra_kwargs = {"id": {"read_only": True}, "user": {"read_only": True}, "chat": {"read_only": True}}
 
     @staticmethod
     def get_title(obj) -> Optional[str]:
@@ -134,13 +136,12 @@ class SavedChatSerializer(serializers.ModelSerializer):
             return obj.chat.user.username
         return None
 
-    @staticmethod
-    def get_img(obj) -> Optional[str]:
-        """Return url of chat avatar"""
+    def get_img(self, obj) -> Optional[str]:
+        """Return url of chat img"""
 
-        if isinstance(obj, SavedChat):
-            return obj.chat.img.url
-        return None
+        if obj.chat:
+            request = self.context.get("request")
+            return request.build_absolute_uri(obj.chat.img)
 
     @staticmethod
     def get_url(obj) -> Optional[str]:
