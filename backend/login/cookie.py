@@ -22,6 +22,9 @@ def set_auth_cookie(response, jwt_token):
     if hostname not in settings.ALLOWED_HOSTS:
         hostname = None
 
+    if hostname in ["back.4rooms.pro", "testback.4rooms.pro"]:
+        hostname = "4rooms.pro"
+
     response.set_cookie(
         key=settings.SIMPLE_JWT["AUTH_COOKIE"],
         value=jwt_token,
