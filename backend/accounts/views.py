@@ -37,14 +37,14 @@ class UserAPIView(APIView):
     serializer_class = UserSerializer
 
     @extend_schema(
-        tags=["Account operations"],
+        tags=["Account"],
     )
     def get(self, request):
         serializer = UserSerializer(request.user, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @extend_schema(
-        tags=["Account operations"],
+        tags=["Account"],
     )
     def put(self, request):
         """Update user email/username"""
@@ -81,8 +81,8 @@ class UserAPIView(APIView):
 
 
 @extend_schema_view(
-    get=extend_schema(tags=["Account operations"]),
-    put=extend_schema(tags=["Account operations"]),
+    get=extend_schema(tags=["Account"]),
+    put=extend_schema(tags=["Account"]),
 )
 class ProfileAPIView(RetrieveUpdateAPIView):
     """
@@ -95,13 +95,13 @@ class ProfileAPIView(RetrieveUpdateAPIView):
     http_method_names = ["get", "put"]
 
     @extend_schema(
-        tags=["Account operations"],
+        tags=["Account"],
     )
     def get_object(self):
         return self.request.user.profile
 
     @extend_schema(
-        tags=["Account operations"],
+        tags=["Account"],
         operation_id="upload_file",
         request={
             "multipart/form-data": {"type": "object", "properties": {"avatar": {"type": "string", "format": "binary"}}}
@@ -152,7 +152,7 @@ class ProfileAPIView(RetrieveUpdateAPIView):
 
 
 @extend_schema_view(
-    put=extend_schema(tags=["Account operations"]),
+    put=extend_schema(tags=["Account"]),
 )
 class ChangePasswordAPIView(UpdateAPIView):
     """
@@ -165,7 +165,7 @@ class ChangePasswordAPIView(UpdateAPIView):
     http_method_names = ["put"]
 
     @extend_schema(
-        tags=["Account operations"],
+        tags=["Account"],
     )
     def update(self, request, *args, **kwargs):
         """Change password"""
@@ -206,7 +206,7 @@ class RequestPasswordResetAPIView(APIView):
     serializer_class = EmailSerializer
 
     @extend_schema(
-        tags=["Account operations"],
+        tags=["Account"],
         responses=inline_serializer(
             name="RequestPasswordResetResponse",
             fields={
@@ -250,7 +250,7 @@ class PasswordResetAPIView(APIView):
     serializer_class = PasswordResetSerializer
 
     @extend_schema(
-        tags=["Account operations"],
+        tags=["Account"],
         responses=inline_serializer(
             name="PasswordResetResponse",
             fields={

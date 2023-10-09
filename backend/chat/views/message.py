@@ -9,12 +9,16 @@ from chat.permissions import (
     IsOnlyTextInRequestData,
 )
 from chat.serializers.message import MessageSerializer
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
 logger = logging.getLogger(__name__)
 
 
+@extend_schema_view(
+    get=extend_schema(tags=["Message"]),
+)
 class MessagesApiView(generics.ListAPIView):
     """Get messages from the certain chat"""
 
@@ -29,6 +33,10 @@ class MessagesApiView(generics.ListAPIView):
         return Chat.objects.get(pk=chat_id).message_set.all()
 
 
+@extend_schema_view(
+    patch=extend_schema(tags=["Message"]),
+    delete=extend_schema(tags=["Message"]),
+)
 class UpdateDeleteMessageApiView(generics.RetrieveUpdateDestroyAPIView):
     """Update text of message and Soft delete of message"""
 

@@ -26,7 +26,7 @@ class RegisterUserView(APIView):
     serializer_class = UserSerializer
 
     @extend_schema(
-        tags=["Account operations"],
+        tags=["Account"],
     )
     def post(self, request):
         serializer = UserSerializer(data=request.data)
@@ -62,7 +62,7 @@ class ConfirmEmailApiView(APIView):
     serializer_class = EmailConfirmationResponseSerializer
 
     @extend_schema(
-        tags=["Account operations"],
+        tags=["Account"],
         parameters=[
             OpenApiParameter(
                 name="token_id", location=OpenApiParameter.QUERY, description="TokenId", required=True, type=str
