@@ -1,30 +1,23 @@
 import logging
 from io import BytesIO
 
-from chat.models import Chat, Message, SavedChat
-from chat.permissions import (
-    IsCreatorOrReadOnly,
-    IsEmailConfirm,
-    IsNotDeleted,
-    IsOnlyTextInRequestData,
-)
-from chat.serializers import (
+from chat.models.chat import Chat, SavedChat
+from chat.permissions import IsCreatorOrReadOnly, IsEmailConfirm
+from chat.serializers.chat import (
     ChatSerializer,
     ChatSerializerForChatUpdate,
-    MessageSerializer,
     SavedChatSerializer,
 )
 from config.settings import CHOICE_ROOM
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from drf_spectacular.utils import extend_schema
+from files.services.images import resize_image
 from PIL import Image
 from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
-from backend.files.services.images import resize_image
 
 logger = logging.getLogger(__name__)
 
@@ -156,29 +149,6 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class MessagesApiView(generics.ListAPIView):
-    """Get messages from the certain chat"""
-
-    permission_classes = (IsAuthenticated, IsEmailConfirm)
-    serializer_class = MessageSerializer
-    http_method_names = ["get"]
-
-    def get_queryset(self):
-        """Get messages from the certain chat"""
-
-        chat_id = self.kwargs["chat_id"]
-        return Chat.objects.get(pk=chat_id).message_set.all()
-
-
-class UpdateDeleteMessageApiView(generics.RetrieveUpdateDestroyAPIView):
-    """Update text of message and Soft delete of message"""
-
-    permission_classes = (IsAuthenticated, IsOnlyTextInRequestData, IsCreatorOrReadOnly, IsEmailConfirm, IsNotDeleted)
-    queryset = Message.objects.all()
-    serializer_class = MessageSerializer
-    http_method_names = ["patch", "delete"]
 
 
 class SavedChatApiView(generics.GenericAPIView):
