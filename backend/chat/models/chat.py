@@ -26,6 +26,7 @@ class Chat(models.Model):
             "room",
             "title",
         )
+        app_label = "chat"
 
     def __str__(self):
         return f"id: {self.pk}, title: {self.title}, room: {self.room}"
@@ -51,36 +52,6 @@ class Chat(models.Model):
             new_img.save(self.img.path)
 
 
-class Message(models.Model):
-    """Message table"""
-
-    chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
-    user = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
-    text = models.TextField(max_length=1000, null=True, blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    is_deleted = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"id: {self.pk}, chat: {self.chat}, user: {self.user}"
-
-    def delete(self):
-        """Soft delete: delete message text, is_deleted = True"""
-
-        self.is_deleted = True
-        self.text = "deleted"
-        self.save()
-
-
-class OnlineUser(models.Model):
-    """The user who is currently in a certain chat"""
-
-    user = models.ForeignKey(get_user_model(), related_name="group_user", on_delete=models.CASCADE, null=True)
-    chat = models.ForeignKey(Chat, related_name="group_participant", on_delete=models.CASCADE, null=True)
-
-    def __str__(self):
-        return f"user: {self.user}, chat: {self.chat}"
-
-
 class SavedChat(models.Model):
     """Saved user's chat"""
 
@@ -89,3 +60,6 @@ class SavedChat(models.Model):
 
     def __str__(self):
         return f"id: {self.pk}, user: {self.user}, saved chat: {self.chat}"
+
+    class Meta:
+        app_label = "chat"

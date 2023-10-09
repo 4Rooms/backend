@@ -1,14 +1,12 @@
-from django.urls import path
-
-from backend.chat.views import (
+from chat.views.chat import (
     ChatAPIView,
     DeleteSavedChatApiView,
-    MessagesApiView,
     MyChatsApiView,
     SavedChatApiView,
     UpdateDeleteChatApiView,
-    UpdateDeleteMessageApiView,
 )
+from chat.views.message import MessagesApiView, UpdateDeleteMessageApiView
+from django.urls import path
 
 urlpatterns = [
     path("chat/saved_chats/", SavedChatApiView.as_view(), name="get_saved_chats"),
