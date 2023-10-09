@@ -30,7 +30,7 @@ class LoginAPIView(APIView):
     permission_classes = (AllowAny,)
 
     @extend_schema(
-        tags=["Account operations"],
+        tags=["Account"],
     )
     def post(self, request, format=None):
         """Authenticate the user, set the access token

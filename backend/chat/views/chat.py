@@ -10,7 +10,7 @@ from chat.serializers.chat import (
 )
 from config.settings import CHOICE_ROOM
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from files.services.images import resize_image
 from PIL import Image
 from rest_framework import generics, status
@@ -30,6 +30,9 @@ class ChatAPIView(generics.GenericAPIView):
     serializer_class = ChatSerializer
     http_method_names = ["get", "post"]
 
+    @extend_schema(
+        tags=["Chat"],
+    )
     def get(self, request, room_name):
         """Get chat list from the certain room"""
 
@@ -44,7 +47,7 @@ class ChatAPIView(generics.GenericAPIView):
         return self.get_paginated_response(page)
 
     @extend_schema(
-        tags=["api"],
+        tags=["Chat"],
         request={
             "multipart/form-data": {
                 "type": "object",
@@ -83,6 +86,9 @@ class ChatAPIView(generics.GenericAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema_view(
+    delete=extend_schema(tags=["Chat"]),
+)
 class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
     """Update chat description/image or delete chat"""
 
@@ -92,7 +98,7 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
     http_method_names = ["patch", "delete"]
 
     @extend_schema(
-        tags=["api"],
+        tags=["Chat"],
         request={
             "multipart/form-data": {
                 "type": "object",
@@ -151,6 +157,10 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@extend_schema_view(
+    get=extend_schema(tags=["Chat"]),
+    post=extend_schema(tags=["Chat"]),
+)
 class SavedChatApiView(generics.GenericAPIView):
     """Get/Post saved chat(s) for the user"""
 
@@ -180,6 +190,9 @@ class SavedChatApiView(generics.GenericAPIView):
         )
 
 
+@extend_schema_view(
+    delete=extend_schema(tags=["Chat"]),
+)
 class DeleteSavedChatApiView(generics.RetrieveUpdateDestroyAPIView):
     """Delete saved chat as saved"""
 
@@ -189,6 +202,9 @@ class DeleteSavedChatApiView(generics.RetrieveUpdateDestroyAPIView):
     http_method_names = ["delete"]
 
 
+@extend_schema_view(
+    get=extend_schema(tags=["Chat"]),
+)
 class MyChatsApiView(generics.GenericAPIView):
     """Get a list of chats created by the user (my chats)"""
 
