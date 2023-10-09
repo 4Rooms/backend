@@ -88,10 +88,10 @@
         ```json
         {
             "description": [
-                "Ensure this field has no more than 400 characters."
+                "Ensure this field has no more than 200 characters."
             ],
             "title": [
-                "Ensure this field has no more than 70 characters."
+                "Ensure this field has no more than 50 characters."
             ]
         }
         ```
@@ -240,7 +240,7 @@
             "errors": [
                 {
                     "code": "max_length",
-                    "detail": "Ensure this field has no more than 400 characters.",
+                    "detail": "Ensure this field has no more than 200 characters.",
                     "attr": "description"
                 }
             ]
@@ -256,6 +256,14 @@
                     "detail": "This field may not be blank.",
                     "attr": "description"
                 }
+            ]
+        }
+        ```
+        
+        ```json
+        {
+            "img": [
+                "Upload a valid image. The file you uploaded was either not an image or a corrupted image."
             ]
         }
         ```

@@ -8,7 +8,7 @@ from PIL import Image
 class Chat(models.Model):
     """Chat table"""
 
-    title = models.CharField(max_length=70)
+    title = models.CharField(max_length=50)
     room = models.CharField(choices=CHOICE_ROOM, max_length=50)
     img = models.ImageField(
         null=True,
@@ -17,7 +17,7 @@ class Chat(models.Model):
         upload_to="chat_img",
     )
     user = models.ForeignKey(get_user_model(), null=True, on_delete=models.CASCADE)
-    description = models.TextField(max_length=400)
+    description = models.TextField(max_length=200)
     url = models.CharField(max_length=50, blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
