@@ -1,6 +1,8 @@
 from typing import Optional
+from urllib.parse import urljoin
 
 from chat.models.message import Message
+from django.conf import settings
 from rest_framework import serializers
 
 
@@ -38,8 +40,7 @@ class MessageSerializer(serializers.ModelSerializer):
         """Return URL to user avatar"""
 
         if isinstance(obj, Message):
-            request = self.context.get("request")
-            return request.build_absolute_uri(obj.user.profile.avatar.url)
+            return urljoin(settings.DJANGO_HOST, obj.user.profile.avatar.url)
         return None
 
 

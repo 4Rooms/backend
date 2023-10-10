@@ -291,7 +291,14 @@
             const messageData = message;
             messageData['timestamp'] = new Date(messageData.timestamp * 1000).toLocaleString();
 
-            messageDiv.innerHTML = `<pre class="received-message">${JSON.stringify(messageData, null, 2)}</pre>`;
+            let new_html = '<div class="received-message">';
+            if (messageData.user_avatar) {
+                new_html += `<img src="${messageData.user_avatar}" width="50" height="50">`
+            }
+            new_html += `<pre ">${JSON.stringify(messageData, null, 2)}</pre>`
+            new_html += '</div>';
+
+            messageDiv.innerHTML = new_html;
             chatMessages.appendChild(messageDiv);
         }
     </script>
