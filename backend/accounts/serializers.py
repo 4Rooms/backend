@@ -1,5 +1,32 @@
+import html
+
 from accounts.models import Profile, User
 from rest_framework import serializers
+
+from .validators.common import WhitespaceValidator
+
+
+class UserNameField(serializers.CharField):
+    """
+    Set validators for username field
+    """
+
+    def __init__(self, *args, **kwargs):
+        # set default values
+        kwargs["min_length"] = kwargs.get("min_length", 1)
+        kwargs["max_length"] = kwargs.get("max_length", 20)
+        kwargs["trim_whitespace"] = kwargs.get("trim_whitespace", False)
+
+        validators = kwargs.get("validators", [])
+        validators.append(WhitespaceValidator())
+        kwargs["validators"] = validators
+
+        super().__init__(*args, **kwargs)
+
+    def to_internal_value(self, data):
+        # escape html
+        data = html.escape(data)
+        return super().to_internal_value(data)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -13,6 +40,8 @@ class UserSerializer(serializers.ModelSerializer):
             "password": {"write_only": True},
             "is_email_confirmed": {"read_only": True},
         }
+
+    username = UserNameField(required=True)
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
@@ -76,5 +105,16 @@ class LoginDataSerializer(serializers.Serializer):
 
     model = User
 
-    username = serializers.CharField(required=True)
+    username = UserNameField(required=True)
     password = serializers.CharField(required=True, max_length=128)
+
+
+class UpdateUserDataSerializer(serializers.Serializer):
+    """
+    User data
+    """
+
+    model = User
+
+    username = UserNameField(required=True)
+    email = serializers.EmailField(required=True)

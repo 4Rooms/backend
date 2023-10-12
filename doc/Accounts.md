@@ -121,21 +121,46 @@
 
         ```json
         {
-            "email": [
-                "Enter a valid email address."
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": "invalid",
+                    "detail": "Enter a valid email address.",
+                    "attr": "email"
+                },
+                {
+                    "code": "invalid",
+                    "detail": "This value should not start or end with a whitespace.",
+                    "attr": "username"
+                },
+
             ]
         }
         ```
 
         ```json
         {
-            "username error": "That username already registered"
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": "invalid",
+                    "detail": "Username already registered.",
+                    "attr": null
+                }
+            ]
         }
         ```
 
         ```json
         {
-            "email error": "That email already exists"
+            "type": "validation_error",
+            "errors": [
+                {
+                    "code": "invalid",
+                    "detail": "Email already exists.",
+                    "attr": null
+                }
+            ]
         }
         ```
 

@@ -7,13 +7,13 @@ from accounts.serializers import (
     EmailSerializer,
     PasswordResetSerializer,
     ProfileSerializer,
+    UpdateUserDataSerializer,
     UserSerializer,
 )
 from chat.permissions import IsEmailConfirm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.core.validators import validate_email
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
 from PIL import Image
 from rest_framework import serializers, status
@@ -45,34 +45,31 @@ class UserAPIView(APIView):
 
     @extend_schema(
         tags=["Account"],
+        request=UpdateUserDataSerializer,
     )
     def put(self, request):
         """Update user email/username"""
 
+        data = UpdateUserDataSerializer(data=request.data)
+        if not data.is_valid():
+            raise ValidationError(data.errors)
+
+        new_email = data.validated_data["email"]
+        new_username = data.validated_data["username"]
         user = User.objects.get(email=request.user.email)
-        new_email = request.data["email"]
-        new_username = request.data["username"]
 
         # if email is already in use
-        if User.objects.filter(email=new_email).exists():
-            another_user = User.objects.get(email=new_email)
+        registered_user = User.objects.filter(email=new_email)
+        if registered_user.exists():
             # is it another user
-            if user.id != another_user.id:
-                return Response({"email error": "That email already exists"}, status=status.HTTP_400_BAD_REQUEST)
+            if user.id != registered_user[0].id:
+                raise ValidationError("Email already exists.")
 
         # if username is already in use
-        if User.objects.filter(username=new_username).exists():
-            another_user = User.objects.get(username=new_username)
-            if user.id != another_user.id:
-                return Response(
-                    {"username error": "That username already registered"}, status=status.HTTP_400_BAD_REQUEST
-                )
-
-        # validate email
-        try:
-            validate_email(new_email)
-        except ValidationError as error:
-            return Response({"email error": error}, status=status.HTTP_400_BAD_REQUEST)
+        registered_user = User.objects.filter(username=new_username)
+        if registered_user.exists():
+            if user.id != registered_user[0].id:
+                raise ValidationError("Username already registered.")
 
         user.email = new_email
         user.username = new_username
