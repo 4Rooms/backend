@@ -13,31 +13,10 @@
       ansible.builtin.debug:
         var: domain
 
-    - name: Build an image
-      delegate_to: localhost
-      community.docker.docker_image:
-        source: build
-        build:
-          path: ../../../
-          dockerfile: .github/scripts/deploy/Dockerfile
-          nocache: true
-          pull: true
-          rm: true
-
-        force_source: true
-        force_tag: true
-        name: chat-{{ img_name }}
-        tag: latest
-        archive_path: /tmp/chat_image.tar
-      register: build_result
-      changed_when: build_result is changed
-
-    - name: Save build logs to a file
-      copy:
-        content: "{{ build_result.stdout }}"
-        dest: /tmp/image_build.log
-
-    - import_tasks: test_image.yml
+    - import_tasks: tasks/build_image.yml
+    - import_tasks: tasks/test_image.yml
+    - import_tasks: tasks/volumes.yml
+    - import_tasks: tasks/redis.yml
 
     - name: Synchronize image
       synchronize:
@@ -53,16 +32,6 @@
         source: load
         force_source: true
         force_tag: true
-
-    - name: Create a volume for data
-      community.docker.docker_volume:
-        name: chat-{{ img_name }}-data
-
-    - name: Create a volume for db
-      community.docker.docker_volume:
-        name: chat-{{ img_name }}-db
-
-    - import_tasks: redis.yml
 
     - name: Recreate chat container
       become: true
@@ -114,3 +83,6 @@
           - "redis-{{ img_name }}"
 
         labels: "{{ container_labels | items2dict }}"
+
+    - import_tasks: tasks/httpd.yml
+    - import_tasks: tasks/docker_prune.yml
