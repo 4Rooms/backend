@@ -157,10 +157,6 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@extend_schema_view(
-    get=extend_schema(tags=["Chat"]),
-    post=extend_schema(tags=["Chat"]),
-)
 class SavedChatApiView(generics.GenericAPIView):
     """Get/Post saved chat(s) for the user"""
 
@@ -169,6 +165,9 @@ class SavedChatApiView(generics.GenericAPIView):
     parser_classes = [JSONParser, MultiPartParser, FormParser]
     http_method_names = ["get", "post"]
 
+    @extend_schema(
+        tags=["Chat"],
+    )
     def get(self, request):
         """Get saved chats of users from request"""
 
@@ -178,6 +177,16 @@ class SavedChatApiView(generics.GenericAPIView):
         page = self.paginate_queryset(serializer.data)
         return self.get_paginated_response(page)
 
+    @extend_schema(
+        tags=["Chat"],
+        request={
+            "application/json": {
+                "properties": {
+                    "chat_id": {"type": "integer"},
+                },
+            }
+        },
+    )
     def post(self, request):
         """Create a saved chat for the user from the request"""
 
