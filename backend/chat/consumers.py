@@ -64,10 +64,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         logger.debug(f"MESSAGE: User: {self._user}. Chat {self._chat_id}. Room {self._room_name}")
 
         # delete msg event
-        if content.get("event_type", None) == "message_was_deleted":
-            logger.debug(f"MESSAGE: message_was_deleted event: {content}, type of content {type(content)}")
-            logger.debug(f"MESSAGE: message_was_deleted event: {content['event_type']}")
-            logger.debug(f"MESSAGE: message_was_deleted event: {content['id']}")
+        if content.get("event_type", None) == "message_was_deleted" and content.get("id", None):
+            logger.debug(f"MESSAGE: message_was_deleted event: {content}")
             await self.channel_layer.group_send(
                 self._group_name,
                 {

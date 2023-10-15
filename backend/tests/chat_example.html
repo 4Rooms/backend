@@ -81,7 +81,7 @@
             margin: 5px;
         }
 
-        #timestamp{
+        #timestamp {
             font-size: smaller;
             color: gray;
         }
@@ -151,32 +151,61 @@
 
     <template id="msgTemp">
         <div id="received-message" class="received-message">
-            <img src={{user_avatar}} id="userAvatar">
+            <img src={{userAvatar}} id="userAvatar">
 
             <div id="msgMainInfo">
-                <b>{{user_name}}</b><span id="timestamp"> {{timestamp}}</span>
-<!--                <div id="msgText">{{text}}</div>-->
-                    <div id={{id}}>{{text}}</div>
-
+                <b>{{userName}}</b><span id="timestamp"> {{timestamp}}</span>
+                <div id={{id}}>{{text}}</div>
             </div>
 
             <div id="extraInfo">
-               {{#message.isDeleted}} <div>Is deleted: {{.}}</div> {{/message.isDeleted}}
+                {{#message.isDeleted}} <div>Is deleted: {{.}}</div> {{/message.isDeleted}}
                 <div>Msg id: {{id}} </div>
-                <div>User id: {{user}}</div>
-                <div>Chat id: {{chat}}</div>
+                <div>User id: {{userId}}</div>
+                <div>Chat id: {{chatId}}</div>
             </div>
 
-            <div id="btnContainer" >
+            <div id="btnContainer">
                 <button id="delMsgBtn" data-msg-id={{id}} onclick="delMsg(this, {{id}})">Del</button>
             </div>
         </div>
     </template>
 
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js" ></script>
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
     <script>
+        class Message {
+            constructor(id, userName, userAvatar, text, timestamp, isDeleted, chatId, userId) {
+                this.id = id;
+                this.userName = userName;
+                this.text = text;
+                this.timestamp = timestamp;
+                this.isDeleted = isDeleted === undefined ? false : isDeleted;
+                this.chatId = chatId === undefined ? "Unknown chat" : chatId;
+                this.userId = userId === undefined ? "Unknown user" : userId;
+            }
+
+            createMsgElemIn(outputElem) {
+                const messageDiv = document.createElement('div');
+                messageDiv.id = "messageDiv";
+
+                let msgTemplate = document.querySelector("#msgTemp").innerHTML;
+                let renderedMsgHTML = Mustache.render(msgTemplate, this);
+                messageDiv.innerHTML = renderedMsgHTML;
+                outputElem.appendChild(messageDiv);
+            }
+
+            deleteMsg() {
+                document.getElementById(`${this.id}`).textContent = "deleted";
+            }
+        }
+
         let socket; // Declare socket variable outside onLoad function
+        let messages = []; // message array
+        let getMsgById = (id) => {
+            return messages.filter(msg => msg.id === id)[0];
+        }
 
         function onLoad() {
             setHostFromUrl();
@@ -210,15 +239,17 @@
             const host = document.getElementById('host').value;
             const apiUrl = host + 'api/chat/' + selectedChatId + '/messages/';
 
+            let chatMessages = document.getElementById('chat-messages'); // output element for messages
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
                     console.log("getMessageHistory, data", data);
 
-                    const messages = data.results;
-                    messages.forEach(message => {
-                        console.log('getMessageHistory. Message:', message);
-                        displayMessage(message);
+                    const messagesFromHistory = data.results;
+                    messagesFromHistory.forEach(message => {
+                        let msg = new Message(message.id, message.user_name, message.user_avatar, message.text, message.timestamp, message.is_deleted, message.chat, message.user);
+                        msg.createMsgElemIn(chatMessages);
+                        messages.push(msg)  // add msg to messages array
                     });
                 })
                 .catch(error => console.error('Error fetching message history:', error));
@@ -248,13 +279,18 @@
                 console.log('Socket. Received message:', message);
 
                 if ("event_type" in message && message.event_type === "chat_message") {
-                    displayMessage(message.message);
+                    const msgData = message.message;
+                    let chatMessages = document.getElementById('chat-messages'); // output element for messages
+
+                    let msg = new Message(msgData.id, msgData.user_name, msgData.user_avatar, msgData.text, msgData.timestamp, msgData.is_deleted, msgData.chat, msgData.user);
+                    msg.createMsgElemIn(chatMessages);
+                    messages.push(msg)  // add msg to messages array
                 } else {
                     displayEvent(message);
                 }
 
                 if ("event_type" in message && message.event_type === "message_was_deleted") {
-                    document.getElementById(`${message.id}`).textContent = "deleted";
+                    getMsgById(message.id).deleteMsg();
                 }
             });
 
@@ -348,6 +384,7 @@
             input.value = '';
         }
 
+        // On click Delete btn -> send "message_was_deleted" event on server and Msg ID
         function delMsg(btn, msgId) {
             console.log("delMsg", btn.id, msgId);
 
@@ -359,20 +396,7 @@
             socket.send(JSON.stringify(message));
         }
 
-        function displayMessage(message) {
-            console.log("displayMessage -> message:", message);
-
-            const chatMessages = document.getElementById('chat-messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.id = "messageDiv";
-
-            msgTemplate = document.querySelector("#msgTemp").innerHTML;
-            let renderedMsgHTML = Mustache.render(msgTemplate, message);
-
-            messageDiv.innerHTML = renderedMsgHTML;
-            chatMessages.appendChild(messageDiv);
-        }
-
+        // display event which isn't a chat message
         function displayEvent(message) {
             console.log("displayEvent -> message:", message);
 
@@ -388,7 +412,7 @@
                 new_html += `<img src="${messageData.user_avatar}" width="50" height="50">`
             }
             new_html += `<pre ">${JSON.stringify(messageData, null, 2)}</pre>`
-                new_html += '</div>';
+            new_html += '</div>';
 
             messageDiv.innerHTML = new_html;
             chatMessages.appendChild(messageDiv);
