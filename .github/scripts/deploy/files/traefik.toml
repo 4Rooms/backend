@@ -23,5 +23,5 @@
 [certificatesResolvers.letsencrypt.acme]
   email = "trash@nls.la"
   storage = "/etc/traefik/certificates/acme.json"
-  [certificatesResolvers.letsencrypt.acme.httpChallenge]
-    entryPoint = "web"
+  [certificatesResolvers.letsencrypt.acme.dnsChallenge]
+    provider = "cloudflare"

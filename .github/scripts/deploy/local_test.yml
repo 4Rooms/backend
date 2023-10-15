@@ -1,0 +1,19 @@
+---
+- name: deploy
+  hosts: localhost
+  connection: local
+
+  vars:
+    domain: "localhost"
+    router: "{{ 'prod' if BRANCH == 'master' else 'test' }}"
+    img_name: "{{ 'prod' if BRANCH == 'master' else 'test' }}"
+    django_host: "http://{{ domain }}/"
+
+  tasks:
+    - name: Debug
+      ansible.builtin.debug:
+        var: domain
+
+    - import_tasks: tasks/build_image.yml
+    - import_tasks: tasks/redis.yml
+    - import_tasks: tasks/test_image.yml

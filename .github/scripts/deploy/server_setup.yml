@@ -91,6 +91,11 @@
         restart_policy: "unless-stopped"
         recreate: true
 
+        env:
+          CF_DNS_API_TOKEN: "{{ CF_DNS_API_TOKEN }}"
+          CLOUDFLARE_POLLING_INTERVAL: "2"
+          CLOUDFLARE_PROPAGATION_TIMEOUT: "500"
+
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
 
@@ -119,7 +124,7 @@
         state: directory
       with_items:
         - /etc/grafana-agent
-    
+
     - name: Create config for grafana agent
       become: true
       ansible.builtin.template:

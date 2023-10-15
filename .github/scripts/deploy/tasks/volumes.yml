@@ -1,0 +1,8 @@
+---
+- name: Create a volume for data
+  community.docker.docker_volume:
+    name: chat-{{ img_name }}-data
+
+- name: Create a volume for db
+  community.docker.docker_volume:
+    name: chat-{{ img_name }}-db

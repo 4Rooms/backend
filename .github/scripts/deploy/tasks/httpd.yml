@@ -1,0 +1,29 @@
+---
+- name: Start busybox httpd
+  vars:
+    container_labels:
+      - key: "traefik.enable"
+        value: "true"
+      - key: "traefik.http.routers.{{ router }}_httpd.rule"
+        value: "Host(`files{{ domain }}`)"
+      - key: "traefik.http.routers.{{ router }}_httpd.tls"
+        value: "true"
+      - key: "traefik.http.routers.{{ router }}_httpd.tls.certresolver"
+        value: "letsencrypt"
+      - key: "traefik.http.services.{{ router }}_httpd.loadbalancer.server.port"
+        value: "8021"
+
+  community.docker.docker_container:
+    name: httpd-{{ img_name }}
+    image: busybox
+    state: "started"
+    restart_policy: "unless-stopped"
+
+    command: "httpd -f -p 8021 -h /data/"
+    exposed_ports:
+      - 8021
+
+    volumes_from:
+      - chat-{{ img_name }}:ro
+
+    labels: "{{ container_labels | items2dict }}"

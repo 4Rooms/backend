@@ -11,6 +11,7 @@
         force_tag: true
 
     - import_tasks: redis.yml
+    - import_tasks: volumes.yml
 
     - name: Recreate chat container
       community.docker.docker_container:
@@ -32,6 +33,17 @@
           REDIS_HOST: "redis-{{ img_name }}"
           DJANGO_SETTINGS_MODULE: "config.settings_prod"
 
+        mounts:
+          - type: volume
+            read_only: false
+            source: chat-{{ img_name }}-data
+            target: /data/
+
+          - type: volume
+            read_only: false
+            source: chat-{{ img_name }}-db
+            target: /db/
+
         published_ports:
           - "8020:8020"
 
@@ -52,6 +64,8 @@
       retries: 11  # 11 * 5 seconds = 55 seconds
       delay: 5  # Every 5 seconds
 
+    - import_tasks: httpd.yml
+
     - name: Sleep for 5 minutes to test the service
       ansible.builtin.wait_for:
         timeout: 300
@@ -65,5 +79,6 @@
       loop:
         - "chat-{{ img_name }}"
         - "redis-{{ img_name }}"
+        - "httpd-{{ img_name }}"
 
   delegate_to: localhost
