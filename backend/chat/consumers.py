@@ -21,8 +21,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         self._group_name = f"{self._room_name}-{self._chat_id}"
         logger.info(f"CONNECT: User {self._user}. Chat {self._chat_id}. Channel: {self.channel_name}")
 
-        # await self.get_online_users()
-
         await self.accept()
         # Send Event connected_user
         await self.channel_layer.group_send(
@@ -65,6 +63,22 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def receive_json(self, content):
         logger.debug(f"MESSAGE: User: {self._user}. Chat {self._chat_id}. Room {self._room_name}")
 
+        # delete msg event
+        if content.get("event_type", None) == "message_was_deleted":
+            logger.debug(f"MESSAGE: message_was_deleted event: {content}, type of content {type(content)}")
+            logger.debug(f"MESSAGE: message_was_deleted event: {content['event_type']}")
+            logger.debug(f"MESSAGE: message_was_deleted event: {content['id']}")
+            await self.channel_layer.group_send(
+                self._group_name,
+                {
+                    "type": "send_deleted_message",
+                    "id": content["id"],
+                    "event_type": content["event_type"],
+                },
+            )
+            return
+
+        # Validate and save to db msg before sending to group
         saved_message = await self._validate_and_save(content)
         if saved_message is None:
             return
@@ -94,18 +108,18 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # Validate chat message
         message = MessageSerializer(data=websocket_message.data["message"], context={"user": self._user})
         if not message.is_valid():
-            logger.error(f"INVALID MESSAGE: User: {self._user}. Msg: {content}. Chat {self._chat_id}.")
+            logger.error(f"INVALID MESSAGE: User: {self._user}. Msg: {content}. Chat: {self._chat_id}.")
             return None
 
         # save
         return message.save()
 
     async def send_message(self, event):
-        logger.debug(f"Sending message to chat {self._chat_id} in room {self._room_name}")
+        logger.debug(f"Sending message to chat: {self._chat_id} in room: {self._room_name}")
         await self.send_json(event["message"])
 
     async def send_connected_user(self, event):
-        logger.debug(f"Event connected_user. Sending user joined to chat {self._chat_id} in room {self._room_name}")
+        logger.debug(f"Event connected_user. Sending user joined to chat: {self._chat_id} in room: {self._room_name}")
 
         connected_event = {
             "event_type": "connected_user",
@@ -115,7 +129,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     async def send_disconnected_user(self, event):
         logger.debug(
-            f"Event disconnected_user. Sending user joined to chat user {self._chat_id} in room {self._room_name}"
+            f"Event disconnected_user. Sending user joined to chat: {self._chat_id} in room: {self._room_name}"
         )
         disconnected_event = {
             "event_type": "disconnected_user",
@@ -124,13 +138,28 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(disconnected_event)
 
     async def send_online_user_list(self):
-        logger.debug(f"Event online_user_list. Sending online users in chat {self._chat_id} in room {self._room_name}")
+        logger.debug(
+            f"Event online_user_list. Sending online users in chat: {self._chat_id} in room: {self._room_name}"
+        )
 
         online_users_event = {
             "event_type": "online_user_list",
             "user_list": await self.get_online_users(),
         }
         await self.send_json(online_users_event)
+
+    async def send_deleted_message(self, event):
+        logger.debug(
+            f"Event message_was_deleted. Sending deleted MSG to chat: {self._chat_id} in room: {self._room_name}"
+        )
+
+        deleted_msg_event = {
+            "event_type": event["event_type"],
+            "id": event["id"],
+        }
+
+        if await self.delete_message(event["id"]):
+            await self.send_json(deleted_msg_event)
 
     @database_sync_to_async
     def create_online_user(self):
@@ -160,3 +189,32 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
         return online_users
+
+    @database_sync_to_async
+    def get_message(self, id):
+        msg = Message.objects.get(pk=id)
+        if msg:
+            return msg
+
+    @database_sync_to_async
+    def delete_message(self, id):
+        """Return True and delete msg if the user from request is a message author.
+        Return False, if the user from the request isn't a message author or msg is absent"""
+
+        msg = Message.objects.get(pk=id)
+        logger.debug(f"delete_message. Msg: {msg}, chat: {self._chat_id} in room: {self._room_name}")
+
+        if not msg:
+            logger.debug(f"delete_message. The message with the specified ID is absent")
+            return False
+
+        # Is the user from the request isn't a message author
+        if self._user.username != msg.user.username:
+            logger.debug(f"delete_message. The user from the request isn't a message author")
+            return False
+
+        Message.objects.get(pk=id).delete()
+        logger.debug(
+            f"delete_message. The Msg: {msg.id} was deleted from chat: {self._chat_id} in room: {self._room_name}"
+        )
+        return True
