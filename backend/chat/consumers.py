@@ -61,11 +61,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard(self._group_name, self.channel_name)
 
     async def receive_json(self, content):
-        logger.debug(f"Received Event. User: {self._user}. Chat {self._chat_id}. Room {self._room_name}")
+        logger.debug(f"Receive msg. User {self._user}. Chat {self._chat_id}. Room {self._room_name}. Content {content}")
 
         # delete msg event
         if content.get("event_type", None) == "message_was_deleted" and content.get("id", None):
-            logger.debug(f"Message_was_deleted event. MESSAGE: {content}")
+            logger.debug(f"Message_was_deleted event. Content: {content}")
             await self.channel_layer.group_send(
                 self._group_name,
                 {
@@ -82,7 +82,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             and content.get("id", None)
             and content.get("new_text", None)
         ):
-            logger.debug(f"Message_was_updated event. MESSAGE: {content}")
+            logger.debug(f"Message_was_updated event. Content: {content}")
 
             # validate msg
             valid_message = await self._validate(
@@ -90,7 +90,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             )
 
             if valid_message is None:
-                logger.debug(f"Update msg. Invalid msg.")
+                logger.debug(f"Update message event. Invalid message.")
                 return
 
             await self.channel_layer.group_send(
@@ -110,10 +110,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             logger.debug(f"Invalid received msg")
             return
 
-        # Save msg to db
+        # Save valid msg to db
         saved_message = await self._save_message(valid_message)
 
-        # Send message to group before sending to group
+        # Send message to group
         msg_json = await self._serialize_message(saved_message)
         await self.channel_layer.group_send(
             self._group_name,
@@ -141,7 +141,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             logger.error(f"INVALID MESSAGE: User: {self._user}. Msg: {content}. Chat: {self._chat_id}.")
             return None
 
-        # save
         return message
 
     @database_sync_to_async
