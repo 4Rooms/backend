@@ -221,10 +221,12 @@
 
             deleteMsg() {
                 document.getElementById(`${this.id}`).textContent = "deleted";
+                this.text = "deleted";
             }
 
             updateMsgText(newText) {
                 this.messageDiv.querySelector(".msgText").textContent = newText;
+                this.text = newText;
             }
         }
 
@@ -300,6 +302,7 @@
                 getMessageHistory();
             });
 
+            // Main events handler
             socket.addEventListener("message", (event) => {
                 const message = JSON.parse(event.data);
                 console.log('Socket. Received message:', message);
@@ -423,7 +426,7 @@
             input.value = '';
         }
 
-        // On click Delete btn -> send "message_was_deleted" event Msg ID on server
+        // On click Del btn -> send "message_was_deleted" event on server
         function delMsg(btn, msgId) {
             console.log("delMsg", btn.id, msgId);
 
@@ -435,7 +438,7 @@
             socket.send(JSON.stringify(message));
         }
 
-        // On click updateMsg btn -> msgUpdating div is visible
+        // On click Edit btn -> msgUpdating div is visible
         function updateMsg(btn, msgId) {
             console.log("updateMsg", btn.id, msgId);
 
@@ -444,7 +447,7 @@
             msgElem.messageDiv.querySelector(".newTextInMsgUpdating").value = msgElem.text;
         }
 
-        // On click sendUpdatedMsg btn -> send "message_was_updateded" event on server
+        // On click >>> btn -> send "message_was_updateded" event on server
         function sendUpdatedMsg(btn, msgId) {
             const msgElem = getMsgById(msgId);
             newText = msgElem.messageDiv.querySelector(".newTextInMsgUpdating").value;
