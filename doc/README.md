@@ -267,3 +267,29 @@ The server will send the following structure to a group of users in the chat:
   "id": 86
 }
 ```
+
+#### Event message_was_updated
+If the client has changed the message text, 
+the server expects the following structure from the client:
+
+```json
+{
+  "event_type": "message_was_updated",
+  "id": 10,
+  "new_text": "New Text" 
+}
+```
+-   "id" - Message ID
+
+If the updated text is valid, there is a message with the specified ID, 
+this message has not been deleted before, and the user from the request 
+is the author of the message, the server will send the following structure 
+to the chat group:
+
+```json
+{
+  "event_type": "message_was_updated",
+  "id": 10,
+  "new_text": "New Text" 
+}
+```

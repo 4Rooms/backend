@@ -59,14 +59,14 @@
         .input-message button {
             padding: 5px 10px;
             border: none;
-            background-color: #007bff;
+            background-color: #5087ff;
             color: white;
             border-radius: 3px;
             cursor: pointer;
         }
 
         .input-message button:hover {
-            background-color: #0056b3;
+            background-color: #5087ff;
         }
 
         #additional_info {
@@ -75,7 +75,7 @@
         }
 
         .received-message {
-            border-bottom: 1px solid #006fca;
+            border-bottom: 1px solid #5087ff;
             border-radius: 5px;
             font-size: 15px;
             margin: 5px;
@@ -91,18 +91,36 @@
             color: gray;
         }
 
-        #delMsgBtn {
+        #delMsgBtn,
+        #editMsgBtn {
             width: 40px;
             height: 20px;
-            background: #FF5050;
             margin: 5px 0;
             margin-top: 10px;
             padding: 1px;
+            border: 1px solid darkgray;
+            border-radius: 3px;
+        }
+
+        #delMsgBtn {
+            background: #FF5050;
+        }
+
+        #editMsgBtn {
+            background: #50ffa8;
         }
 
         #userAvatar {
             width: 30px;
             height: 30px;
+        }
+
+        #msgUpdating {
+            display: none;
+        }
+
+        .newTextInMsgUpdating {
+            width: 60%;
         }
     </style>
 </head>
@@ -155,7 +173,11 @@
 
             <div id="msgMainInfo">
                 <b>{{userName}}</b><span id="timestamp"> {{timestamp}}</span>
-                <div id={{id}}>{{text}}</div>
+                <div id={{id}} class="msgText">{{text}}</div>
+                <div id="msgUpdating">
+                    <input type="text" id={{id}} class="newTextInMsgUpdating">
+                    <button id="updateMsgBtn" onclick="sendUpdatedMsg(this, {{id}})">>>></button>
+                </div>
             </div>
 
             <div id="extraInfo">
@@ -167,6 +189,7 @@
 
             <div id="btnContainer">
                 <button id="delMsgBtn" data-msg-id={{id}} onclick="delMsg(this, {{id}})">Del</button>
+                <button id="editMsgBtn" onclick="updateMsg(this, {{id}})">Edit</button>
             </div>
         </div>
     </template>
@@ -184,20 +207,24 @@
                 this.isDeleted = isDeleted === undefined ? false : isDeleted;
                 this.chatId = chatId === undefined ? "Unknown chat" : chatId;
                 this.userId = userId === undefined ? "Unknown user" : userId;
+                this.messageDiv = document.createElement('div');
             }
 
             createMsgElemIn(outputElem) {
-                const messageDiv = document.createElement('div');
-                messageDiv.id = "messageDiv";
+                this.messageDiv.id = "messageDiv";
 
                 let msgTemplate = document.querySelector("#msgTemp").innerHTML;
                 let renderedMsgHTML = Mustache.render(msgTemplate, this);
-                messageDiv.innerHTML = renderedMsgHTML;
-                outputElem.appendChild(messageDiv);
+                this.messageDiv.innerHTML = renderedMsgHTML;
+                outputElem.appendChild(this.messageDiv);
             }
 
             deleteMsg() {
                 document.getElementById(`${this.id}`).textContent = "deleted";
+            }
+
+            updateMsgText(newText) {
+                this.messageDiv.querySelector(".msgText").textContent = newText;
             }
         }
 
@@ -275,22 +302,25 @@
 
             socket.addEventListener("message", (event) => {
                 const message = JSON.parse(event.data);
-
                 console.log('Socket. Received message:', message);
 
-                if ("event_type" in message && message.event_type === "chat_message") {
-                    const msgData = message.message;
-                    let chatMessages = document.getElementById('chat-messages'); // output element for messages
-
-                    let msg = new Message(msgData.id, msgData.user_name, msgData.user_avatar, msgData.text, msgData.timestamp, msgData.is_deleted, msgData.chat, msgData.user);
-                    msg.createMsgElemIn(chatMessages);
-                    messages.push(msg)  // add msg to messages array
-                } else {
-                    displayEvent(message);
+                switch (message.event_type) {
+                    case "chat_message":
+                        chatMessageHandler(message);
+                        break;
+                    case "message_was_updated":
+                        getMsgById(message.id).updateMsgText(message.new_text);
+                        break;
+                    case "message_was_deleted":
+                        getMsgById(message.id).deleteMsg();
+                        break
+                    default:
+                        console.log("Unknown event", message) ;
+                        break;   
                 }
 
-                if ("event_type" in message && message.event_type === "message_was_deleted") {
-                    getMsgById(message.id).deleteMsg();
+                if ("event_type" in message && message.event_type !== "chat_message") {
+                    displayEvent(message);
                 }
             });
 
@@ -303,6 +333,15 @@
                 console.log("WebSocket connection closed:", event);
                 document.getElementById('connection-status').innerHTML = '🔴 Connection closed';
             });
+        }
+
+        function chatMessageHandler(message) {
+            const msgData = message.message;
+            let chatMessages = document.getElementById('chat-messages'); // output element for messages
+
+            let msg = new Message(msgData.id, msgData.user_name, msgData.user_avatar, msgData.text, msgData.timestamp, msgData.is_deleted, msgData.chat, msgData.user);
+            msg.createMsgElemIn(chatMessages);
+            messages.push(msg)  // add msg to messages array
         }
 
         function clearChatMessages() {
@@ -384,7 +423,7 @@
             input.value = '';
         }
 
-        // On click Delete btn -> send "message_was_deleted" event on server and Msg ID
+        // On click Delete btn -> send "message_was_deleted" event Msg ID on server
         function delMsg(btn, msgId) {
             console.log("delMsg", btn.id, msgId);
 
@@ -394,6 +433,30 @@
             };
 
             socket.send(JSON.stringify(message));
+        }
+
+        // On click updateMsg btn -> msgUpdating div is visible
+        function updateMsg(btn, msgId) {
+            console.log("updateMsg", btn.id, msgId);
+
+            const msgElem = getMsgById(msgId);
+            msgElem.messageDiv.querySelector("#msgUpdating").style.display = "inline";
+            msgElem.messageDiv.querySelector(".newTextInMsgUpdating").value = msgElem.text;
+        }
+
+        // On click sendUpdatedMsg btn -> send "message_was_updateded" event on server
+        function sendUpdatedMsg(btn, msgId) {
+            const msgElem = getMsgById(msgId);
+            newText = msgElem.messageDiv.querySelector(".newTextInMsgUpdating").value;
+
+            const message = {
+                event_type: 'message_was_updated',
+                id: msgId,
+                new_text: newText,
+            };
+
+            socket.send(JSON.stringify(message));
+            msgElem.messageDiv.querySelector("#msgUpdating").style.display = "none";
         }
 
         // display event which isn't a chat message

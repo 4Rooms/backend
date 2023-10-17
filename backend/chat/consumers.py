@@ -61,11 +61,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard(self._group_name, self.channel_name)
 
     async def receive_json(self, content):
-        logger.debug(f"MESSAGE: User: {self._user}. Chat {self._chat_id}. Room {self._room_name}")
+        logger.debug(f"Received Event. User: {self._user}. Chat {self._chat_id}. Room {self._room_name}")
 
         # delete msg event
         if content.get("event_type", None) == "message_was_deleted" and content.get("id", None):
-            logger.debug(f"MESSAGE: message_was_deleted event: {content}")
+            logger.debug(f"Message_was_deleted event. MESSAGE: {content}")
             await self.channel_layer.group_send(
                 self._group_name,
                 {
@@ -76,12 +76,44 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             )
             return
 
-        # Validate and save to db msg before sending to group
-        saved_message = await self._validate_and_save(content)
-        if saved_message is None:
+        # update msg event
+        if (
+            content.get("event_type", None) == "message_was_updated"
+            and content.get("id", None)
+            and content.get("new_text", None)
+        ):
+            logger.debug(f"Message_was_updated event. MESSAGE: {content}")
+
+            # validate msg
+            valid_message = await self._validate(
+                {"event_type": "chat_message", "message": {"chat": self._chat_id, "text": content["new_text"]}}
+            )
+
+            if valid_message is None:
+                logger.debug(f"Update msg. Invalid msg.")
+                return
+
+            await self.channel_layer.group_send(
+                self._group_name,
+                {
+                    "type": "send_updated_message",
+                    "id": content["id"],
+                    "new_text": content["new_text"],
+                    "event_type": content["event_type"],
+                },
+            )
             return
 
-        # Send message to group
+        # Validate received msg
+        valid_message = await self._validate(content)
+        if valid_message is None:
+            logger.debug(f"Invalid received msg")
+            return
+
+        # Save msg to db
+        saved_message = await self._save_message(valid_message)
+
+        # Send message to group before sending to group
         msg_json = await self._serialize_message(saved_message)
         await self.channel_layer.group_send(
             self._group_name,
@@ -96,7 +128,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         return WebsocketMessageSerializer(instance={"message": message, "event_type": "chat_message"}).data
 
     @database_sync_to_async
-    def _validate_and_save(self, content) -> Optional[Message]:
+    def _validate(self, content) -> Optional[Message]:
         # Validate websocket message
         websocket_message = WebsocketMessageSerializer(data=content)
         if not websocket_message.is_valid():
@@ -110,10 +142,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return None
 
         # save
+        return message
+
+    @database_sync_to_async
+    def _save_message(self, message):
+        """Save MSG to DB"""
         return message.save()
 
     async def send_message(self, event):
-        logger.debug(f"Sending message to chat: {self._chat_id} in room: {self._room_name}")
+        logger.debug(f"Chat_message. Sending message to chat: {self._chat_id} in room: {self._room_name}")
         await self.send_json(event["message"])
 
     async def send_connected_user(self, event):
@@ -159,6 +196,20 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         if await self.delete_message(event["id"]):
             await self.send_json(deleted_msg_event)
 
+    async def send_updated_message(self, event):
+        logger.debug(
+            f"Event message_was_updated. Sending deleted MSG to chat: {self._chat_id} in room: {self._room_name}"
+        )
+
+        updated_msg_event = {
+            "event_type": event["event_type"],
+            "id": event["id"],
+            "new_text": event["new_text"],
+        }
+
+        if await self.update_message(event["id"], event["new_text"]):
+            await self.send_json(updated_msg_event)
+
     @database_sync_to_async
     def create_online_user(self):
         new, _ = OnlineUser.objects.get_or_create(user=self._user, chat_id=self._chat_id)
@@ -200,19 +251,43 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         Return False, if the user from the request isn't a message author or msg is absent"""
 
         msg = Message.objects.get(pk=id)
-        logger.debug(f"delete_message. Msg: {msg}, chat: {self._chat_id} in room: {self._room_name}")
 
         if not msg:
-            logger.debug(f"delete_message. The message with the specified ID is absent")
+            logger.debug(f"Delete_message. The message with the specified ID is absent")
             return False
 
         # Is the user from the request isn't a message author
         if self._user.username != msg.user.username:
-            logger.debug(f"delete_message. The user from the request isn't a message author")
+            logger.debug(f"Delete_message. The user from the request isn't a message author")
             return False
 
-        Message.objects.get(pk=id).delete()
+        msg.delete()
         logger.debug(
-            f"delete_message. The Msg: {msg.id} was deleted from chat: {self._chat_id} in room: {self._room_name}"
+            f"Delete_message. The Msg: {msg.id} was deleted from chat: {self._chat_id} in room: {self._room_name}"
         )
+        return True
+
+    @database_sync_to_async
+    def update_message(self, id, new_text):
+        """Return True and update msg if the user from request is a message author.
+        Return False, if the user from the request isn't a message author, msg is absent"""
+
+        msg = Message.objects.get(pk=id)
+
+        if not msg:
+            logger.debug(f"Update_message. The message with the specified ID is absent")
+            return False
+
+        if msg.is_deleted:
+            logger.debug(f"Update_message. A deleted message cannot be edited")
+            return False
+
+        # Is the user from the request isn't a message author
+        if self._user.username != msg.user.username:
+            logger.debug(f"Update_message. The user from the request isn't a message author")
+            return False
+
+        msg.text = new_text
+        msg.save()
+        logger.debug(f"Update_message. The Msg: {msg.id} was updated in chat: {self._chat_id}, room: {self._room_name}")
         return True
