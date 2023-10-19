@@ -127,18 +127,12 @@
 
 <body onload="onLoad()">
     <div id="additional_info">
+        API description: <a href='/swagger-ui/'>/swagger-ui/</a><br>
+        Login Page: <a href='/login_example.html'>/login_example.html</a><br>
+        Chat example: <a href='/chat_example.html'>/chat_example.html</a><br>
     </div>
 
     <h1>Chat example</h1>
-
-    <div class="input-container">
-        <label for="host">Host:</label>
-        <select id="host" onchange="getUserInfo();">
-            <option value="https://testback.4rooms.pro/" selected>https://testback.4rooms.pro</option>
-            <option value="https://back.4rooms.pro/">https://back.4rooms.pro/</option>
-            <option value="http://localhost:8000/">http://localhost:8000/</option>
-        </select>
-    </div>
 
     <div class="input-container">
         <label for="room">Room:</label>
@@ -155,6 +149,9 @@
         <select id="selected-chat" onchange="onChatSelectionChange()">
             <!-- Options will be dynamically added using JavaScript -->
         </select>
+    </div>
+
+    <div class="chat_img">
     </div>
 
     <div class="input-container" id="connection-status"></div>
@@ -202,6 +199,7 @@
             constructor(id, userName, userAvatar, text, timestamp, isDeleted, chatId, userId) {
                 this.id = id;
                 this.userName = userName;
+                this.userAvatar = userAvatar;
                 this.text = text;
                 this.timestamp = timestamp;
                 this.isDeleted = isDeleted === undefined ? false : isDeleted;
@@ -232,26 +230,34 @@
 
         let socket; // Declare socket variable outside onLoad function
         let messages = []; // message array
+        let chats = []; // chat array
+
         let getMsgById = (id) => {
             return messages.filter(msg => msg.id === id)[0];
         }
 
-        function onLoad() {
-            setHostFromUrl();
-            setSwaggerUILink();
+        let getChatById = (id) => {
+            return chats.filter(chat => chat.id === id)[0];
+        }
 
+        function onLoad() {
             const selectedRoom = document.getElementById('room').value;
             fetchChats(selectedRoom);
         }
 
         function fetchChats(selectedRoom) {
-            const host = document.getElementById('host').value;
-            const apiUrl = host + 'api/chat/' + selectedRoom + '/';
+            const apiUrl = '/api/chat/' + selectedRoom + '/';
 
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
-                    const chats = data.results;
+                    chats = data.results;
+                    if (chats.length === 0) {
+                        console.log('No chats found for room:', selectedRoom);
+                        displayConnectionError("There are no chats for this room.");
+                        return;
+                    }
+
                     populateChatDropdown(chats);
                     onChatSelectionChange();
                 })
@@ -265,8 +271,7 @@
                 return;
             }
 
-            const host = document.getElementById('host').value;
-            const apiUrl = host + 'api/chat/' + selectedChatId + '/messages/';
+            const apiUrl = '/api/chat/' + selectedChatId + '/messages/';
 
             let chatMessages = document.getElementById('chat-messages'); // output element for messages
             fetch(apiUrl)
@@ -318,8 +323,8 @@
                         getMsgById(message.id).deleteMsg();
                         break
                     default:
-                        console.log("Unknown event", message) ;
-                        break;   
+                        console.log("Unknown event", message);
+                        break;
                 }
 
                 if ("event_type" in message && message.event_type !== "chat_message") {
@@ -355,6 +360,12 @@
         function onChatSelectionChange() {
             const selectedRoom = document.getElementById('room').value;
             const selectedChatId = document.getElementById('selected-chat').value;
+
+            // display selected chat image
+            const chat = getChatById(Number(selectedChatId));
+            document.querySelector(".chat_img").innerHTML = `<img src="${chat.img}" width="100px" >`;
+
+            // initialize WebSocket connection
             initializeWebSocket(selectedRoom, selectedChatId);
         }
 
@@ -363,10 +374,15 @@
             fetchChats(selectedRoom);
         }
 
-        function displayConnectionError() {
+        function displayConnectionError(msg) {
             const chatMessages = document.getElementById('chat-messages');
             const errorDiv = document.createElement('div');
-            errorDiv.innerHTML = "<p><strong>Error:</strong> Failed to connect to the chat. Please try again later.</p>";
+
+            if (msg) {
+                errorDiv.innerHTML = "<p>" + msg + "</p>";
+            } else {
+                errorDiv.innerHTML = "<p><strong>Error:</strong> Failed to connect to the chat. Please try again later.</p>";
+            }
             chatMessages.appendChild(errorDiv);
         }
 
@@ -382,27 +398,6 @@
             });
 
             chatDropdown.selectedIndex = 0;
-        }
-
-        function setHostFromUrl() {
-            const url = new URL(window.location.href);
-            const domain = url.origin + "/";
-            const hostSelect = document.getElementById("host");
-
-            for (let i = 0; i < hostSelect.options.length; i++) {
-                if (hostSelect.options[i].value === domain) {
-                    hostSelect.selectedIndex = i;
-                    break;
-                }
-            }
-        }
-
-        function setSwaggerUILink() {
-            const host = document.getElementById('host').value;
-            const additionalInfo = document.getElementById("additional_info");
-
-            const swaggerUrl = host + "swagger-ui/";
-            additionalInfo.innerHTML = "API description: <a href='" + swaggerUrl + "'>" + swaggerUrl + "</a>";
         }
 
         function sendMessage() {

@@ -1,6 +1,7 @@
 from typing import Optional
 
 from chat.models.chat import Chat, SavedChat
+from files.utils import get_full_file_url
 from rest_framework import serializers
 
 
@@ -8,6 +9,7 @@ class ChatSerializer(serializers.ModelSerializer):
     """Chat Serializer"""
 
     user = serializers.SerializerMethodField(source="get_user")
+    img = serializers.SerializerMethodField(source="get_img")
 
     class Meta:
         model = Chat
@@ -28,6 +30,12 @@ class ChatSerializer(serializers.ModelSerializer):
 
         if obj.user:
             return obj.user.username
+
+    def get_img(self, obj) -> Optional[str]:
+        """Return url of chat img"""
+
+        if obj.img:
+            return get_full_file_url(obj.img.url)
 
 
 class ChatSerializerForChatUpdate(ChatSerializer):
@@ -91,8 +99,7 @@ class SavedChatSerializer(serializers.ModelSerializer):
         """Return url of chat img"""
 
         if obj.chat:
-            request = self.context.get("request")
-            return request.build_absolute_uri(obj.chat.img)
+            return get_full_file_url(obj.chat.img.url)
 
     @staticmethod
     def get_url(obj) -> Optional[str]:

@@ -23,3 +23,12 @@ class DefaultAvatars:
 
         random_avatar = random.choice(avatars)
         return random_avatar.relative_to(settings.MEDIA_ROOT)
+
+    def get_random_chat_avatar(self):
+        avatars = list(self._chat_avatars_dir.glob("*"))
+        logger.debug(f"Found {len(avatars)} chat avatars.")
+        if not avatars:
+            return None
+
+        random_avatar = random.choice(avatars)
+        return random_avatar.relative_to(settings.MEDIA_ROOT)
