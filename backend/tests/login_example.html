@@ -104,25 +104,12 @@
 </head>
 
 <body onload="onLoad()">
-    <!-- Logo in the center-->
-    <!-- <img src="https://avatars.githubusercontent.com/u/136704824?s=200&v=4" alt="4Rooms logo" width="200" height="200"
-        style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: -1;" /> -->
-
     <h1>Login/register example</h1>
 
-    <div class="input-container">
-        <label for="host">Host:</label>
-        <select id="host" onchange="getUserInfo();">
-            <option value="https://testback.4rooms.pro/" selected>https://testback.4rooms.pro</option>
-            <option value="https://back.4rooms.pro/">https://back.4rooms.pro/</option>
-            <option value="http://localhost:8000/">http://localhost:8000/</option>
-        </select>
-    </div>
-
-    <div>
-        <a href="/chat_example.html">Chat example</a>
-    </div>
     <div id="additional_info">
+        API description: <a href='/swagger-ui/'>/swagger-ui/</a><br>
+        Login Page: <a href='/login_example.html'>/login_example.html</a><br>
+        Chat example: <a href='/chat_example.html'>/chat_example.html</a><br>
     </div>
 
     <div class="forms-container">
@@ -194,9 +181,6 @@
         }
 
         async function onLoad() {
-            setHostFromUrl();
-            setSwaggerUILink();
-
             // if there is a refresh_token in the url, handle the oauth callback
             handleOauthCallback();
         }
@@ -206,14 +190,10 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const email = document.getElementById('email').value;
-            const host = document.getElementById('host').value;
-
-            // disable button
-            // document.getElementById('register-form').innerHTML = "<button disabled>Registering...</button>";
 
             // register
             document.getElementById('message').innerText = "Registering...";
-            var response = await fetch(host + "api/register/", {
+            var response = await fetch("/api/register/", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -244,11 +224,10 @@
             // get values
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
-            const host = document.getElementById('host').value;
 
             // login
             document.getElementById('message').innerText = "Logging in...";
-            var response = await fetch(host + "api/login/", {
+            var response = await fetch("/api/login/", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -312,15 +291,12 @@
         }
 
         async function getUserInfo() {
-            setSwaggerUILink();
-
             // get user info
             document.getElementById('message').innerText = "Getting user_info...";
             await sleep(500);
 
-            const host = document.getElementById('host').value;
             try {
-                var response = await fetch(host + "api/user/", {
+                var response = await fetch("/api/user/", {
                     method: 'GET',
                     credentials: 'include',
                 });
@@ -332,7 +308,7 @@
                 var user_info = await response.json();
 
                 // get avatar
-                var ava_resp = await fetch(host + "api/profile/", {
+                var ava_resp = await fetch("/api/profile/", {
                     method: 'GET',
                     credentials: 'include',
                 });
@@ -342,8 +318,8 @@
                 var ava_data = await ava_resp.json();
 
                 // set message
-                msg = "<b>✅ Received user_info</b>:<br /><code>" + JSON.stringify(user_info, null, 2) + "</code>" + 
-                "<br /><img src='" + ava_data.avatar + "' alt='avatar' width='100' height='100' />";
+                msg = "<b>✅ Received user_info</b>:<br /><code>" + JSON.stringify(user_info, null, 2) + "</code>" +
+                    "<br /><img src='" + ava_data.avatar + "' alt='avatar' width='100' height='100' />";
                 document.getElementById('message').innerHTML = msg;
 
             } catch (error) {
@@ -351,28 +327,6 @@
             }
         }
 
-        // Function to set the selected host based on the URL domain
-        function setHostFromUrl() {
-            var url = new URL(window.location.href);
-            var domain = url.origin + "/";
-            var hostSelect = document.getElementById("host");
-
-            // Loop through the options to find a match
-            for (var i = 0; i < hostSelect.options.length; i++) {
-                if (hostSelect.options[i].value === domain) {
-                    hostSelect.selectedIndex = i;
-                    break;
-                }
-            }
-        }
-
-        function setSwaggerUILink() {
-            const host = document.getElementById('host').value;
-            additional_info = document.getElementById("additional_info");
-
-            const swagger_url = host + "swagger-ui/";
-            additional_info.innerHTML = "API description: <a href='" + swagger_url + "'>" + swagger_url + "</a>";
-        }
     </script>
 </body>
 

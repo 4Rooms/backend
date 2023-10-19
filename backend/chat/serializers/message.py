@@ -1,8 +1,7 @@
 from typing import Optional
-from urllib.parse import urljoin
 
 from chat.models.message import Message
-from django.conf import settings
+from files.utils import get_full_file_url
 from rest_framework import serializers
 
 
@@ -40,7 +39,7 @@ class MessageSerializer(serializers.ModelSerializer):
         """Return URL to user avatar"""
 
         if isinstance(obj, Message):
-            return urljoin(settings.DJANGO_HOST, obj.user.profile.avatar.url)
+            return get_full_file_url(obj.user.profile.avatar.url)
         return None
 
 

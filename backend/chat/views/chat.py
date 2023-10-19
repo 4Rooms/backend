@@ -1,5 +1,4 @@
 import logging
-from io import BytesIO
 
 from chat.models.chat import Chat, SavedChat
 from chat.permissions import IsCreatorOrReadOnly, IsEmailConfirm
@@ -9,10 +8,9 @@ from chat.serializers.chat import (
     SavedChatSerializer,
 )
 from config.settings import CHOICE_ROOM
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from files.services.images import resize_image
-from PIL import Image
+from files.services.default_avatars import DefaultAvatars
+from files.services.images import resize_in_memory_uploaded_file
 from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -68,17 +66,24 @@ class ChatAPIView(generics.GenericAPIView):
 
         if serializer.is_valid():
             # Optional fields
-            img = request.data.get("img", None)
-            description = request.data.get("description", None)
+            img = serializer.validated_data.get("img", None)
+            if img:
+                img = resize_in_memory_uploaded_file(img, 200)
+            else:
+                img = DefaultAvatars().get_random_chat_avatar().as_posix()
+                logger.info(f"No image provided. Using default avatar: {img}")
+
+            description = serializer.validated_data.get("description", None)
 
             new_chat = Chat.objects.create(
-                title=request.data["title"],
+                title=serializer.validated_data["title"],
                 room=room_name,
                 user=request.user,
                 img=img,
                 description=description,
             )
             serializer.update_url(obj=new_chat)
+
             return Response(
                 {"chat": ChatSerializer(new_chat, context={"request": request}).data}, status=status.HTTP_201_CREATED
             )
@@ -123,34 +128,7 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
 
         if chat_img:
             logger.debug(f"Chat img: {chat_img}")
-            img = Image.open(chat_img)
-            img_format = img.format
-
-            if img.size != (200, 200):
-                # Resize the image before saving it
-                img = resize_image(img, 200)
-
-                # Create a BytesIO object to store the resized image
-                output = BytesIO()
-
-                # Save the resized image to the BytesIO object in JPEG format
-                img.save(output, format=img_format)
-
-                # Move the cursor to the beginning of the BytesIO object
-                output.seek(0)
-
-                # Create a new InMemoryUploadedFile with the resized image
-                resized_image = InMemoryUploadedFile(
-                    output,
-                    "ImageField",
-                    f"{chat_img.name.split('.')[0]}.{img_format.lower()}",
-                    f"image/{img_format.lower()}",
-                    output.tell(),
-                    None,
-                )
-
-                # Save the resized image
-                serializer.validated_data["img"] = resized_image
+            serializer.validated_data["img"] = resize_in_memory_uploaded_file(chat_img, 200)
 
         serializer.save()
 

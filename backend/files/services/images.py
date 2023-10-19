@@ -1,7 +1,9 @@
+from io import BytesIO
+
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
 
 
-@staticmethod
 def resize_image(image: Image, length: int) -> Image:
     """
     Resize an image to a square length x length. Return the resized image. It also crops
@@ -38,3 +40,39 @@ def resize_image(image: Image, length: int) -> Image:
         # we now have a length x length pixels image.
 
         return resized_image
+
+
+def resize_in_memory_uploaded_file(image: InMemoryUploadedFile, length: int) -> InMemoryUploadedFile:
+    """
+    Resize in memory uploaded file to a square length x length. Return the resized image.
+    """
+
+    # Create a PIL Image object from the InMemoryUploadedFile
+    img = Image.open(image)
+
+    if img.size == (length, length):
+        return image
+
+    # Resize the image
+    resized_image = resize_image(img, length)
+
+    # Create a BytesIO object to store the resized image
+    output = BytesIO()
+
+    # Save the resized image to the BytesIO object in JPEG format
+    resized_image.save(output, format=img.format)
+
+    # Move the cursor to the beginning of the BytesIO object
+    output.seek(0)
+
+    # Create a new InMemoryUploadedFile with the resized image
+    resized_image = InMemoryUploadedFile(
+        output,
+        "ImageField",
+        f"{image.name.split('.')[0]}.{img.format.lower()}",
+        f"image/{img.format.lower()}",
+        output.tell(),
+        None,
+    )
+
+    return resized_image

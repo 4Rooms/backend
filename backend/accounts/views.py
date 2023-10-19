@@ -1,5 +1,4 @@
 import logging
-from io import BytesIO
 
 from accounts.models import PasswordResetToken, Profile, User
 from accounts.serializers import (
@@ -13,9 +12,7 @@ from accounts.serializers import (
 from chat.permissions import IsEmailConfirm
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
-from PIL import Image
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView
@@ -26,7 +23,7 @@ from rest_framework.views import APIView
 
 from backend.accounts.services.email import send_password_reset_email
 from backend.config.utils import get_ui_host
-from backend.files.services.images import resize_image
+from backend.files.services.images import resize_in_memory_uploaded_file
 
 
 class UserAPIView(APIView):
@@ -113,36 +110,7 @@ class ProfileAPIView(RetrieveUpdateAPIView):
             raise ValidationError(serializer.errors)
 
         avatar = serializer.validated_data["avatar"]
-
-        img = Image.open(avatar)
-        img_format = img.format
-
-        if img.size != (200, 200):
-            # Resize the image before saving it
-            img = resize_image(img, 200)
-
-            # Create a BytesIO object to store the resized image
-            output = BytesIO()
-
-            # Save the resized image to the BytesIO object in JPEG format
-            img.save(output, format=img_format)
-
-            # Move the cursor to the beginning of the BytesIO object
-            output.seek(0)
-
-            # Create a new InMemoryUploadedFile with the resized image
-            resized_image = InMemoryUploadedFile(
-                output,
-                "ImageField",
-                f"{avatar.name.split('.')[0]}.{img_format.lower()}",
-                f"image/{img_format.lower()}",
-                output.tell(),
-                None,
-            )
-
-            # Save the resized image
-            serializer.validated_data["avatar"] = resized_image
-
+        serializer.validated_data["avatar"] = resize_in_memory_uploaded_file(avatar, 200)
         serializer.save()
 
         return Response(serializer.data, status=status.HTTP_200_OK)

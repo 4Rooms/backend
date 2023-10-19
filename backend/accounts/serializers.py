@@ -1,6 +1,7 @@
 import html
 
 from accounts.models import Profile, User
+from files.utils import get_full_file_url
 from rest_framework import serializers
 
 from .validators.common import WhitespaceValidator
@@ -56,6 +57,13 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ("avatar",)
+
+    def to_representation(self, instance):
+        """
+        Return full url of avatar
+        """
+        full_url = get_full_file_url(instance.avatar.url)
+        return {"avatar": full_url}
 
 
 class ChangePasswordSerializer(serializers.Serializer):
