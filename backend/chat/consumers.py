@@ -3,6 +3,7 @@ from typing import Optional
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
+from chat.models.chat import Chat
 from chat.models.message import Message
 from chat.models.onlineUser import OnlineUser
 from chat.serializers.message import MessageSerializer, WebsocketMessageSerializer
@@ -99,6 +100,19 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                     "type": "send_updated_message",
                     "id": content["id"],
                     "new_text": content["new_text"],
+                    "event_type": content["event_type"],
+                },
+            )
+            return
+
+        # delete chat event
+        if content.get("event_type", None) == "chat_was_deleted" and content.get("id", None):
+            logger.debug(f"Chat_was_deleted event. Content: {content}")
+            await self.channel_layer.group_send(
+                self._group_name,
+                {
+                    "type": "send_deleted_chat",
+                    "id": content["id"],
                     "event_type": content["event_type"],
                 },
             )
@@ -209,6 +223,19 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         if await self.update_message(event["id"], event["new_text"]):
             await self.send_json(updated_msg_event)
 
+    async def send_deleted_chat(self, event):
+        logger.debug(
+            f"Event chat_was_deleted. Sending deleted Chat to chat: {self._chat_id} in room: {self._room_name}"
+        )
+
+        deleted_chat_event = {
+            "event_type": event["event_type"],
+            "id": event["id"],
+        }
+
+        if await self.delete_chat(event["id"]):
+            await self.send_json(deleted_chat_event)
+
     @database_sync_to_async
     def create_online_user(self):
         new, _ = OnlineUser.objects.get_or_create(user=self._user, chat_id=self._chat_id)
@@ -289,4 +316,24 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         msg.text = new_text
         msg.save()
         logger.debug(f"Update_message. The Msg: {msg.id} was updated in chat: {self._chat_id}, room: {self._room_name}")
+        return True
+
+    @database_sync_to_async
+    def delete_chat(self, id):
+        """Return True and delete chat if the user from request is a chat author.
+        Return False, if the user from the request isn't a chat author or chat is absent"""
+
+        chat = Chat.objects.get(pk=id)
+
+        if not chat:
+            logger.debug(f"Delete_chat. The chat with the specified ID is absent")
+            return False
+
+        # Is the user from the request isn't a chat author
+        if self._user.username != chat.user.username:
+            logger.debug(f"Delete_chat. The user from the request isn't a chat author")
+            return False
+
+        chat.delete()
+        logger.debug(f"Delete_chat. The Chat: {self._chat_id} was deleted in room: {self._room_name}")
         return True
