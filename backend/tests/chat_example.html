@@ -91,6 +91,7 @@
             color: gray;
         }
 
+        #delChat,
         #delMsgBtn,
         #editMsgBtn {
             width: 40px;
@@ -102,12 +103,19 @@
             border-radius: 3px;
         }
 
+        #delChat,
         #delMsgBtn {
             background: #FF5050;
         }
 
         #editMsgBtn {
             background: #50ffa8;
+        }
+
+        #delChat {
+            width: 70px;
+            height: 30px;
+            margin: 15px;
         }
 
         #userAvatar {
@@ -153,6 +161,8 @@
 
     <div class="chat_img">
     </div>
+
+    <div><button id="delChat" onclick="delChat()">Del chat</button></div>
 
     <div class="input-container" id="connection-status"></div>
 
@@ -321,7 +331,11 @@
                         break;
                     case "message_was_deleted":
                         getMsgById(message.id).deleteMsg();
-                        break
+                        break;
+                    case "online_user_list":
+                        break;
+                    case "chat_was_deleted":
+                        break;
                     default:
                         console.log("Unknown event", message);
                         break;
@@ -477,6 +491,18 @@
 
             messageDiv.innerHTML = new_html;
             chatMessages.appendChild(messageDiv);
+        }
+
+        function delChat() {
+            console.log("delChat Event");
+
+            const chatId = document.getElementById('selected-chat').value;
+            const message = {
+                event_type: 'chat_was_deleted',
+                id: chatId,
+            };
+
+            socket.send(JSON.stringify(message));
         }
     </script>
 </body>
