@@ -1,6 +1,7 @@
 from typing import Optional
 
 from chat.models.chat import Chat, SavedChat
+from chat.models.chatLike import ChatLike
 from files.utils import get_full_file_url
 from rest_framework import serializers
 
@@ -10,10 +11,11 @@ class ChatSerializer(serializers.ModelSerializer):
 
     user = serializers.SerializerMethodField(source="get_user")
     img = serializers.SerializerMethodField(source="get_img")
+    likes = serializers.SerializerMethodField(source="get_likes")
 
     class Meta:
         model = Chat
-        fields = ["id", "title", "room", "img", "user", "description", "url", "timestamp"]
+        fields = ["id", "title", "room", "img", "user", "description", "url", "timestamp", "likes"]
         read_only_fields = ["id", "user", "timestamp", "url", "room"]
 
     @staticmethod
@@ -37,14 +39,20 @@ class ChatSerializer(serializers.ModelSerializer):
         if obj.img:
             return get_full_file_url(obj.img.url)
 
+    @staticmethod
+    def get_likes(obj) -> str:
+        """Return number of likes"""
+
+        return ChatLike.objects.filter(chat__pk=obj.pk).count()
+
 
 class ChatSerializerForChatUpdate(ChatSerializer):
     """Chat Serializer for Update chat (Patch)"""
 
     class Meta:
         model = Chat
-        fields = ["id", "title", "room", "img", "user", "description", "url", "timestamp"]
-        read_only_fields = ["id", "user", "timestamp", "url", "title", "room"]
+        fields = ["id", "title", "room", "img", "user", "description", "url", "timestamp", "likes"]
+        read_only_fields = ["id", "user", "timestamp", "url", "title", "room", "likes"]
         extra_kwargs = {"description": {"required": False}, "img": {"required": False}}
 
 
@@ -57,10 +65,11 @@ class SavedChatSerializer(serializers.ModelSerializer):
     chat_creator = serializers.SerializerMethodField(source="get_chat_creator")
     img = serializers.SerializerMethodField(source="get_img")
     url = serializers.SerializerMethodField(source="get_url")
+    likes = serializers.SerializerMethodField(source="get_likes")
 
     class Meta:
         model = SavedChat
-        fields = ["id", "user", "chat", "title", "room", "description", "chat_creator", "img", "url"]
+        fields = ["id", "user", "chat", "title", "room", "description", "chat_creator", "img", "url", "likes"]
         extra_kwargs = {"id": {"read_only": True}, "user": {"read_only": True}, "chat": {"read_only": True}}
 
     @staticmethod
@@ -108,3 +117,9 @@ class SavedChatSerializer(serializers.ModelSerializer):
         if isinstance(obj, SavedChat):
             return obj.chat.url
         return None
+
+    @staticmethod
+    def get_likes(obj) -> str:
+        """Return number of likes"""
+
+        return ChatLike.objects.filter(chat__pk=obj.pk).count()

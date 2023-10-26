@@ -4,6 +4,7 @@ from typing import Optional
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from chat.models.chat import Chat
+from chat.models.chatLike import ChatLike
 from chat.models.message import Message
 from chat.models.onlineUser import OnlineUser
 from chat.serializers.message import MessageSerializer, WebsocketMessageSerializer
@@ -106,13 +107,24 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return
 
         # delete chat event
-        if content.get("event_type", None) == "chat_was_deleted" and content.get("id", None):
+        if content.get("event_type", None) == "chat_was_deleted":
             logger.debug(f"Chat_was_deleted event. Content: {content}")
             await self.channel_layer.group_send(
                 self._group_name,
                 {
                     "type": "send_deleted_chat",
-                    "id": content["id"],
+                    "event_type": content["event_type"],
+                },
+            )
+            return
+
+        # chat was liked event
+        if content.get("event_type", None) == "chat_was_liked":
+            logger.debug(f"Chat_was_liked event. Content: {content}")
+            await self.channel_layer.group_send(
+                self._group_name,
+                {
+                    "type": "send_liked_chat",
                     "event_type": content["event_type"],
                 },
             )
@@ -230,11 +242,22 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         deleted_chat_event = {
             "event_type": event["event_type"],
-            "id": event["id"],
+            "id": self._chat_id,
         }
 
-        if await self.delete_chat(event["id"]):
+        if await self.delete_chat():
             await self.send_json(deleted_chat_event)
+
+    async def send_liked_chat(self, event):
+        logger.debug(f"Event chat_was_liked. Sending liked Chat to chat: {self._chat_id} in room: {self._room_name}")
+
+        liked_chat_event = {
+            "event_type": event["event_type"],
+            "id": self._chat_id,
+        }
+
+        if await self.like_chat():
+            await self.send_json(liked_chat_event)
 
     @database_sync_to_async
     def create_online_user(self):
@@ -267,7 +290,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def get_message(self, id):
-        msg = Message.objects.get(pk=id)
+        msg = Message.objects.filter(pk=id).first()
         if msg:
             return msg
 
@@ -276,7 +299,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         """Return True and delete msg if the user from request is a message author.
         Return False, if the user from the request isn't a message author or msg is absent"""
 
-        msg = Message.objects.get(pk=id)
+        msg = Message.objects.filter(pk=id).first()
 
         if not msg:
             logger.debug(f"Delete_message. The message with the specified ID is absent")
@@ -298,7 +321,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         """Return True and update msg if the user from request is a message author.
         Return False, if the user from the request isn't a message author, msg is absent"""
 
-        msg = Message.objects.get(pk=id)
+        msg = Message.objects.filter(pk=id).first()
 
         if not msg:
             logger.debug(f"Update_message. The message with the specified ID is absent")
@@ -319,15 +342,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         return True
 
     @database_sync_to_async
-    def delete_chat(self, id):
+    def delete_chat(self):
         """Return True and delete chat if the user from request is a chat author.
-        Return False, if the user from the request isn't a chat author or chat is absent"""
+        Return False, if the user from the request isn't a chat author"""
 
-        chat = Chat.objects.get(pk=id)
-
-        if not chat:
-            logger.debug(f"Delete_chat. The chat with the specified ID is absent")
-            return False
+        chat = Chat.objects.get(pk=self._chat_id)
 
         # Is the user from the request isn't a chat author
         if self._user.username != chat.user.username:
@@ -337,3 +356,18 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         chat.delete()
         logger.debug(f"Delete_chat. The Chat: {self._chat_id} was deleted in room: {self._room_name}")
         return True
+
+    # like_chat
+    @database_sync_to_async
+    def like_chat(self):
+        """Return True and save like in DB. Return False If this user already liked this chat."""
+
+        chat_like = ChatLike.objects.filter(user=self._user, chat_id=self._chat_id).first()
+        if not chat_like:
+            new, _ = ChatLike.objects.get_or_create(user=self._user, chat_id=self._chat_id)
+            logger.debug(f"Like_chat. The Chat: {self._chat_id} was liked in room: {self._room_name}")
+            return True
+        else:
+            # If this user already liked this chat
+            logger.debug(f"Like_chat. The user has already liked chat: {self._chat_id} in room: {self._room_name}")
+            return False

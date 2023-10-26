@@ -112,10 +112,12 @@
             background: #50ffa8;
         }
 
-        #delChat {
-            width: 70px;
+        #delChat,
+        #chatLikeBtn {
+            /* width: 70px; */
             height: 30px;
-            margin: 15px;
+            width: 70px;
+            margin-left: 15px;
         }
 
         #userAvatar {
@@ -162,7 +164,10 @@
     <div class="chat_img">
     </div>
 
-    <div><button id="delChat" onclick="delChat()">Del chat</button></div>
+    <div>
+        <button id="delChat" onclick="delChat()">Del</button>
+        <button id="chatLikeBtn" onclick="sendChatLike(this)">🧡</button>
+    </div>
 
     <div class="input-container" id="connection-status"></div>
 
@@ -188,7 +193,6 @@
             </div>
 
             <div id="extraInfo">
-                {{#message.isDeleted}} <div>Is deleted: {{.}}</div> {{/message.isDeleted}}
                 <div>Msg id: {{id}} </div>
                 <div>User id: {{userId}}</div>
                 <div>Chat id: {{chatId}}</div>
@@ -297,6 +301,10 @@
                     });
                 })
                 .catch(error => console.error('Error fetching message history:', error));
+
+            // show chat likes
+            document.querySelector("#chatLikeBtn").textContent = "🧡" + getChatById(Number(selectedChatId)).likes
+
         }
 
         function initializeWebSocket(selectedRoom, selectedChatId) {
@@ -335,6 +343,10 @@
                     case "online_user_list":
                         break;
                     case "chat_was_deleted":
+                        break;
+                    case "chat_was_liked":
+                        let likesCount = getChatById(Number(selectedChatId)).likes + 1;
+                        document.querySelector("#chatLikeBtn").textContent = "🧡" + likesCount;
                         break;
                     default:
                         console.log("Unknown event", message);
@@ -494,12 +506,20 @@
         }
 
         function delChat() {
-            console.log("delChat Event");
+            console.log("chat_was_deleted Event");
 
-            const chatId = document.getElementById('selected-chat').value;
             const message = {
                 event_type: 'chat_was_deleted',
-                id: chatId,
+            };
+
+            socket.send(JSON.stringify(message));
+        }
+
+        function sendChatLike(btn) {
+            console.log("chat_was_liked Event");
+
+            const message = {
+                event_type: 'chat_was_liked',
             };
 
             socket.send(JSON.stringify(message));
