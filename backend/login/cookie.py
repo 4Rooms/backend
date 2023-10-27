@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from jwt import decode
+from rest_framework.response import Response
 
 
 def get_token_expire_time(access_token):
@@ -15,8 +16,7 @@ def get_token_expire_time(access_token):
     return token_exp_time
 
 
-def set_auth_cookie(response, jwt_token):
-    # set domain based on DJANGO_HOST
+def get_hostname():
     domain_url = settings.DJANGO_HOST
     hostname = urlparse(domain_url).hostname
     if hostname not in settings.ALLOWED_HOSTS:
@@ -25,6 +25,8 @@ def set_auth_cookie(response, jwt_token):
     if hostname in ["back.4rooms.pro", "testback.4rooms.pro"]:
         hostname = "4rooms.pro"
 
+
+def set_auth_cookie(response: Response, jwt_token):
     response.set_cookie(
         key=settings.SIMPLE_JWT["AUTH_COOKIE"],
         value=jwt_token,
@@ -32,5 +34,13 @@ def set_auth_cookie(response, jwt_token):
         secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
         httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
         samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
-        domain=hostname,
+        domain=get_hostname(),
+    )
+
+
+def delete_auth_cookie(response: Response):
+    response.delete_cookie(
+        key=settings.SIMPLE_JWT["AUTH_COOKIE"],
+        samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
+        domain=get_hostname(),
     )

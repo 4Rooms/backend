@@ -263,19 +263,29 @@
             const apiUrl = '/api/chat/' + selectedRoom + '/';
 
             fetch(apiUrl)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch chats: ' + response.status + ' ' + response.statusText);
+                    }
+                    return response.json()
+                })
                 .then(data => {
+                    if (!('results' in data)) {
+                        throw new Error('No data returned from server when fetching chats.');
+                    }
+
                     chats = data.results;
-                    if (chats.length === 0) {
-                        console.log('No chats found for room:', selectedRoom);
-                        displayConnectionError("There are no chats for this room.");
-                        return;
+                    if (!chats) {
+                        throw new Error('No chats returned from server when fetching chats.');
                     }
 
                     populateChatDropdown(chats);
                     onChatSelectionChange();
                 })
-                .catch(error => console.error('Error fetching chats:', error));
+                .catch(error => {
+                    console.error(error);
+                    displayConnectionError(error);
+                });
         }
 
         function getMessageHistory() {
