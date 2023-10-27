@@ -1,9 +1,10 @@
 from accounts.serializers import LoginDataSerializer, UserSerializer
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, inline_serializer
 from login.authentication_backend import AuthBackend
-from login.cookie import set_auth_cookie
-from rest_framework import status
+from login.cookie import delete_auth_cookie, set_auth_cookie
+from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import UpdateAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -58,3 +59,41 @@ class LoginAPIView(APIView):
         serializer = UserSerializer(user, many=False)
         response.data = {"Success": "Login successfully", "user": serializer.data}
         return response
+
+
+class LogoutAPIView(UpdateAPIView):
+    """Logout. Delete the access token cookie"""
+
+    authentication_classes = []
+    http_method_names = ["put"]
+    permission_classes = (AllowAny,)
+    serializer_class = serializers.Serializer
+
+    @extend_schema(
+        tags=["Account"],
+        request=inline_serializer(
+            name="LogoutRequest",
+            fields={},
+        ),
+        responses={
+            204: inline_serializer(
+                name="LogoutResponse",
+                fields={},
+            )
+        },
+        parameters=[],
+        methods=["PUT"],
+        description="Logout Request",
+    )
+    def put(self, request):
+        """Delete the access token cookie"""
+
+        response = Response(status=status.HTTP_204_NO_CONTENT)
+        delete_auth_cookie(response)
+        return response
+
+    def get_object(self):
+        return self.request.user
+
+    def get_queryset(self):
+        return super().get_queryset().filter(user=self.request.user)
