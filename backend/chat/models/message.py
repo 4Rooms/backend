@@ -8,7 +8,7 @@ class Message(models.Model):
 
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     user = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
-    text = models.TextField(max_length=1000, null=True)
+    text = models.TextField(max_length=792, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_deleted = models.BooleanField(default=False)
 

@@ -166,7 +166,7 @@ to receive the following structure from the client:
 
 ```json
 {
-  "event_type": "chat_was_liked"
+  "event_type": "chat_was_liked/unliked"
 }
 ```
  
