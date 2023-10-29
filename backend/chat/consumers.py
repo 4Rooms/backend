@@ -119,8 +119,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return
 
         # chat was liked event
-        if content.get("event_type", None) == "chat_was_liked":
-            logger.debug(f"Chat_was_liked event. Content: {content}")
+        if content.get("event_type", None) == "chat_was_liked/unliked":
+            logger.debug(f"chat_was_liked/unliked event. Content: {content}")
             await self.channel_layer.group_send(
                 self._group_name,
                 {
@@ -252,12 +252,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         logger.debug(f"Event chat_was_liked. Sending liked Chat to chat: {self._chat_id} in room: {self._room_name}")
 
         liked_chat_event = {
-            "event_type": event["event_type"],
+            "event_type": await self.like_chat(),
             "id": self._chat_id,
         }
 
-        if await self.like_chat():
-            await self.send_json(liked_chat_event)
+        await self.send_json(liked_chat_event)
 
     @database_sync_to_async
     def create_online_user(self):
@@ -360,14 +359,16 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     # like_chat
     @database_sync_to_async
     def like_chat(self):
-        """Return True and save like in DB. Return False If this user already liked this chat."""
+        """Return 'chat_was_liked' and save like in DB.
+        Return 'chat_was_unliked' and del like if this user already liked this chat."""
 
         chat_like = ChatLike.objects.filter(user=self._user, chat_id=self._chat_id).first()
         if not chat_like:
             new, _ = ChatLike.objects.get_or_create(user=self._user, chat_id=self._chat_id)
             logger.debug(f"Like_chat. The Chat: {self._chat_id} was liked in room: {self._room_name}")
-            return True
+            return "chat_was_liked"
         else:
-            # If this user already liked this chat
-            logger.debug(f"Like_chat. The user has already liked chat: {self._chat_id} in room: {self._room_name}")
-            return False
+            # If this user already liked this chat -> del this like
+            chat_like.delete()
+            logger.debug(f"Like_chat. The Chat: {self._chat_id} was unliked in room: {self._room_name}")
+            return "chat_was_unliked"
