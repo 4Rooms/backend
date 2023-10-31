@@ -8,6 +8,7 @@ from chat.serializers.chat import (
     SavedChatSerializer,
 )
 from config.settings import CHOICE_ROOM
+from django.conf import settings
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from files.services.default_avatars import DefaultAvatars
 from files.services.images import resize_in_memory_uploaded_file
@@ -66,8 +67,10 @@ class ChatAPIView(generics.GenericAPIView):
 
         if serializer.is_valid():
             # Optional fields
-            img = serializer.validated_data.get("img", None)
+            img = data.get("img", None)
             if img:
+                if img.size > settings.MAX_FILE_SIZE:
+                    raise ValidationError(f"File size must be less than {settings.MAX_FILE_SIZE} bytes")
                 img = resize_in_memory_uploaded_file(img, 200)
             else:
                 img = DefaultAvatars().get_random_chat_avatar().as_posix()
