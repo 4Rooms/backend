@@ -10,6 +10,7 @@ from accounts.serializers import (
     UserSerializer,
 )
 from chat.permissions import IsEmailConfirm
+from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
@@ -110,6 +111,9 @@ class ProfileAPIView(RetrieveUpdateAPIView):
             raise ValidationError(serializer.errors)
 
         avatar = serializer.validated_data["avatar"]
+        if avatar.size > settings.MAX_FILE_SIZE:
+            raise ValidationError(f"File size must be less than {settings.MAX_FILE_SIZE} bytes")
+
         serializer.validated_data["avatar"] = resize_in_memory_uploaded_file(avatar, 200)
         serializer.save()
 
