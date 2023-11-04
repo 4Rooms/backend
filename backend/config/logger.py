@@ -1,42 +1,43 @@
 LOGGING = {
-    "version": 1,  # the dictConfig format version
-    "disable_existing_loggers": False,  # retain the default loggers
+    "version": 1,
+    "disable_existing_loggers": False,
     "formatters": {
-        "standard": {
-            "format": "%(asctime)s [%(name)s] [%(levelname)s] %(message)s",
-            "datefmt": "%Y-%m-%d %H:%M:%S",  # Format for the timestamp
+        "verbose": {
+            "format": "{asctime:<20} {levelname:<8} {filename:<25}:{lineno:<4} {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
         },
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "formatter": "standard",
+            "formatter": "verbose",
         },
     },
+    "root": {
+        "handlers": ["console"],
+        "level": "DEBUG",
+    },
     "loggers": {
-        "backend": {
-            "level": "DEBUG",
+        "django": {
             "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
         },
-        "login": {
-            "level": "DEBUG",
+        "asyncio": {
             "handlers": ["console"],
-        },
-        "register": {
-            "level": "DEBUG",
-            "handlers": ["console"],
-        },
-        "accounts": {
-            "level": "DEBUG",
-            "handlers": ["console"],
-        },
-        "files": {
-            "level": "DEBUG",
-            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
         },
         "django.channels.server": {
-            "level": "INFO",
             "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "daphne.http_protocol": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
 }
