@@ -7,7 +7,10 @@ from config.utils import get_ui_host
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from registration.serializers import EmailConfirmationResponseSerializer
+from registration.serializers import (
+    ConfirmationEmailRequestSerializer,
+    EmailConfirmationResponseSerializer,
+)
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -86,3 +89,32 @@ class ConfirmEmailApiView(APIView):
         except DjangoValidationError as ex:
             logger.error(ex)
             raise ValidationError(ex.message) from None
+
+
+class SendConfirmationEmailApiView(APIView):
+    """Send confirmation email to user"""
+
+    permission_classes = (AllowAny,)
+    serializer_class = UserSerializer
+
+    @extend_schema(tags=["Account"], request=ConfirmationEmailRequestSerializer, responses=UserSerializer)
+    def post(self, request):
+        serializer = ConfirmationEmailRequestSerializer(data=request.data)
+        if not serializer.is_valid():
+            raise ValidationError(serializer.errors)
+
+        email = serializer.validated_data["email"]
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            raise ValidationError("User with this email does not exist") from None
+
+        if user.is_email_confirmed:
+            raise ValidationError("Email is already confirmed")
+
+        token = EmailConfirmationToken.objects.get(user=user)
+        if not token:
+            raise ValidationError("Cannot find a registration token for this user")
+
+        send_confirmation_email(address=email, token_id=token.pk, ui_host=get_ui_host(request))
+        return Response(UserSerializer(user).data, status=status.HTTP_200_OK)
