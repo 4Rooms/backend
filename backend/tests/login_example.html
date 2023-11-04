@@ -269,24 +269,12 @@
         }
 
         async function handleOauthCallback() {
-            // if location is /logged-in/
-            var logged_in = window.location.pathname == "/logged-in/";
+            const logged_in = getUserInfo();
 
             if (logged_in) {
-                // remove refresh_token from url
-                window.history.replaceState({}, document.title, "/");
-
-                document.getElementById('message').innerText = "✅ Logged IN!";
-                // hide signin button
-                // document.getElementById('signin-button').style.display = "none";
-                await sleep(1000);
-
-                // show signout button
-                // document.getElementById('signout-button').style.display = "block";
+                console.log("Logged in");
             } else {
-                // remove refresh_token from url
-                document.getElementById('message').innerText = "Not logged in";
-                getUserInfo();
+                console.log("Not logged in");
             }
         }
 
@@ -324,7 +312,10 @@
 
             } catch (error) {
                 document.getElementById('message').innerHTML = "<b>❌ <i>Failed to get user_info</i></b>";
+                return false;
             }
+
+            return true;
         }
 
     </script>
