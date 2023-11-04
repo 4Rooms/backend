@@ -159,7 +159,7 @@ sequenceDiagram
     Backend ->> Backend: Create/Login user
 
     rect rgba(50, 100, 50, .4)
-        Backend ->> Frontend: Redirect: /logged-in/
+        Backend ->> Frontend: Redirect: /
     end
     deactivate Backend
 
@@ -180,6 +180,6 @@ sequenceDiagram
 6.  The user confirms the login, and this acknowledgment is sent back to Google's service at `https://accounts.google.com/_/signin/oauth`.
 7.  With the user's confirmation, Google's service generates an authentication response and sends a redirection request to the backend at `/oauth/complete/google-oauth2/`.
 8.  The backend receives the authentication response from Google's service and creates a new user or logs in an existing user.
-9.  The backend, upon successful completion, redirects the flow back to the frontend through the URL `/logged-in/` and sets the access token in a cookie.
+9.  The backend, upon successful completion, redirects the flow back to the frontend through the URL `/` and sets the access token in a cookie.
 10. The frontend processes the completion signal from the backend and displays the login result to the user.
     This result could be a success message or a notification confirming successful login using their Google account.
