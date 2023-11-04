@@ -7,3 +7,11 @@ class EmailConfirmationResponseSerializer(serializers.Serializer):
     """
 
     is_email_confirmed = serializers.BooleanField()
+
+
+class ConfirmationEmailRequestSerializer(serializers.Serializer):
+    """
+    Email confirmation request.
+    """
+
+    email = serializers.EmailField()
