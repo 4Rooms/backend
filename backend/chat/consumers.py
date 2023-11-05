@@ -6,8 +6,8 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from chat.models.chat import Chat
 from chat.models.chatLike import ChatLike
 from chat.models.message import Message
-from chat.models.reaction import Reaction
 from chat.models.onlineUser import OnlineUser
+from chat.models.reaction import Reaction
 from chat.serializers.message import MessageSerializer, WebsocketMessageSerializer
 
 logger = logging.getLogger(__name__)
@@ -16,6 +16,12 @@ logger = logging.getLogger(__name__)
 class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self._user = self.scope["user"]
+
+        if self._user is None:
+            logger.debug(f"User is None. Rejecting connection")
+            await self.close()
+            return
+
         self._username = await self.get_user_username(self._user)
 
         logger.debug(f"User {self._user} wants to connect to websocket")
@@ -27,6 +33,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         await self.accept()
         # Send Event connected_user
+        logger.debug(f"Sending connected_user event to chat: {self._chat_id} in room: {self._room_name}")
         await self.channel_layer.group_send(
             self._group_name,
             {
@@ -39,10 +46,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             },
         )
         # Add a user to a group of users in that chat
+        logger.debug(f"Adding user to group: {self._group_name}")
         await self.channel_layer.group_add(self._group_name, self.channel_name)
         # Add user as online user in DB
+        logger.debug(f"Adding user as online user in DB")
         await self.create_online_user()
         # Send yourself Event online_user_list
+        logger.debug(f"Sending online_user_list event to chat: {self._chat_id} in room: {self._room_name}")
         await self.send_online_user_list()
 
     async def disconnect(self, code):
@@ -118,7 +128,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                     "event_type": content["event_type"],
                 },
             )
-
+            return
 
         # chat was liked event
         if content.get("event_type", None) == "chat_was_liked/unliked":
@@ -133,15 +143,22 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return
 
         # message reaction event
-        if content.get("event_type", None) == "message_reaction" and content.get("id", None) and content.get("reaction", None):
+        if (
+            content.get("event_type", None) == "message_reaction"
+            and content.get("id", None)
+            and content.get("reaction", None)
+        ):
             logger.debug(f"message_reaction event. Content: {content}")
+
+            event_type = await self.message_reaction(content["id"], content["reaction"], self._user)
             await self.channel_layer.group_send(
                 self._group_name,
                 {
                     "type": "send_message_reaction",
                     "id": content["id"],
                     "reaction": content["reaction"],
-                    "event_type": content["event_type"],
+                    "event_type": event_type,
+                    "user": self._user,
                 },
             )
             return
@@ -276,14 +293,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     # send_message_reaction
     async def send_message_reaction(self, event):
-        logger.debug(f"Event message_reaction. Sending msg reaction to chat: {self._chat_id} in room: {self._room_name}")
-        print("!! self.scope['user'] !!", self.scope["user"], self.scope["user"].id, self.scope["user"].username)
+        logger.debug(f"Sending msg reaction to chat: {self._chat_id} in room: {self._room_name}")
 
         msg_reaction_event = {
-            "event_type": await self.message_reaction(event["id"], event["reaction"], self.scope["user"]),
+            "event_type": event["event_type"],
             "id": event["id"],
             "reaction": event["reaction"],
-            "user": self._user.username,
+            "user": event["user"].username,
         }
 
         await self.send_json(msg_reaction_event)
@@ -413,7 +429,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         Return 'message_reaction_was_deleted' and del reaction if this user already reacted this msg."""
 
         msg_reaction = Reaction.objects.filter(user=user, message_id=id).first()
-        print("!!!!!!   msg_reaction   !!!!!!", msg_reaction)
+
         if not msg_reaction:
             new, _ = Reaction.objects.get_or_create(user=user, message_id=id, reaction=reaction)
             logger.debug(f"Message_reaction. The user: {user} msg: {id}, reaction: {reaction} was posted")
