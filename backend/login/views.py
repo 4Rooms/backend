@@ -53,7 +53,7 @@ class LoginAPIView(APIView):
 
         # set cookie for response
         response = Response()
-        set_auth_cookie(response, token["access"])
+        set_auth_cookie(request, response, token["access"])
 
         # serialize the user to return it in response
         serializer = UserSerializer(user, many=False)
@@ -89,7 +89,7 @@ class LogoutAPIView(UpdateAPIView):
         """Delete the access token cookie"""
 
         response = Response(status=status.HTTP_204_NO_CONTENT)
-        delete_auth_cookie(response)
+        delete_auth_cookie(self.request, response)
         return response
 
     def get_object(self):

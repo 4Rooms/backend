@@ -1,5 +1,6 @@
 import logging
 import re
+from urllib.parse import urlparse
 
 import pytest
 from accounts.models import User
@@ -12,6 +13,19 @@ from .conftest import UserForTests
 
 @pytest.mark.django_db
 @pytest.mark.parametrize(
+    "origin, expected_url",
+    [
+        ("http://localhost:8000", "http://localhost:8000/password-reset/"),
+        ("http://localhost:5173", "http://localhost:5173/password-reset/"),
+        ("https://4rooms.pro", "https://4rooms.pro/password-reset/"),
+        ("https://back.4rooms.pro", "https://4rooms.pro/password-reset/"),
+        ("https://testback.4rooms.pro", "https://4rooms.pro/password-reset/"),
+        # Forbidden origins
+        ("http://localhost:8080", None),
+        ("https://5rooms.pro", None),
+    ],
+)
+@pytest.mark.parametrize(
     "new_password, expected_error_type",
     [
         ("gxf1yAzl", None),  # valid password
@@ -21,7 +35,9 @@ from .conftest import UserForTests
         ("password123", "validation_error"),  # too common
     ],
 )
-def test_password_reset(client: Client, test_user: UserForTests, new_password, expected_error_type):
+def test_password_reset(
+    client: Client, test_user: UserForTests, new_password, expected_error_type, origin, expected_url
+):
     """
     Test password reset
 
@@ -32,8 +48,12 @@ def test_password_reset(client: Client, test_user: UserForTests, new_password, e
 
     # request password reset email
     url = reverse("request_password_reset")
-    response = client.post(url, {"email": test_user.email}, format="json", headers={"origin": "http://localhost:8000"})
+    response = client.post(url, {"email": test_user.email}, format="json", headers={"origin": origin})
     logging.debug(f"response: {response.json()}\n")
+
+    if expected_url is None:
+        assert response.status_code == 400
+        return
 
     assert response.status_code == 200
 
@@ -43,7 +63,12 @@ def test_password_reset(client: Client, test_user: UserForTests, new_password, e
     logging.debug(f"Password reset email: \n{email.body}\n")
 
     # get token for password reset from email
-    token = re.match(r".*/password-reset/\?token_id=(?P<token>.+)", email.body).groupdict()["token"]
+    link = re.match(r".*(?P<link>http[s]?://[^\s]+)", email.body).groupdict()["link"]
+    assert link is not None
+    parsed = urlparse(link)
+    assert f"{parsed.scheme}://{parsed.netloc}{parsed.path}" == expected_url
+
+    token = parsed.query.split("=")[1]
     assert token is not None
 
     # reset password

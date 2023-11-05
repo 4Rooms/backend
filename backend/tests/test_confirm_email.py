@@ -14,8 +14,17 @@ from .conftest import UserForTests
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.django_db
-def test_confirm_email_view_is_working(client: Client, test_user: UserForTests):
+@pytest.mark.parametrize(
+    "origin, expected_url, expected_cookie_domain",
+    [
+        ("http://localhost:8000", "http://localhost:8000/confirm-email/", "localhost"),
+        ("http://localhost:5173", "http://localhost:5173/confirm-email/", "localhost"),
+        ("https://4rooms.pro", "https://4rooms.pro/confirm-email/", "4rooms.pro"),
+        ("https://back.4rooms.pro", "https://4rooms.pro/confirm-email/", "4rooms.pro"),
+        ("https://testback.4rooms.pro", "https://4rooms.pro/confirm-email/", "4rooms.pro"),
+    ],
+)
+def test_confirm_email_view_is_working(client: Client, django_user_model, origin, expected_url, expected_cookie_domain):
     """
     Test that get-request makes is_confirm_email=True
 
@@ -24,25 +33,62 @@ def test_confirm_email_view_is_working(client: Client, test_user: UserForTests):
         test_user (fixture): user with confirmed email (see conftest.py for details)
     """
 
+    url = reverse("register")
+    body = {"username": "user1", "email": "user1@gmail.com", "password": "user1user1user1"}
+    response = client.post(url, body, format="json", headers={"origin": origin})
+    assert response.status_code == 201
+
+    # Test that one message has been sent.
+    assert len(mail.outbox) == 1
+
+    email = mail.outbox[0]
+    mail.outbox.clear()
+    assert email.to == [body["email"]]
+    assert email.subject == "Please confirm email"
+    link = re.match(r".*(?P<link>http[s]?://[^\s]+)", email.body).groupdict()["link"]
+    assert link is not None
+    parsed = urlparse(link)
+    assert f"{parsed.scheme}://{parsed.netloc}{parsed.path}" == expected_url
+
+    token = parsed.query.split("=")[1]
+    assert token is not None
+
+    user = django_user_model.objects.filter(email=body["email"]).first()
+    assert user is not None
+
     # login user
     url = reverse("login")
-    body = {"username": test_user.username, "password": test_user.password}
+    body = {"username": "user1", "password": "user1user1user1"}
 
     logger.debug(f"Login user: {body}")
-    response = client.post(url, body, format="json", headers={"origin": "http://localhost:8000"})
+    response = client.post(url, body, format="json", headers={"origin": origin})
 
     logger.debug(f"Login response: {response.json()}")
     assert response.status_code == 200
 
-    # get user info to check is_email_confirmed
-    url = reverse("user")
-    response = client.get(url, format="json")
-    print(response.json())
-    assert response.json()["is_email_confirmed"] is True
+    # check cookie
+    assert "access_token" in response.cookies
+    cookie = response.cookies["access_token"]
+    assert cookie["domain"] == expected_cookie_domain
 
 
 @pytest.mark.django_db
-def test_resend_confirmation_email(client: Client, test_user_unconfirmed: UserForTests, django_user_model):
+@pytest.mark.parametrize(
+    "origin, expected_url",
+    [
+        ("http://localhost:8000", "http://localhost:8000/confirm-email/"),
+        ("http://localhost:5173", "http://localhost:5173/confirm-email/"),
+        ("https://4rooms.pro", "https://4rooms.pro/confirm-email/"),
+        ("https://back.4rooms.pro", "https://4rooms.pro/confirm-email/"),
+        ("https://testback.4rooms.pro", "https://4rooms.pro/confirm-email/"),
+        # Forbidden origins
+        ("http://localhost:8080", None),
+        ("https://5rooms.pro", None),
+    ],
+)
+def test_resend_confirmation_email(
+    client: Client, test_user_unconfirmed: UserForTests, django_user_model, origin, expected_url
+):
     """
     Test that the resend confirmation email endpoint sends an email.
 
@@ -55,11 +101,14 @@ def test_resend_confirmation_email(client: Client, test_user_unconfirmed: UserFo
     # Clear outbox before sending email
     mail.outbox.clear()
 
-    origin = "http://localhost:8000"
     # Send confirmation email
     url = reverse("send-confirmation-email")
     body = {"email": test_user_unconfirmed.email}
     response = client.post(url, body, format="json", headers={"origin": origin})
+
+    if expected_url is None:
+        assert response.status_code == 400
+        return
 
     # Check response
     assert response.status_code == 200
@@ -71,6 +120,7 @@ def test_resend_confirmation_email(client: Client, test_user_unconfirmed: UserFo
 
     # Check email details
     email = mail.outbox[0]
+    mail.outbox.clear()
     assert email.to == [body["email"]]
     assert email.subject == "Please confirm email"
 
@@ -78,9 +128,7 @@ def test_resend_confirmation_email(client: Client, test_user_unconfirmed: UserFo
     link = re.match(r".*(?P<link>http[s]?://[^\s]+)", email.body).groupdict()["link"]
     assert link is not None
     parsed = urlparse(link)
-    assert parsed.scheme == "http"
-    assert parsed.netloc == "localhost:8000"
-    assert parsed.path == "/confirm-email/"
+    assert f"{parsed.scheme}://{parsed.netloc}{parsed.path}" == expected_url
     token = parsed.query.split("=")[1]
     assert token is not None
 
@@ -92,9 +140,6 @@ def test_resend_confirmation_email(client: Client, test_user_unconfirmed: UserFo
     existing_token = EmailConfirmationToken.objects.filter(user=user).first()
     assert existing_token is not None
     assert existing_token.id == uuid.UUID(token)
-
-    # Clear outbox after test
-    mail.outbox.clear()
 
 
 @pytest.mark.django_db

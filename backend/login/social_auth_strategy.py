@@ -37,13 +37,13 @@ class AuthStrategy(DjangoStrategy):
 
         redirect_url = resolve_url(url)
         if redirect_url == settings.LOGIN_REDIRECT_URL:
-            redirect_url = urljoin(get_ui_host(self.request), redirect_url)
+            redirect_url = urljoin(get_ui_host(self.request, always_frontend_ui=False), redirect_url)
 
         user = self.request.user
         token = RefreshToken.for_user(user).access_token
 
         response = HttpResponseRedirect(redirect_url)
-        set_auth_cookie(response, str(token))
+        set_auth_cookie(self.request, response, str(token))
 
         logger.info(f"Redirecting to {redirect_url}")
         return response
