@@ -374,12 +374,14 @@
                     case "chat_was_deleted":
                         break;
                     case "chat_was_liked":
-                        let likesCount = getChatById(Number(selectedChatId)).likes + 1;
-                        document.querySelector("#chatLikeBtn").textContent = "🧡" + likesCount;
+                        let likedChat = getChatById(Number(selectedChatId));
+                        likedChat.likes += 1;
+                        document.querySelector("#chatLikeBtn").textContent = "🧡" + likedChat.likes;
                         break;
                     case "chat_was_unliked":
-                        let likes = getChatById(Number(selectedChatId)).likes;
-                        document.querySelector("#chatLikeBtn").textContent = "🧡" + likes;
+                        let unlikedChat = getChatById(Number(selectedChatId));
+                        unlikedChat.likes -= 1;
+                        document.querySelector("#chatLikeBtn").textContent = "🧡" + unlikedChat.likes;
                         break;
                     default:
                         console.log("Unknown event", message);
