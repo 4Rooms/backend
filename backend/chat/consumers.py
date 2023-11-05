@@ -109,6 +109,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 logger.debug(f"Update message event. Invalid message.")
                 return
 
+            await self.update_message(content["id"], content["new_text"])
             await self.channel_layer.group_send(
                 self._group_name,
                 {
@@ -255,9 +256,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(deleted_msg_event)
 
     async def send_updated_message(self, event):
-        logger.debug(
-            f"Event message_was_updated. Sending deleted MSG to chat: {self._chat_id} in room: {self._room_name}"
-        )
+        event_type = event["event_type"]
+        logger.debug(f"Send '{event_type}' to {self._username}, chat: {self._chat_id}, room: {self._room_name}")
 
         updated_msg_event = {
             "event_type": event["event_type"],
@@ -265,8 +265,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             "new_text": event["new_text"],
         }
 
-        if await self.update_message(event["id"], event["new_text"]):
-            await self.send_json(updated_msg_event)
+        await self.send_json(updated_msg_event)
 
     async def send_deleted_chat(self, event):
         logger.debug(
