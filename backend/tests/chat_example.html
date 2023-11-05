@@ -132,6 +132,14 @@
         .newTextInMsgUpdating {
             width: 60%;
         }
+
+        #emojiPicker {
+            display: none;
+        }
+
+        .emoji {
+            border: none;
+        }
     </style>
 </head>
 
@@ -189,6 +197,17 @@
                 <div id="msgUpdating">
                     <input type="text" id={{id}} class="newTextInMsgUpdating">
                     <button id="updateMsgBtn" onclick="sendUpdatedMsg(this, {{id}})">>>></button>
+                </div>
+                <div><button id="pickReaction" onclick="pickReaction(this, {{id}})">😊</button></div>
+                <div class="emoji-picker" id="emojiPicker">
+                    <button class="emoji" data-emoji="😊", onclick="sendReaction(this, {{id}})">😊</button>
+                    <button class="emoji" data-emoji="👍", onclick="sendReaction(this, {{id}})">👍</button>
+                    <button class="emoji" data-emoji="❤️", onclick="sendReaction(this, {{id}})">❤️</button>
+                    <button class="emoji" data-emoji="😀", onclick="sendReaction(this, {{id}})">😀</button>
+                    <button class="emoji" data-emoji="😍", onclick="sendReaction(this, {{id}})">😍</button>
+                    <button class="emoji" data-emoji="😂", onclick="sendReaction(this, {{id}})">😂</button>
+                    <button class="emoji" data-emoji="😢", onclick="sendReaction(this, {{id}})">😢</button>
+                    <button class="emoji" data-emoji="👎", onclick="sendReaction(this, {{id}})">👎</button>
                 </div>
             </div>
 
@@ -534,6 +553,25 @@
 
             const message = {
                 event_type: 'chat_was_liked/unliked',
+            };
+
+            socket.send(JSON.stringify(message));
+        }
+
+        function pickReaction(btn, msgId) {
+            console.log("pickReaction, Msg Id =", msgId);
+
+            const msgElem = getMsgById(msgId);
+            msgElem.messageDiv.querySelector(".emoji-picker").style.display = "inline";
+        }
+
+        function sendReaction(btn, msgId) {
+            console.log("send reaction", btn.textContent);
+
+            const message = {
+                event_type: 'message_reaction',
+                id: msgId,
+                reaction: btn.textContent,
             };
 
             socket.send(JSON.stringify(message));

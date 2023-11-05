@@ -9,7 +9,7 @@ class MessageSerializer(serializers.ModelSerializer):
     """Serializer for websocket messages"""
 
     # override timestamp field to return timestamp in seconds
-    timestamp = serializers.DateTimeField(format="%s", read_only=True)
+    # timestamp = serializers.DateTimeField(format="%s", read_only=True)
 
     # Add user_name field to return username instead id
     user_name = serializers.SerializerMethodField(source="get_user_name")
