@@ -124,6 +124,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # delete chat event
         if content.get("event_type", None) == "chat_was_deleted":
             logger.debug(f"Chat_was_deleted event. Content: {content}")
+            await self.delete_chat()
             await self.channel_layer.group_send(
                 self._group_name,
                 {
@@ -268,17 +269,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(updated_msg_event)
 
     async def send_deleted_chat(self, event):
-        logger.debug(
-            f"Event chat_was_deleted. Sending deleted Chat to chat: {self._chat_id} in room: {self._room_name}"
-        )
+        event_type = event["event_type"]
+        logger.debug(f"Send '{event_type}' to {self._username}, chat: {self._chat_id}, room: {self._room_name}")
 
         deleted_chat_event = {
-            "event_type": event["event_type"],
+            "event_type": event_type,
             "id": self._chat_id,
         }
 
-        if await self.delete_chat():
-            await self.send_json(deleted_chat_event)
+        await self.send_json(deleted_chat_event)
 
     async def send_liked_chat(self, event):
         logger.debug(f"Event chat_was_liked. Sending liked Chat to chat: {self._chat_id} in room: {self._room_name}")
