@@ -6,6 +6,7 @@ from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from chat.models.chat import Chat
 from chat.models.chatLike import ChatLike
 from chat.models.message import Message
+from chat.models.reaction import Reaction
 from chat.models.onlineUser import OnlineUser
 from chat.serializers.message import MessageSerializer, WebsocketMessageSerializer
 
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self._user = self.scope["user"]
+        self._username = await self.get_user_username(self._user)
 
         logger.debug(f"User {self._user} wants to connect to websocket")
 
@@ -116,7 +118,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                     "event_type": content["event_type"],
                 },
             )
-            return
+
 
         # chat was liked event
         if content.get("event_type", None) == "chat_was_liked/unliked":
@@ -125,6 +127,20 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 self._group_name,
                 {
                     "type": "send_liked_chat",
+                    "event_type": content["event_type"],
+                },
+            )
+            return
+
+        # message reaction event
+        if content.get("event_type", None) == "message_reaction" and content.get("id", None) and content.get("reaction", None):
+            logger.debug(f"message_reaction event. Content: {content}")
+            await self.channel_layer.group_send(
+                self._group_name,
+                {
+                    "type": "send_message_reaction",
+                    "id": content["id"],
+                    "reaction": content["reaction"],
                     "event_type": content["event_type"],
                 },
             )
@@ -258,6 +274,20 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         await self.send_json(liked_chat_event)
 
+    # send_message_reaction
+    async def send_message_reaction(self, event):
+        logger.debug(f"Event message_reaction. Sending msg reaction to chat: {self._chat_id} in room: {self._room_name}")
+        print("!! self.scope['user'] !!", self.scope["user"], self.scope["user"].id, self.scope["user"].username)
+
+        msg_reaction_event = {
+            "event_type": await self.message_reaction(event["id"], event["reaction"], self.scope["user"]),
+            "id": event["id"],
+            "reaction": event["reaction"],
+            "user": self._user.username,
+        }
+
+        await self.send_json(msg_reaction_event)
+
     @database_sync_to_async
     def create_online_user(self):
         new, _ = OnlineUser.objects.get_or_create(user=self._user, chat_id=self._chat_id)
@@ -269,6 +299,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     def get_user_avatar(self, user):
         return user.profile.avatar.url
+
+    @database_sync_to_async
+    def get_user_username(self, user):
+        return user.username
 
     @database_sync_to_async
     def get_online_users(self):
@@ -372,3 +406,19 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             chat_like.delete()
             logger.debug(f"Like_chat. The Chat: {self._chat_id} was unliked in room: {self._room_name}")
             return "chat_was_unliked"
+
+    @database_sync_to_async
+    def message_reaction(self, id, reaction, user):
+        """Return 'message_reaction_was_posted' and save reaction in DB.
+        Return 'message_reaction_was_deleted' and del reaction if this user already reacted this msg."""
+
+        msg_reaction = Reaction.objects.filter(user=user, message_id=id).first()
+        print("!!!!!!   msg_reaction   !!!!!!", msg_reaction)
+        if not msg_reaction:
+            new, _ = Reaction.objects.get_or_create(user=user, message_id=id, reaction=reaction)
+            logger.debug(f"Message_reaction. The user: {user} msg: {id}, reaction: {reaction} was posted")
+            return "message_reaction_was_posted"
+        else:
+            msg_reaction.delete()
+            logger.debug(f"Message_reaction. The user: {user} msg: {id}, reaction: {reaction} was deleted")
+            return "message_reaction_was_deleted"
