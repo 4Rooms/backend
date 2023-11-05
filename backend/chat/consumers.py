@@ -137,11 +137,14 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # chat was liked event
         if content.get("event_type", None) == "chat_was_liked/unliked":
             logger.debug(f"chat_was_liked/unliked event. Content: {content}")
+
+            event_type = await self.like_chat(self._user)
             await self.channel_layer.group_send(
                 self._group_name,
                 {
                     "type": "send_liked_chat",
-                    "event_type": content["event_type"],
+                    "user": self._user,
+                    "event_type": event_type,
                 },
             )
             return
@@ -161,8 +164,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                     "type": "send_message_reaction",
                     "id": content["id"],
                     "reaction": content["reaction"],
-                    "event_type": event_type,
                     "user": self._user,
+                    "event_type": event_type,
                 },
             )
             return
@@ -280,11 +283,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(deleted_chat_event)
 
     async def send_liked_chat(self, event):
-        logger.debug(f"Event chat_was_liked. Sending liked Chat to chat: {self._chat_id} in room: {self._room_name}")
+        logger.debug(f"Event chat_was_liked. Sending liked Chat: {self._chat_id} by user: {event['user'].username}")
 
         liked_chat_event = {
-            "event_type": await self.like_chat(),
+            "event_type": event["event_type"],
             "id": self._chat_id,
+            "user": event["user"].username
         }
 
         await self.send_json(liked_chat_event)
@@ -406,13 +410,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     # like_chat
     @database_sync_to_async
-    def like_chat(self):
+    def like_chat(self, user):
         """Return 'chat_was_liked' and save like in DB.
         Return 'chat_was_unliked' and del like if this user already liked this chat."""
 
-        chat_like = ChatLike.objects.filter(user=self._user, chat_id=self._chat_id).first()
+        chat_like = ChatLike.objects.filter(user=user, chat_id=self._chat_id).first()
+        print("!!! chat_like !!!", chat_like)
+
         if not chat_like:
-            new, _ = ChatLike.objects.get_or_create(user=self._user, chat_id=self._chat_id)
+            new, _ = ChatLike.objects.get_or_create(user=user, chat_id=self._chat_id)
             logger.debug(f"Like_chat. The Chat: {self._chat_id} was liked in room: {self._room_name}")
             return "chat_was_liked"
         else:
