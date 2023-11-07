@@ -46,9 +46,11 @@ class MessageSerializer(serializers.ModelSerializer):
         return None
 
     def get_reactions(self, obj):
-        reactions = Reaction.objects.filter(message=obj)
-        serializer = ReactionSerializer(reactions, many=True)
-        return serializer.data
+        if isinstance(obj, Message):
+            reactions = Reaction.objects.filter(message=obj)
+            serializer = ReactionSerializer(reactions, many=True)
+            return serializer.data
+        return None
 
 
 class WebsocketMessageSerializer(serializers.Serializer):
