@@ -215,6 +215,13 @@
                 <div>Msg id: {{id}} </div>
                 <div>User id: {{userId}}</div>
                 <div>Chat id: {{chatId}}</div>
+                <div>Reactions:
+                    <ul>
+                        {{#reactions}}
+                            <li>user: {{user_name}}, reaction: {{reaction}}</li>
+                        {{/reactions}}
+                    </ul>
+                </div>
             </div>
 
             <div id="btnContainer">
