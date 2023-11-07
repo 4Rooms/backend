@@ -12,7 +12,13 @@ class ReactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Reaction
         fields = "__all__"
-        read_only_fields = ["id", "message", "user", "reaction", "timestamp",]
+        read_only_fields = [
+            "id",
+            "message",
+            "user",
+            "reaction",
+            "timestamp",
+        ]
 
     @staticmethod
     def get_user_name(obj) -> Optional[str]:

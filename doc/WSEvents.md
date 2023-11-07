@@ -9,12 +9,19 @@ to receive the following structure from the client:
 {
  "event_type": "chat_message",
   "message": {
-      "chat": 5,
-      "text": "Msg Text"
+    "chat": 39,
+    "id": 133,
+    "is_deleted": false,
+    "reactions": [],
+    "text": "hi",
+    "timestamp": "2023-11-09T18:03:11.236195Z",
+    "user": 6,
+    "user_avatar": "https://.../avatar.jpg",
+    "user_name": "Terry"
   }
 }
 ```
--   "chat": chat ID
+-   "id": message ID
 
 If the message passes validation the event with the following structure is sent to a group of users in the chat:
 
@@ -171,7 +178,7 @@ to receive the following structure from the client:
 }
 ```
  
-The server will send the following structure to a group of users 
+The server will save like in DB and send the following structure to a group of users 
 in the chat if there is no record in the DB that this user liked the chat:
 
 ```json
@@ -184,13 +191,52 @@ in the chat if there is no record in the DB that this user liked the chat:
 ```
 -   "id": chat ID
 
-The server will send the following structure to a group of users 
+The server will delete like and send the following structure to a group of users 
 in the chat if the user has already liked the current chat:
 
 ```json
 {
   "event_type": "chat_was_unliked", 
   "id": 34,
+  "user": "Terry",
+  "timestamp": "2023-09-26T14:17:44.250236Z"
+}
+```
+
+### Event message_reaction
+If a client has reacted the message, the server expects 
+to receive the following structure from the client:
+
+```json
+{
+  "event_type": "message_reaction", 
+  "id": 35,
+  "reaction": "👍"
+}
+```
+ 
+The server will save reaction in DB and send the following structure to a group of users 
+in the chat if there wasn't record in the DB that this user reacted to that message with a posted emoji:
+
+```json
+{
+  "event_type": "message_reaction_was_posted",
+  "id": 35,
+  "reaction": "👍",
+  "user": "Terry",
+  "timestamp": "2023-09-26T14:17:44.250236Z"
+}
+```
+-   "id": message ID
+
+The server will delete posted reaction and send the following structure to a group of users 
+in the chat if the user has already reacted to that message with a posted emoji:
+
+```json
+{
+  "event_type": "message_reaction_was_deleted",
+  "id": 131,
+  "reaction": "👍",
   "user": "Terry",
   "timestamp": "2023-09-26T14:17:44.250236Z"
 }
