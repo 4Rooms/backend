@@ -16,7 +16,7 @@ class Message(models.Model):
         app_label = "chat"
 
     def __str__(self):
-        return f"id: {self.pk}, chat: {self.chat}, user: {self.user}"
+        return f"id: {self.pk}, text: {self.text}, user: {self.user}"
 
     def delete(self):
         """Soft delete: delete message text, is_deleted = True"""

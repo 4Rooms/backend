@@ -159,6 +159,7 @@ The server will send the following structure to a group of users in the chat:
   "timestamp": "2023-09-26T14:17:44.250236Z"
 }
 ```
+-   "id": chat ID
 
 ### Event chat_was_liked/unliked
 If a client has liked/unliked the chat, the server expects 
@@ -177,9 +178,11 @@ in the chat if there is no record in the DB that this user liked the chat:
 {
   "event_type": "chat_was_liked", 
   "id": 34,
+  "user": "Terry",
   "timestamp": "2023-09-26T14:17:44.250236Z"
 }
 ```
+-   "id": chat ID
 
 The server will send the following structure to a group of users 
 in the chat if the user has already liked the current chat:
@@ -188,6 +191,7 @@ in the chat if the user has already liked the current chat:
 {
   "event_type": "chat_was_unliked", 
   "id": 34,
+  "user": "Terry",
   "timestamp": "2023-09-26T14:17:44.250236Z"
 }
 ```

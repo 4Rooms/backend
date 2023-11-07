@@ -24,6 +24,7 @@
                     "id": 1,
                     "user_name": "user1",
                     "user_avatar": "/media/avatars/user1-avatar.jpg",
+                    "reactions": [],
                     "text": "deleted",
                     "timestamp": "2023-09-12T14:28:35.244410Z",
                     "is_deleted": true,
@@ -34,6 +35,24 @@
                    "id": 2,
                     "user_name": "user2",
                     "user_avatar": "/media/avatars/user2-avatar.jpg",
+                    "reactions": [
+                       {
+                         "id": 1,
+                         "user_name": "user2",
+                         "reaction": "😀",
+                         "timestamp": "2023-11-06T09:10:06.129390Z",
+                         "message": 1,
+                         "user": 2
+                       },
+                       {
+                         "id": 2,
+                         "user_name": "user1",
+                         "reaction": "👍",
+                         "timestamp": "2023-11-06T09:10:51.081415Z",
+                         "message": 1,
+                         "user": 1
+                       }
+                     ],
                     "text": "Hello",
                     "timestamp": "2023-09-12T14:28:35.244410Z",
                     "is_deleted": false,

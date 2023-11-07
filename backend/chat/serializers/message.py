@@ -1,6 +1,8 @@
 from typing import Optional
 
 from chat.models.message import Message
+from chat.models.reaction import Reaction
+from chat.serializers.reaction import ReactionSerializer
 from files.utils import get_full_file_url
 from rest_framework import serializers
 
@@ -14,11 +16,12 @@ class MessageSerializer(serializers.ModelSerializer):
     # Add user_name field to return username instead id
     user_name = serializers.SerializerMethodField(source="get_user_name")
     user_avatar = serializers.SerializerMethodField(source="get_user_avatar")
+    reactions = serializers.SerializerMethodField(source="get_reactions")
 
     class Meta:
         model = Message
         fields = "__all__"
-        read_only_fields = ["id", "timestamp", "user"]
+        read_only_fields = ["id", "timestamp", "user", "reactions"]
 
     def create(self, validated_data):
         """Save message with user"""
@@ -41,6 +44,11 @@ class MessageSerializer(serializers.ModelSerializer):
         if isinstance(obj, Message):
             return get_full_file_url(obj.user.profile.avatar.url)
         return None
+
+    def get_reactions(self, obj):
+        reactions = Reaction.objects.filter(message=obj)
+        serializer = ReactionSerializer(reactions, many=True)
+        return serializer.data
 
 
 class WebsocketMessageSerializer(serializers.Serializer):
