@@ -3,9 +3,10 @@
   hosts: all
 
   vars:
-    domain: "{{ PROD_DOMAIN if BRANCH == 'master' else TEST_DOMAIN }}"
-    router: "{{ 'prod' if BRANCH == 'master' else 'test' }}"
-    img_name: "{{ 'prod' if BRANCH == 'master' else 'test' }}"
+    server: "{{ SERVER if SERVER != 'default' else ('prod' if BRANCH == 'master' else 'test') }}"
+    domain: "{{ PROD_DOMAIN if server == 'prod' else TEST_DOMAIN }}"
+    router: "{{ 'prod' if server == 'prod' else 'test' }}"
+    img_name: "{{ 'prod' if server == 'prod' else 'test' }}"
     django_host: "https://{{ domain }}/"
 
   tasks:

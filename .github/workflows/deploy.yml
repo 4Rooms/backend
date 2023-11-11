@@ -2,6 +2,16 @@
 name: Deploy
 'on':
   workflow_dispatch:
+    inputs:
+      deploy_branch:
+        description: 'Repository branch to deploy'     
+        required: true
+        default: 'master'
+      server:
+        description: 'Server to deploy'
+        required: true
+        default: 'default'
+
   workflow_call:
     secrets:
       VAULT_PASS:
@@ -14,10 +24,16 @@ jobs:
   black:
     name: Deploy
     runs-on: ubuntu-latest
-    steps:
 
+    env:
+      SERVER: ${{ github.event_name == 'workflow_dispatch' &&  github.event.inputs.server || 'default' }}
+      BRANCH_NAME: ${{ github.event_name == 'workflow_dispatch' &&  github.event.inputs.deploy_branch || github.ref_name }}
+
+    steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BRANCH_NAME }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -43,7 +59,8 @@ jobs:
             -i ./inventory                                   \
             --vault-password-file $RUNNER_TEMP/.vault_pass   \
             -e CI=true                                       \
-            -e BRANCH=$GITHUB_REF_NAME
+            -e BRANCH=$BRANCH_NAME                           \
+            -e SERVER=$SERVER
 
       - name: Upload logs
         if: always()
