@@ -4,7 +4,7 @@ name: Deploy
   workflow_dispatch:
     inputs:
       deploy_branch:
-        description: 'Repository branch to deploy'     
+        description: 'Repository branch to deploy'
         required: true
         default: 'master'
       server:
@@ -30,10 +30,15 @@ jobs:
       BRANCH_NAME: ${{ github.event_name == 'workflow_dispatch' &&  github.event.inputs.deploy_branch || github.ref_name }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout code with specific branch
         uses: actions/checkout@v4
         with:
           ref: ${{ env.BRANCH_NAME }}
+        if: github.event_name == 'workflow_dispatch'
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        if: github.event_name != 'workflow_dispatch'
 
       - name: Set up Python
         uses: actions/setup-python@v4

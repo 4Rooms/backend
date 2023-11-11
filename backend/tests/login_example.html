@@ -150,6 +150,7 @@
             </div>
 
             <button onclick="login()">Login</button>
+            <button onclick="logout()">Logout</button>
         </div>
 
         <div class="vertical-line"></div>
@@ -248,23 +249,33 @@
                 msg = "<b>❌ <i>Failed to login</i></b>:<br /><code>" + JSON.stringify(data, null, 2) + "</code>";
                 document.getElementById('message').innerHTML = msg;
             }
+        }
 
-            // enable button
-            // document.getElementById('login-form').innerHTML = "<button onclick=\"login()\">Login</button>";
+        async function logout() {
+            try {
+                var response = await fetch("/api/logout/", {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed logout: " + response.status + " " + response.statusText);
+                }
+
+                document.getElementById('message').innerText = "Logged out."
+            } catch (error) {
+                document.getElementById('message').innerText = error
+            }
         }
 
         async function signInWithGoogle() {
-            // disable button
-            // document.getElementById('signin-button').innerHTML = "<button disabled>Signing in...</button>";
-
-            // Redirect to /oauth/login/google-oauth2/
-            url = new URL("oauth/login/google-oauth2/", window.location.href)
+            const current_url = window.location.href;
+            url = new URL("oauth/login/google-oauth2/?next=" + current_url, window.location.href)
             document.getElementById('message').innerText = "Redirecting to " + url;
 
-            // sleep for 2 second
             await sleep(1000);
-
-            // redirect to url
             window.location.href = url;
         }
 

@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 @pytest.mark.parametrize(
     "origin, expected_url, expected_cookie_domain",
     [
-        ("http://localhost:8000", "http://localhost:8000/confirm-email/", "localhost"),
-        ("http://localhost:5173", "http://localhost:5173/confirm-email/", "localhost"),
+        ("http://localhost:8000", "http://localhost:8000/confirm-email/", ""),
+        ("http://localhost:5173", "http://localhost:5173/confirm-email/", ""),
         ("https://4rooms.pro", "https://4rooms.pro/confirm-email/", "4rooms.pro"),
         ("https://back.4rooms.pro", "https://4rooms.pro/confirm-email/", "4rooms.pro"),
         ("https://testback.4rooms.pro", "https://4rooms.pro/confirm-email/", "4rooms.pro"),
