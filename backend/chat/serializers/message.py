@@ -45,7 +45,7 @@ class MessageSerializer(serializers.ModelSerializer):
             return get_full_file_url(obj.user.profile.avatar.url)
         return None
 
-    def get_reactions(self, obj):
+    def get_reactions(self, obj) -> ReactionSerializer:
         if isinstance(obj, Message):
             reactions = Reaction.objects.filter(message=obj)
             serializer = ReactionSerializer(reactions, many=True)

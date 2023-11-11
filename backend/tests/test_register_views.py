@@ -8,8 +8,8 @@ from .conftest import UserForTests
 @pytest.mark.parametrize(
     "origin, expected_cookie_domain",
     [
-        ("http://localhost:8000", "localhost"),
-        ("http://localhost:5173", "localhost"),
+        ("http://localhost:8000", ""),
+        ("http://localhost:5173", ""),
         ("https://4rooms.pro", "4rooms.pro"),
         ("https://back.4rooms.pro", "4rooms.pro"),
         ("https://testback.4rooms.pro", "4rooms.pro"),

@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 from urllib.parse import urlparse
 
-from config.utils import get_ui_host
+from config.utils import get_ui_host, origin_from_host
 from django.conf import settings
 from jwt import decode
 from rest_framework.response import Response
@@ -27,16 +27,28 @@ def get_hostname(request):
     return hostname
 
 
-def set_auth_cookie(request, response: Response, jwt_token):
+def set_auth_cookie(request, response: Response, jwt_token, url=None):
+    """
+    Set auth cookie
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
+    """
+    logger.info(f"Setting cookie. User: {request.user.username}, url: {url}")
+
+    cookie_host = urlparse(origin_from_host(urlparse(url).hostname)).hostname if url else get_hostname(request)
+    secure = False if cookie_host == "localhost" else settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"]
+    samesite = settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"] if secure else None
+
     response.set_cookie(
         key=settings.SIMPLE_JWT["AUTH_COOKIE"],
         value=jwt_token,
         expires=get_token_expire_time(jwt_token),
-        secure=settings.SIMPLE_JWT["AUTH_COOKIE_SECURE"],
+        secure=secure,
         httponly=settings.SIMPLE_JWT["AUTH_COOKIE_HTTP_ONLY"],
-        samesite=settings.SIMPLE_JWT["AUTH_COOKIE_SAMESITE"],
-        domain=get_hostname(request),
+        samesite=samesite,
+        domain=cookie_host if cookie_host != "localhost" else None,
     )
+
+    logger.info(f"Set cookie. User: {request.user.username}, host: {cookie_host}, secure: {secure}")
 
 
 def delete_auth_cookie(request, response: Response):

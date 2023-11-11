@@ -9,7 +9,7 @@ It is necessary to set SOCIAL_AUTH_STRATEGY to point to this class in settings.p
 
 
 import logging
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 from config.utils import get_ui_host
 from django.conf import settings
@@ -35,15 +35,23 @@ class AuthStrategy(DjangoStrategy):
         Redirect to a custom url after login and set a cookie with JWT token
         """
 
+        logger.info(f"Google auth redirecting to {url}")
+
+        if urlparse(url).hostname == "accounts.google.com":
+            logger.info(f"This is a redirect to Google auth")
+            return HttpResponseRedirect(url)
+
         redirect_url = resolve_url(url)
         if redirect_url == settings.LOGIN_REDIRECT_URL:
-            redirect_url = urljoin(get_ui_host(self.request, always_frontend_ui=False), redirect_url)
+            logger.info(f"Redirecting url is LOGIN_REDIRECT_URL")
+            redirect_url = urljoin(get_ui_host(self.request, always_frontend_ui=True), redirect_url)
+            logger.info(f"Setting redirect_url to {redirect_url}")
 
         user = self.request.user
         token = RefreshToken.for_user(user).access_token
 
         response = HttpResponseRedirect(redirect_url)
-        set_auth_cookie(self.request, response, str(token))
+        set_auth_cookie(self.request, response, str(token), url=redirect_url)
 
         logger.info(f"Redirecting to {redirect_url}")
         return response

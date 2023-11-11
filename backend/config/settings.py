@@ -56,13 +56,20 @@ CORS_ALLOWED_ORIGINS = [
     "https://testback.4rooms.pro",
 ]
 
-
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"]
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"]
 SOCIAL_AUTH_URL_NAMESPACE = "social"
 SOCIAL_AUTH_STRATEGY = "login.social_auth_strategy.AuthStrategy"
 LOGIN_REDIRECT_URL = "/"
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = os.environ["SOCIAL_AUTH_REDIRECT_IS_HTTPS"] == "true"
+# SOCIAL_AUTH_SANITIZE_REDIRECTS = True
+ALLOWED_REDIRECT_HOSTS = [
+    "localhost:8000",
+    "localhost:5173",
+    "4rooms.pro",
+    "back.4rooms.pro",
+    "testback.4rooms.pro",
+]
 
 AUTH_USER_MODEL = "accounts.User"
 AUTHENTICATION_BACKENDS = [
@@ -228,7 +235,7 @@ SIMPLE_JWT = {
     # Whether the auth cookies should be secure (https:// only).
     "AUTH_COOKIE_SECURE": True,
     # Http only cookie flag. It's not fetch by javascript.
-    "AUTH_COOKIE_HTTP_ONLY": True,
+    "AUTH_COOKIE_HTTP_ONLY": False,
     # The path of the auth cookie.
     "AUTH_COOKIE_PATH": "/",
     # Whether to set the flag restricting cookie leaks on cross-site requests.
