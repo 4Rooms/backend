@@ -286,7 +286,8 @@
         }
 
         function fetchChats(selectedRoom) {
-            const apiUrl = '/api/chat/' + selectedRoom + '/';
+            const apiUrl = '/api/chat/get/' + selectedRoom + '/' + 'new' + '/';
+
 
             fetch(apiUrl)
                 .then(response => {
