@@ -11,7 +11,7 @@ from django.urls import path
 
 urlpatterns = [
     path("chat/saved_chats/", SavedChatApiView.as_view(), name="get_saved_chats"),
-    path("chat/my_chats/", MyChatsApiView.as_view(), name="my_chats"),
+    path("chat/my_chats/<str:room_name>/", MyChatsApiView.as_view(), name="my_chats"),
     path("chat/get/<str:room_name>/<str:sorting_name>/", ChatGetAPIView.as_view(), name="get_chats"),
     path("chat/post/<str:room_name>/", ChatPostAPIView.as_view(), name="post_chat"),
     path("chat/message/<int:pk>/", UpdateDeleteMessageApiView.as_view(), name="update_delete_message"),

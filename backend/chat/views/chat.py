@@ -239,11 +239,15 @@ class MyChatsApiView(generics.GenericAPIView):
     parser_classes = [JSONParser, MultiPartParser, FormParser]
     http_method_names = ["get"]
 
-    def get(self, request):
+    def get(self, request, room_name):
         """Get a list of chats created by the user (my chats)"""
 
+        # if wrong room name
+        if (room_name, room_name) not in CHOICE_ROOM:
+            return Response({"Error": "wrong room"}, status=status.HTTP_400_BAD_REQUEST)
+
         # get chats, serialize, and return list of chats by pagination
-        self.queryset = Chat.objects.filter(user=request.user)
+        self.queryset = Chat.objects.filter(user=request.user, room=room_name)
         serializer = ChatSerializer(self.queryset, context={"request": request}, many=True)
         page = self.paginate_queryset(serializer.data)
         return self.get_paginated_response(page)
