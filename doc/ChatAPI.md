@@ -2,7 +2,7 @@
 
 
 ## Post chat
--   URL: /api/chat/<room>/
+-   URL: /api/post/chat/<room_name>/
 -   Request: Post(URL, data)  
     -   data: title, description, img (optional)  
     -   chat titles cannot be repeated in the same room  
@@ -13,7 +13,7 @@
         -   "games"
 
     ```
-    URL = "/api/chat/books/"
+    URL = "/api/post/chat/books/"
     data = {"title": "Harry Potter",
             "description": "Discussion of characters",
             "img": "file.jpeg"}
@@ -48,9 +48,7 @@
 
         ```json
         {
-            "room": [
-                "\"movie\" is not a valid choice."
-            ]
+            "Error": "wrong room"
         }
         ```
 
@@ -98,16 +96,20 @@
         ```
 
 ## Get chats from the certain room
--   URL: /api/chat/<room>/
+-   URL: /api/chat/get/<room_name>/<sorting_name>/
     -   __room__ must have one of the following string values:
         -   "films"
         -   "music"
         -   "books"
         -   "games"
+    -   __sorting_name__ must have one of the following string values:
+        -   "new" - chat sorting from newest to oldest
+        -   "old" - chat sorting from oldest to newest
+        -   "popular" - chat sorting by the number of chat likes
 -   Request: Get(URL)
 
     ```
-    URL = "/api/chat/films/"
+    URL = "/api/chat/get/films/popular/"
     response = request.get(URL)
     ```
 
@@ -163,7 +165,6 @@
     -   previous - link to get the previous 100 records by Get request on it
     -   results - 100 or fewer records from DB (100 or fewer chats)
 
-
 -   Unsuccessful response:
     -   Status code: 400 Bad Request.
     -   Response body:
@@ -171,6 +172,12 @@
         ```json
         {
             "Error": "wrong room"
+        }
+        ```
+        
+        ```json
+        {
+            "Error": "wrong sorting_name"
         }
         ```
 

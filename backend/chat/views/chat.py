@@ -9,6 +9,7 @@ from chat.serializers.chat import (
 )
 from config.settings import CHOICE_ROOM
 from django.conf import settings
+from django.db.models import Count
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from files.services.default_avatars import DefaultAvatars
 from files.services.images import resize_in_memory_uploaded_file
@@ -21,29 +22,60 @@ from rest_framework.response import Response
 logger = logging.getLogger(__name__)
 
 
-class ChatAPIView(generics.GenericAPIView):
-    """API to get/put chat"""
+class ChatGetAPIView(generics.GenericAPIView):
+    """API to get chats"""
 
     permission_classes = (IsAuthenticated, IsEmailConfirm)
     parser_classes = [JSONParser, MultiPartParser, FormParser]
     serializer_class = ChatSerializer
-    http_method_names = ["get", "post"]
+    http_method_names = ["get"]
 
     @extend_schema(
         tags=["Chat"],
     )
-    def get(self, request, room_name):
-        """Get chat list from the certain room"""
+    def get(self, request, room_name, sorting_name):
+        """Get a chat list from a certain room sorted by a certain criterion (sorting_name)"""
+
+        logger.info(f"Get chat, room_name: {room_name}, sorting_name: {sorting_name}")
 
         # if wrong room name
         if (room_name, room_name) not in CHOICE_ROOM:
             return Response({"Error": "wrong room"}, status=status.HTTP_400_BAD_REQUEST)
 
+        # if wrong sorting_name name
+        if sorting_name not in ["new", "popular", "old"]:
+            return Response({"Error": "wrong sorting_name"}, status=status.HTTP_400_BAD_REQUEST)
+
         # get chats, serialize, and return list of chats by pagination
-        self.queryset = Chat.objects.filter(room=room_name)
-        serializer = ChatSerializer(self.queryset, context={"request": request}, many=True)
-        page = self.paginate_queryset(serializer.data)
-        return self.get_paginated_response(page)
+        # sorting_name = new
+        if sorting_name == "new":
+            self.queryset = Chat.objects.filter(room=room_name).order_by("-timestamp")
+            serializer = ChatSerializer(self.queryset, context={"request": request}, many=True)
+            page = self.paginate_queryset(serializer.data)
+            return self.get_paginated_response(page)
+        # sorting_name = old
+        if sorting_name == "old":
+            self.queryset = Chat.objects.filter(room=room_name).order_by("timestamp")
+            serializer = ChatSerializer(self.queryset, context={"request": request}, many=True)
+            page = self.paginate_queryset(serializer.data)
+            return self.get_paginated_response(page)
+        # sorting_name = popular
+        if sorting_name == "popular":
+            self.queryset = (
+                Chat.objects.filter(room=room_name).annotate(likes_number=Count("chatlike")).order_by("-likes_number")
+            )
+            serializer = ChatSerializer(self.queryset, context={"request": request}, many=True)
+            page = self.paginate_queryset(serializer.data)
+            return self.get_paginated_response(page)
+
+
+class ChatPostAPIView(generics.GenericAPIView):
+    """API to post chat"""
+
+    permission_classes = (IsAuthenticated, IsEmailConfirm)
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    serializer_class = ChatSerializer
+    http_method_names = ["post"]
 
     @extend_schema(
         tags=["Chat"],
@@ -61,6 +93,10 @@ class ChatAPIView(generics.GenericAPIView):
     def post(self, request, room_name):
         """Create Chat"""
 
+        # if wrong room name
+        if (room_name, room_name) not in CHOICE_ROOM:
+            return Response({"Error": "wrong room"}, status=status.HTTP_400_BAD_REQUEST)
+
         data = request.data.copy()
         data["room"] = room_name
         serializer = ChatSerializer(data=data)
@@ -74,7 +110,7 @@ class ChatAPIView(generics.GenericAPIView):
                 img = resize_in_memory_uploaded_file(img, 200)
             else:
                 img = DefaultAvatars().get_random_chat_avatar().as_posix()
-                logger.info(f"No image provided. Using default avatar: {img}")
+                logger.info(f"Post chat. No image provided. Using default avatar: {img}")
 
             description = serializer.validated_data.get("description", None)
 
@@ -98,7 +134,7 @@ class ChatAPIView(generics.GenericAPIView):
     delete=extend_schema(tags=["Chat"]),
 )
 class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
-    """Update chat description/image or delete chat"""
+    """Update chat description/image or delete chat. Now delete chat is WSocket event"""
 
     permission_classes = (IsAuthenticated, IsCreatorOrReadOnly, IsEmailConfirm)
     queryset = Chat.objects.all()
