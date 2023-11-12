@@ -247,7 +247,7 @@ class MyChatsApiView(generics.GenericAPIView):
             return Response({"Error": "wrong room"}, status=status.HTTP_400_BAD_REQUEST)
 
         # get chats, serialize, and return list of chats by pagination
-        self.queryset = Chat.objects.filter(user=request.user, room=room_name)
+        self.queryset = Chat.objects.filter(user=request.user, room=room_name).order_by("-timestamp")
         serializer = ChatSerializer(self.queryset, context={"request": request}, many=True)
         page = self.paginate_queryset(serializer.data)
         return self.get_paginated_response(page)
