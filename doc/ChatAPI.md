@@ -484,11 +484,16 @@
         ```
         
 ## Get user-created chats (my chats)
--   URL: /api/chat/my_chat/
+-   URL: /api/chat/my_chat/<room_name>/
 -   Request: Get(URL)
+    -   __room__ must have one of the following string values:
+        -   "films"
+        -   "music"
+        -   "books"
+        -   "games"
 
     ```
-    URL = "/api/chat/my_chat/"
+    URL = "/api/chat/my_chat/films/"
     response = request.get(URL)
     ```
 
@@ -516,7 +521,7 @@
                 {
                     "id": 12,
                     "title": "The witcher",
-                    "room": "games",
+                    "room": "films",
                     "img": ".../media/chat-avatar.jpg",
                     "user": "Carter",
                     "description": "How to pass",
@@ -533,3 +538,13 @@
     -   next - link to get the next 100 records by Get request on it
     -   previous - link to get the previous 100 records by Get request on it
     -   results - 100 or fewer records from DB (100 or fewer chats)
+
+-   Unsuccessful response:
+    -   Status code: 400 Bad Request.
+    -   Response body:
+
+        ```json
+        {
+            "Error": "wrong room"
+        }
+        ```
