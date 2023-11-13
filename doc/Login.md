@@ -72,15 +72,13 @@
         ```
 
 -   Additional information:  
-    After successful user login, the access token is set in cookies as HttpOnly=True
+    After successful user login, the access token is returned in response
 
     ```
-    access_token = access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg5ODUyODEzLCJpYXQiOjE2ODk3NjY0MTMsImp0aSI6ImY1ZGZlY2NkM2FkNzQ5YTc4Zjg4OWIyNDhjNDBjYWJmIiwidXNlcl9pZCI6Mzl9.Rswt9Iss_WmtpSgV8hVi798NYv7Xz69r0Z1_BMnJ9pQ; 
-    Path=/; 
-    HttpOnly;
+    access_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg5ODUyODEzLCJpYXQiOjE2ODk3NjY0MTMsImp0aSI6ImY1ZGZlY2NkM2FkNzQ5YTc4Zjg4OWIyNDhjNDBjYWJmIiwidXNlcl9pZCI6Mzl9.Rswt9Iss_WmtpSgV8hVi798NYv7Xz69r0Z1_BMnJ9pQ;
     ```
 
-    -   The access token expires after 1 day.
+    -   The access token expires after 30 days.
     -   If you send __the wrong or expired access token__, when a token is needed, you get the following error with Status code 401 Unauthorized:
 
         ```json
@@ -163,7 +161,7 @@ sequenceDiagram
     end
     deactivate Backend
 
-    Note left of Backend: Along with redirection<br />the backend sets the access<br />token in a cookie.
+    Note left of Backend: Along with redirection<br />the backend sets the access<br />token in a URL.
 
     Frontend ->> User: Show login result
     deactivate Backend
@@ -180,6 +178,6 @@ sequenceDiagram
 6.  The user confirms the login, and this acknowledgment is sent back to Google's service at `https://accounts.google.com/_/signin/oauth`.
 7.  With the user's confirmation, Google's service generates an authentication response and sends a redirection request to the backend at `/oauth/complete/google-oauth2/`.
 8.  The backend receives the authentication response from Google's service and creates a new user or logs in an existing user.
-9.  The backend, upon successful completion, redirects the flow back to the frontend through the URL `/` and sets the access token in a cookie.
+9.  The backend, upon successful completion, redirects the flow back to the frontend through the URL `/google-login/?token=<token>` with access token.
 10. The frontend processes the completion signal from the backend and displays the login result to the user.
     This result could be a success message or a notification confirming successful login using their Google account.

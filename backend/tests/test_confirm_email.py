@@ -15,16 +15,16 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
-    "origin, expected_url, expected_cookie_domain",
+    "origin, expected_url",
     [
-        ("http://localhost:8000", "http://localhost:8000/confirm-email/", ""),
-        ("http://localhost:5173", "http://localhost:5173/confirm-email/", ""),
-        ("https://4rooms.pro", "https://4rooms.pro/confirm-email/", "4rooms.pro"),
-        ("https://back.4rooms.pro", "https://4rooms.pro/confirm-email/", "4rooms.pro"),
-        ("https://testback.4rooms.pro", "https://4rooms.pro/confirm-email/", "4rooms.pro"),
+        ("http://localhost:8000", "http://localhost:8000/confirm-email/"),
+        ("http://localhost:5173", "http://localhost:5173/confirm-email/"),
+        ("https://4rooms.pro", "https://4rooms.pro/confirm-email/"),
+        ("https://back.4rooms.pro", "https://4rooms.pro/confirm-email/"),
+        ("https://testback.4rooms.pro", "https://4rooms.pro/confirm-email/"),
     ],
 )
-def test_confirm_email_view_is_working(client: Client, django_user_model, origin, expected_url, expected_cookie_domain):
+def test_confirm_email_view_is_working(client: Client, django_user_model, origin, expected_url):
     """
     Test that get-request makes is_confirm_email=True
 
@@ -65,11 +65,6 @@ def test_confirm_email_view_is_working(client: Client, django_user_model, origin
 
     logger.debug(f"Login response: {response.json()}")
     assert response.status_code == 200
-
-    # check cookie
-    assert "access_token" in response.cookies
-    cookie = response.cookies["access_token"]
-    assert cookie["domain"] == expected_cookie_domain
 
 
 @pytest.mark.django_db

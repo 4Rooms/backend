@@ -71,7 +71,7 @@ def client_factory():
                 f"/ws/chat/{chat.room}/{chat.id}/",
                 headers=[
                     (b"origin", b"http://localhost:8000"),
-                    (b"cookie", f"{settings.SIMPLE_JWT['AUTH_COOKIE']}={access_token}".encode()),
+                    (b"Authorization", f"Bearer {access_token}".encode("utf-8")),
                 ],
             )
             client.scope["user"] = user
