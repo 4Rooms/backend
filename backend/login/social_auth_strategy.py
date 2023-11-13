@@ -2,7 +2,7 @@
 Custom strategy to:
 
 - set is_email_confirmed to True when creating a user
-- redirect to a custom url after login and set a cookie with JWT token
+- redirect to a custom url after login and set a JWT token
 
 It is necessary to set SOCIAL_AUTH_STRATEGY to point to this class in settings.py
 """
@@ -15,7 +15,6 @@ from config.utils import get_ui_host
 from django.conf import settings
 from django.http import HttpResponseRedirect
 from django.shortcuts import resolve_url
-from login.cookie import set_auth_cookie
 from rest_framework_simplejwt.tokens import RefreshToken
 from social_django.strategy import DjangoStrategy
 
@@ -32,7 +31,7 @@ class AuthStrategy(DjangoStrategy):
 
     def redirect(self, url):
         """
-        Redirect to a custom url after login and set a cookie with JWT token
+        Redirect to a custom url after login and set a JWT token
         """
 
         logger.info(f"Google auth redirecting to {url}")
@@ -50,8 +49,8 @@ class AuthStrategy(DjangoStrategy):
         user = self.request.user
         token = RefreshToken.for_user(user).access_token
 
+        redirect_url = urljoin(redirect_url, f"?token={token}")
         response = HttpResponseRedirect(redirect_url)
-        set_auth_cookie(self.request, response, str(token), url=redirect_url)
 
         logger.info(f"Redirecting to {redirect_url}")
         return response

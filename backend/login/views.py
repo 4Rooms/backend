@@ -1,7 +1,6 @@
 from accounts.serializers import LoginDataSerializer, UserSerializer
 from drf_spectacular.utils import extend_schema, inline_serializer
 from login.authentication_backend import AuthBackend
-from login.cookie import delete_auth_cookie, set_auth_cookie
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import UpdateAPIView
@@ -34,8 +33,7 @@ class LoginAPIView(APIView):
         tags=["Account"],
     )
     def post(self, request, format=None):
-        """Authenticate the user, set the access token
-        as an HttpOnly cookie, and return a user info"""
+        """Authenticate the user, set the access token and return a user info"""
 
         # authenticate user
         data = request.data
@@ -49,20 +47,18 @@ class LoginAPIView(APIView):
         if user is None:
             raise ValidationError({"Invalid": "Invalid username or password"}, code=status.HTTP_404_NOT_FOUND)
 
-        token = get_tokens(user)
+        tokens = get_tokens(user)
 
-        # set cookie for response
         response = Response()
-        set_auth_cookie(request, response, token["access"])
 
         # serialize the user to return it in response
         serializer = UserSerializer(user, many=False)
-        response.data = {"Success": "Login successfully", "user": serializer.data}
+        response.data = {"user": serializer.data, "token": tokens["access"]}
         return response
 
 
 class LogoutAPIView(UpdateAPIView):
-    """Logout. Delete the access token cookie"""
+    """Logout"""
 
     authentication_classes = []
     http_method_names = ["put"]
@@ -86,11 +82,8 @@ class LogoutAPIView(UpdateAPIView):
         description="Logout Request",
     )
     def put(self, request):
-        """Delete the access token cookie"""
-
-        response = Response(status=status.HTTP_204_NO_CONTENT)
-        delete_auth_cookie(self.request, response)
-        return response
+        """Delete the access token"""
+        raise NotImplementedError("Logout is not implemented")
 
     def get_object(self):
         return self.request.user

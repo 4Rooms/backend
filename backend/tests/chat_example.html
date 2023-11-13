@@ -182,8 +182,10 @@
     <div class="chat-container">
         <div id="chat-messages"></div>
         <div class="input-message">
-            <input type="text" id="message-input" placeholder="Type your message...">
-            <button onclick="sendMessage()">Send</button>
+            <form onsubmit="sendMessage(); return false;">
+                <input type="text" id="message-input" placeholder="Type your message...">
+                <button type="submit">Send</button>
+            </form>
         </div>
     </div>
 
@@ -200,14 +202,14 @@
                 </div>
                 <div><button id="pickReaction" onclick="pickReaction(this, {{id}})">😊</button></div>
                 <div class="emoji-picker" id="emojiPicker">
-                    <button class="emoji" data-emoji="😊", onclick="sendReaction(this, {{id}})">😊</button>
-                    <button class="emoji" data-emoji="👍", onclick="sendReaction(this, {{id}})">👍</button>
-                    <button class="emoji" data-emoji="❤️", onclick="sendReaction(this, {{id}})">❤️</button>
-                    <button class="emoji" data-emoji="😀", onclick="sendReaction(this, {{id}})">😀</button>
-                    <button class="emoji" data-emoji="😍", onclick="sendReaction(this, {{id}})">😍</button>
-                    <button class="emoji" data-emoji="😂", onclick="sendReaction(this, {{id}})">😂</button>
-                    <button class="emoji" data-emoji="😢", onclick="sendReaction(this, {{id}})">😢</button>
-                    <button class="emoji" data-emoji="👎", onclick="sendReaction(this, {{id}})">👎</button>
+                    <button class="emoji" data-emoji="😊" , onclick="sendReaction(this, {{id}})">😊</button>
+                    <button class="emoji" data-emoji="👍" , onclick="sendReaction(this, {{id}})">👍</button>
+                    <button class="emoji" data-emoji="❤️" , onclick="sendReaction(this, {{id}})">❤️</button>
+                    <button class="emoji" data-emoji="😀" , onclick="sendReaction(this, {{id}})">😀</button>
+                    <button class="emoji" data-emoji="😍" , onclick="sendReaction(this, {{id}})">😍</button>
+                    <button class="emoji" data-emoji="😂" , onclick="sendReaction(this, {{id}})">😂</button>
+                    <button class="emoji" data-emoji="😢" , onclick="sendReaction(this, {{id}})">😢</button>
+                    <button class="emoji" data-emoji="👎" , onclick="sendReaction(this, {{id}})">👎</button>
                 </div>
             </div>
 
@@ -218,7 +220,7 @@
                 <div>Reactions:
                     <ul>
                         {{#reactions}}
-                            <li>user: {{user_name}}, reaction: {{reaction}}</li>
+                        <li>user: {{user_name}}, reaction: {{reaction}}</li>
                         {{/reactions}}
                     </ul>
                 </div>
@@ -289,7 +291,13 @@
             const apiUrl = '/api/chat/get/' + selectedRoom + '/' + 'new' + '/';
 
 
-            fetch(apiUrl)
+            fetch(apiUrl,
+                {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    }
+                },)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Failed to fetch chats: ' + response.status + ' ' + response.statusText);
@@ -325,7 +333,12 @@
             const apiUrl = '/api/chat/' + selectedChatId + '/messages/';
 
             let chatMessages = document.getElementById('chat-messages'); // output element for messages
-            fetch(apiUrl)
+            fetch(apiUrl, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                    'Content-Type': 'application/json'
+                },
+            })
                 .then(response => response.json())
                 .then(data => {
                     console.log("getMessageHistory, data", data);
@@ -345,12 +358,20 @@
         }
 
         function initializeWebSocket(selectedRoom, selectedChatId) {
+            console.log("initializeWebSocket", selectedRoom, selectedChatId);
+            if (!selectedRoom || !selectedChatId) {
+                console.log('Please select a room and a chat before initializing WebSocket connection.');
+                return;
+            }
+
             if (socket) {
                 socket.close();
             }
 
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const socketUrl = protocol + window.location.host + '/ws/chat/' + selectedRoom + '/' + selectedChatId + '/';
+            const socketUrl = protocol + window.location.host + '/ws/chat/' + selectedRoom + '/' + selectedChatId + '/'
+                + '?token=' + localStorage.getItem('token');
+            console.log("socketUrl", socketUrl);
 
             socket = new WebSocket(socketUrl);
 
@@ -432,7 +453,9 @@
 
             // display selected chat image
             const chat = getChatById(Number(selectedChatId));
-            document.querySelector(".chat_img").innerHTML = `<img src="${chat.img}" width="100px" >`;
+            if (chat) {
+                document.querySelector(".chat_img").innerHTML = `<img src="${chat.img}" width="100px" >`;
+            }
 
             // initialize WebSocket connection
             initializeWebSocket(selectedRoom, selectedChatId);

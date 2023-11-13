@@ -49,7 +49,7 @@ We decided to use JWT for authentication.
 
 </details>
 
-We decided to store JWT in cookie with HttpOnly flag and Secure flag.
+We decided to store JWT tokens intead of cookie.
 
 ## REST API
 

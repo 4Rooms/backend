@@ -38,7 +38,6 @@ ASGI_APPLICATION = "config.asgi.application"
 CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 CORS_ORIGIN_ALLOW_ALL = True
-# Server allows cookies in the cross-site HTTP requests.
 CORS_ALLOW_CREDENTIALS = True
 
 ALLOWED_HOSTS = [
@@ -60,7 +59,7 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_KEY"]
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ["SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET"]
 SOCIAL_AUTH_URL_NAMESPACE = "social"
 SOCIAL_AUTH_STRATEGY = "login.social_auth_strategy.AuthStrategy"
-LOGIN_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = "/google-redirect/"
 SOCIAL_AUTH_REDIRECT_IS_HTTPS = os.environ["SOCIAL_AUTH_REDIRECT_IS_HTTPS"] == "true"
 # SOCIAL_AUTH_SANITIZE_REDIRECTS = True
 ALLOWED_REDIRECT_HOSTS = [
@@ -78,7 +77,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 STAFF_USERS = os.environ.get("STAFF_USERS", "").split(",")
-DJANGO_HOST = os.environ.get("DJANGO_HOST", "http://localhost:8000")
+DJANGO_HOST = os.environ.get("DJANGO_HOST")
 
 SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.social_details",
@@ -90,7 +89,6 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.associate_user",
     "social_core.pipeline.social_auth.load_extra_data",
     "social_core.pipeline.user.user_details",
-    # "social_core.pipeline.debug.debug",
 )
 
 # Application definition
@@ -227,21 +225,6 @@ SIMPLE_JWT = {
     "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
     "SLIDING_TOKEN_LIFETIME": timedelta(days=30),
     "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=30),
-    # Custom
-    # Cookie name. Enables cookies if value is set.
-    "AUTH_COOKIE": "access_token",
-    # A string like "example.com", or None for standard domain cookie.
-    "AUTH_COOKIE_DOMAIN": None,
-    # Whether the auth cookies should be secure (https:// only).
-    "AUTH_COOKIE_SECURE": True,
-    # Http only cookie flag. It's not fetch by javascript.
-    "AUTH_COOKIE_HTTP_ONLY": False,
-    # The path of the auth cookie.
-    "AUTH_COOKIE_PATH": "/",
-    # Whether to set the flag restricting cookie leaks on cross-site requests.
-    # This can be 'Lax', 'Strict', or None to disable the flag.
-    # Samesite "Lax" - Protection against csrf attacks
-    "AUTH_COOKIE_SAMESITE": "None",
 }
 
 # Internationalization

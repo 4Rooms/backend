@@ -184,6 +184,9 @@
         async function onLoad() {
             // if there is a refresh_token in the url, handle the oauth callback
             handleOauthCallback();
+
+            // handle email verification
+            handleEmailVerification();
         }
 
         async function register() {
@@ -239,8 +242,11 @@
                 })
             });
 
-            var data = await response.json();
+            const data = await response.json();
             if (response.ok) {
+                // save token
+                localStorage.setItem('token', data.token);
+
                 // set message
                 msg = "<b>Received response</b>:<br /><code>" + JSON.stringify(data, null, 2) + "</code>";
                 document.getElementById('message').innerHTML = msg;
@@ -253,17 +259,7 @@
 
         async function logout() {
             try {
-                var response = await fetch("/api/logout/", {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error("Failed logout: " + response.status + " " + response.statusText);
-                }
-
+                localStorage.removeItem('token');
                 document.getElementById('message').innerText = "Logged out."
             } catch (error) {
                 document.getElementById('message').innerText = error
@@ -272,7 +268,8 @@
 
         async function signInWithGoogle() {
             const current_url = window.location.href;
-            url = new URL("oauth/login/google-oauth2/?next=" + current_url, window.location.href)
+            const next = new URL("/google-redirect/", current_url);
+            const url = new URL("oauth/login/google-oauth2/?next=" + next, window.location.href);
             document.getElementById('message').innerText = "Redirecting to " + url;
 
             await sleep(1000);
@@ -280,12 +277,35 @@
         }
 
         async function handleOauthCallback() {
-            const logged_in = getUserInfo();
+            const is_callback = window.location.pathname == "/google-redirect/";
+            if (is_callback) {
+                // save token
+                const urlParams = new URLSearchParams(window.location.search);
+                const token = urlParams.get('token');
+                localStorage.setItem('token', token);
 
-            if (logged_in) {
-                console.log("Logged in");
-            } else {
-                console.log("Not logged in");
+                const ok = getUserInfo();
+
+                if (ok) {
+                    console.log("Logged in");
+                } else {
+                    console.log("Not logged in");
+                }
+            }
+        }
+
+        async function handleEmailVerification() {
+            const is_email_confirmation = window.location.pathname == "/confirm-email/";
+            if (is_email_confirmation) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const token_id = urlParams.get('token_id');
+                const response = await fetch("/api/confirm-email/" + "?token_id=" + token_id);
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('message').innerHTML = "Email confirmed" + "<br /><code>" + JSON.stringify(data, null, 2) + "</code>";
+                } else {
+                    document.getElementById('message').innerHTML = "Failed to confirm email: " + "<br /><code>" + JSON.stringify(data, null, 2) + "</code>";
+                }
             }
         }
 
@@ -297,7 +317,10 @@
             try {
                 var response = await fetch("/api/user/", {
                     method: 'GET',
-                    credentials: 'include',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    },
                 });
 
                 if (!response.ok) {
@@ -309,7 +332,10 @@
                 // get avatar
                 var ava_resp = await fetch("/api/profile/", {
                     method: 'GET',
-                    credentials: 'include',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('token'),
+                        'Content-Type': 'application/json'
+                    },
                 });
                 if (!ava_resp.ok) {
                     throw new Error("Failed to get avatar");

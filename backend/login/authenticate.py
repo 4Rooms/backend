@@ -1,6 +1,5 @@
 import logging
 
-from django.conf import settings
 from rest_framework.request import Request
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
@@ -31,27 +30,19 @@ class CustomJWTAuthentication(JWTAuthentication):
         raw_token = None
 
         if isinstance(request_data, Request):
-            # http request
-            raw_token = request_data.COOKIES.get(settings.SIMPLE_JWT["AUTH_COOKIE"], None)
-
-            if raw_token is None:
-                header = self.get_header(request_data)
-                raw_token = self.get_raw_token(header if header is not None else "")
+            header = self.get_header(request_data)
+            raw_token = self.get_raw_token(header if header is not None else "")
         else:
             # websocket
-            raw_token = self._get_auth_cookie_from_headers(request_data["headers"])
+            if isinstance(request_data, dict):
+                headers = dict(request_data["headers"])
+                if b"Authorization" in headers:
+                    raw_token = self.get_raw_token(dict(request_data["headers"])[b"Authorization"])
+                else:
+                    if "query_string" in request_data:
+                        token = request_data["query_string"].decode("utf-8").split("=")
+                        if len(token) == 2:
+                            if token[0] == "token":
+                                raw_token = token[1]
 
         return raw_token
-
-    def _get_auth_cookie_from_headers(self, headers):
-        """Get auth cookie from headers"""
-        try:
-            for header in headers:
-                if header[0] == b"cookie":
-                    for cookie in map(bytes.decode, header[1].split(b";")):
-                        if cookie.strip().startswith(settings.SIMPLE_JWT["AUTH_COOKIE"]):
-                            return cookie.split("=")[1]
-        except Exception:
-            return None
-
-        return None

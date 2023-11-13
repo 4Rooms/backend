@@ -10,8 +10,9 @@ class CustomJWTAuthenticationExtension(OpenApiAuthenticationExtension):
 
     def get_security_definition(self, auto_schema: "AutoSchema") -> Union[dict, List[dict]]:
         return {
-            "type": "apiKey",
-            "in": "header|cookie",
+            "type": "http",
+            "in": "header",
+            "scheme": "Bearer",
             "name": "Authorization",
-            "description": "JWT token in a cookie or JWT Authorization header using the Bearer scheme.",
+            "description": "JWT Authorization header using the Bearer scheme.",
         }
