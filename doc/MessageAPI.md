@@ -2,11 +2,11 @@
 
 
 ## Get message history from the chat
--   URL: /api/chat/<chatID>/messages/
+-   URL: /api/chat/messages/get/<chatId>/
 -   Request: Get(URL)
 
     ```
-    URL = "/api/chat/10/messages/"
+    URL = "/api/chat/messages/get/10/"
     response = request.get(URL)
     ```
 
@@ -81,12 +81,12 @@
         ```
 
 ## Update message text (Now it is WebSocket Event)
--   URL: /api/chat/message/<messageID>/
+-   URL: /api/chat/message/update_delete/<messageID>/
 -   Request: Patch(URL, data)
     -   data: text
 
     ```
-    URL = "/api/chat/message/5/"
+    URL = "/api/chat/message/update_delete/5/"
     data = {"text": "Message text"}
     response = request.patch(URL, data)
     ```
@@ -178,11 +178,11 @@
         ```
         
 ## Delete message (Now it is WebSocket Event)
--   URL: /api/chat/message/<messageID>/
+-   URL: /api/chat/message/update_delete/<messageID>/
 -   Request: Delete(URL)
 
     ```
-    URL = "/api/chat/message/10/"
+    URL = "/api/chat/message/update_delete/10/"
     response = request.delete(URL)
     ```
 

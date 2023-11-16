@@ -40,11 +40,15 @@ class ChatGetAPIView(generics.GenericAPIView):
 
         # if wrong room name
         if (room_name, room_name) not in CHOICE_ROOM:
-            return Response({"Error": "wrong room"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"type": "client_error", "errors": {"detail": "wrong room"}}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # if wrong sorting_name name
         if sorting_name not in ["new", "popular", "old"]:
-            return Response({"Error": "wrong sorting_name"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"type": "client_error", "errors": {"detail": "wrong sorting_name"}}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # get chats, serialize, and return list of chats by pagination
         # sorting_name = new
@@ -95,7 +99,9 @@ class ChatPostAPIView(generics.GenericAPIView):
 
         # if wrong room name
         if (room_name, room_name) not in CHOICE_ROOM:
-            return Response({"Error": "wrong room"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"type": "client_error", "errors": [{"detail": "wrong room"}]}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         data = request.data.copy()
         data["room"] = room_name
@@ -174,8 +180,8 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class SavedChatApiView(generics.GenericAPIView):
-    """Get/Post saved chat(s) for the user"""
+class GetSavedChatApiView(generics.GenericAPIView):
+    """Get saved chat(s) for the user"""
 
     permission_classes = (IsAuthenticated, IsEmailConfirm)
     serializer_class = SavedChatSerializer
@@ -185,14 +191,29 @@ class SavedChatApiView(generics.GenericAPIView):
     @extend_schema(
         tags=["Chat"],
     )
-    def get(self, request):
+    def get(self, request, room_name):
         """Get saved chats of users from request"""
 
+        # if wrong room name
+        if (room_name, room_name) not in CHOICE_ROOM:
+            return Response(
+                {"type": "client_error", "errors": [{"detail": "wrong room"}]}, status=status.HTTP_400_BAD_REQUEST
+            )
+
         # get saved chats, serialize, and return list of chats by pagination
-        self.queryset = SavedChat.objects.filter(user=request.user)
+        self.queryset = SavedChat.objects.filter(user=request.user, chat__room=room_name).order_by("-id")
         serializer = SavedChatSerializer(self.queryset, context={"request": request}, many=True)
         page = self.paginate_queryset(serializer.data)
         return self.get_paginated_response(page)
+
+
+class PostSavedChatApiView(generics.GenericAPIView):
+    """Post saved chat for the user"""
+
+    permission_classes = (IsAuthenticated, IsEmailConfirm)
+    serializer_class = SavedChatSerializer
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    http_method_names = ["post"]
 
     @extend_schema(
         tags=["Chat"],
@@ -244,7 +265,9 @@ class MyChatsApiView(generics.GenericAPIView):
 
         # if wrong room name
         if (room_name, room_name) not in CHOICE_ROOM:
-            return Response({"Error": "wrong room"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"type": "client_error", "errors": [{"detail": "wrong room"}]}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         # get chats, serialize, and return list of chats by pagination
         self.queryset = Chat.objects.filter(user=request.user, room=room_name).order_by("-timestamp")

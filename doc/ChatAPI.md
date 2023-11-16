@@ -2,7 +2,7 @@
 
 
 ## Post chat
--   URL: /api/post/chat/<room_name>/
+-   URL: /api/chat/post/<room_name>/
 -   Request: Post(URL, data)  
     -   data: title, description, img (optional)  
     -   chat titles cannot be repeated in the same room  
@@ -13,7 +13,7 @@
         -   "games"
 
     ```
-    URL = "/api/post/chat/books/"
+    URL = "/api/chat/post/books/"
     data = {"title": "Harry Potter",
             "description": "Discussion of characters",
             "img": "file.jpeg"}
@@ -48,7 +48,12 @@
 
         ```json
         {
-            "Error": "wrong room"
+          "type": "client_error",
+          "errors": [
+            {
+              "detail": "wrong room"
+            }
+          ]
         }
         ```
 
@@ -171,23 +176,33 @@
 
         ```json
         {
-            "Error": "wrong room"
+          "type": "client_error",
+          "errors": [
+            {
+              "detail": "wrong room"
+            }
+          ]
         }
         ```
         
         ```json
         {
-            "Error": "wrong sorting_name"
+          "type": "client_error",
+          "errors": [
+            {
+              "detail": "wrong sorting_name"
+            }
+          ]
         }
         ```
 
 ## Update chat description/img (Patch)
--   URL: /api/chat/<chatID>/
+-   URL: /api/chat/update/<chatID>/
 -   Request: Patch(URL, data)
     -   data: description/img or both fields
 
     ```
-    URL = "/api/chat/10/"
+    URL = "/api/chat/update/10/"
     data = {"description": "Chat description"}
     response = request.patch(URL, data)
     
@@ -280,12 +295,12 @@
         }
         ```
 
-## Delete chat
--   URL: /api/chat/<chatID>/
+## Delete chat (Now it's a WS Event)
+-   URL: /api/chat/update/<chatID>/
 -   Request: Delete(URL)
 
     ```
-    URL = "/api/chat/10/"
+    URL = "/api/chat/update/10/"
     response = request.delete(URL)
     ```
 
@@ -323,11 +338,16 @@
         ```
 
 ## Get list of saved chats
--   URL: /api/chat/saved_chats/
+-   URL: /api/chat/saved_chats/get/<room>/
+    -   __room__ must have one of the following string values:
+        -   "films"
+        -   "music"
+        -   "books"
+        -   "games"
 -   Request: Get(URL)
 
     ```
-    URL = "/api/chat/saved_chats/"
+    URL = "/api/chat/saved_chats/get/books/"
     response = request.get(URL)
     ```
 
@@ -357,12 +377,12 @@
                     "id": 2,
                     "user": 7,
                     "chat": 10,
-                    "title": "Imagine Dragons",
-                    "room": "music",
-                    "description": "Imagine Dragons Fans",
+                    "title": "Patterns",
+                    "room": "books",
+                    "description": "Patterns",
                     "chat_creator": "user2",
                     "img": "/media/chat_img3.jpg",
-                    "url": "/chat/music/10/",
+                    "url": "/chat/books/10/",
                     "likes": 3
                 }
             ]
@@ -378,14 +398,14 @@
     -   results - 100 or fewer records from DB (100 or fewer chats)
         
 ## Post saved chats
--   URL: /api/chat/saved_chats/
+-   URL: /api/chat/saved_chats/post/
 -   Request: Post(URL, data)
 
     ```
-    URL = "/api/chat/saved_chats/"
+    URL = "/api/chat/saved_chats/post/"
     
     # the ID of the chat we want to save
-    data = data = {"chat_id": chatId}
+    data = {"chat_id": chatId}
     
     response = request.post(URL, data)
     ```
@@ -442,11 +462,11 @@
         ```
 
 ## Delete saved chats
--   URL: /api/chat/saved_chats/<savedChatID>/
+-   URL: /api/chat/saved_chats/delete/<savedChatID>/
 -   Request: Post(URL)
 
     ```
-    URL = "/api/chat/saved_chats/2/"
+    URL = "/api/chat/saved_chats/delete/2/"
     response = request.delete(URL)
     ```
 
@@ -484,7 +504,7 @@
         ```
         
 ## Get user-created chats (my chats)
--   URL: /api/chat/my_chat/<room_name>/
+-   URL: /api/chat/my_chats/get/<room>/
 -   Request: Get(URL)
     -   __room__ must have one of the following string values:
         -   "films"
@@ -493,7 +513,7 @@
         -   "games"
 
     ```
-    URL = "/api/chat/my_chat/films/"
+    URL = "/api/chat/my_chat/get/films/"
     response = request.get(URL)
     ```
 
@@ -545,6 +565,11 @@
 
         ```json
         {
-            "Error": "wrong room"
+          "type": "client_error",
+          "errors": [
+            {
+              "detail": "wrong room"
+            }
+          ]
         }
         ```
