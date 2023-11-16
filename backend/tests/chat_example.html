@@ -330,7 +330,7 @@
                 return;
             }
 
-            const apiUrl = '/api/chat/' + selectedChatId + '/messages/';
+            const apiUrl = '/api/chat/messages/get/' + selectedChatId + '/';
 
             let chatMessages = document.getElementById('chat-messages'); // output element for messages
             fetch(apiUrl, {
