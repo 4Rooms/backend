@@ -1,6 +1,7 @@
 from chat.views.chat import (
     ChatGetAPIView,
     ChatPostAPIView,
+    ChatSearchGetAPIView,
     DeleteSavedChatApiView,
     GetSavedChatApiView,
     MyChatsApiView,
@@ -19,6 +20,7 @@ urlpatterns = [
     path("chat/post/<str:room_name>/", ChatPostAPIView.as_view(), name="post_chat"),
     path("chat/update/<int:pk>/", UpdateDeleteChatApiView.as_view(), name="update_delete_chat"),
     path("chat/messages/get/<int:chat_id>/", MessagesApiView.as_view(), name="get_messages"),
+    path("chat/search/get/<str:room_name>/<str:phrase>/", ChatSearchGetAPIView.as_view(), name="get_searched_chats"),
     # It is WS event
     path("chat/message/update_delete/<int:pk>/", UpdateDeleteMessageApiView.as_view(), name="update_delete_message"),
 ]

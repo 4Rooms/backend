@@ -573,3 +573,75 @@
           ]
         }
         ```
+
+## Search chats 
+-   URL: /api/chat/search/get/<room>/<phrase>/
+-   Request: Get(URL)
+    -   __room__ must have one of the following string values:
+        -   "cinema"
+        -   "music"
+        -   "books"
+        -   "games"
+    -   __phrase__ - phrase or word by which we search for a chat
+
+    ```
+    URL = "/api/chat/search/get/games/witcher/"
+    response = request.get(URL)
+    ```
+
+-   Successful response:
+    -   Status code: 200.
+    -   Response body:
+
+        ```json
+        {
+            "count": 2,
+            "next": null,
+            "previous": null,
+            "results": [
+                {
+                   "id": 19,
+                   "title": "The witcher 3",
+                   "room": "games",
+                   "img": ".../media/vatar.jpg",
+                   "user": "Terry",
+                   "description": "How to pass",
+                   "url": "/chat/games/19/",
+                   "timestamp": "2023-10-06T08:39:16.155425Z",
+                   "likes": 0
+                },
+                {
+                    "id": 17,
+                    "title": "The witcher 2",
+                    "room": "games",
+                    "img": ".../media/avatar.jpg",
+                    "user": "Mary",
+                    "description": "How to pass",
+                    "url": "/chat/games/17/",
+                    "timestamp": "2023-10-06T08:16:46.221209Z",
+                    "likes": 1
+                }
+            ]
+        }
+        ```
+    -   img - URL of chat avatar
+    -   url - URL as WebSocket chat
+    -   count - number of all records in DB
+    -   next - link to get the next 100 records by Get request on it
+    -   previous - link to get the previous 100 records by Get request on it
+    -   results - 100 or fewer records from DB (100 or fewer chats)
+
+-   Unsuccessful response:
+    -   Status code: 400 Bad Request.
+    -   Response body:
+
+        ```json
+        {
+          "type": "client_error",
+          "errors": [
+            {
+              "detail": "wrong room"
+            }
+          ]
+        }
+        ```
