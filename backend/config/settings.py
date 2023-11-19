@@ -263,7 +263,7 @@ EMAIL_HOST_USER = os.getenv("HOST_USER_EMAIL")
 EMAIL_HOST_PASSWORD = os.getenv("HOST_APP_PASSWORD")
 
 # Rooms categories for models
-CHOICE_ROOM = (("books", "books"), ("films", "films"), ("music", "music"), ("games", "games"))
+CHOICE_ROOM = (("books", "books"), ("cinema", "cinema"), ("music", "music"), ("games", "games"))
 
 from .files import *  # noqa
 from .logger import *  # noqa

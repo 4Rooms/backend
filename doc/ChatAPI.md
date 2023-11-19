@@ -7,7 +7,7 @@
     -   data: title, description, img (optional)  
     -   chat titles cannot be repeated in the same room  
     -   __room__ must have one of the following string values:
-        -   "films"
+        -   "cinema"
         -   "music"
         -   "books"
         -   "games"
@@ -30,11 +30,11 @@
             "chat": {
                 "id": 3,
                 "title": "Harry Potter",
-                "room": "films",
+                "room": "books",
                 "img": "/media/file.jpg",
                 "user": "userName",
                 "description": "Discussion of characters",
-                "url": "/chat/films/3/",
+                "url": "/chat/books/3/",
                 "likes": 0,
                 "timestamp": "2023-08-03T08:51:26.593514Z"
             }
@@ -103,7 +103,7 @@
 ## Get chats from the certain room
 -   URL: /api/chat/get/<room_name>/<sorting_name>/
     -   __room__ must have one of the following string values:
-        -   "films"
+        -   "cinema"
         -   "music"
         -   "books"
         -   "games"
@@ -114,7 +114,7 @@
 -   Request: Get(URL)
 
     ```
-    URL = "/api/chat/get/films/popular/"
+    URL = "/api/chat/get/cinema/popular/"
     response = request.get(URL)
     ```
 
@@ -131,33 +131,33 @@
                 {
                     "id": 1,
                     "title": "Harry Potter characters",
-                    "room": "films",
+                    "room": "cinema",
                     "img": "/media/chat_img/Hurry.jpg",
                     "user": "user1",
                     "description": "Who is your favorite character?",
-                    "url": "/chat/films/1/",
+                    "url": "/chat/cinema/1/",
                     "likes": 5,
                     "timestamp": "2023-08-04T20:12:10.777701Z"
                 },
                 {
                     "id": 2,
                     "title": "The Lord of the Rings films",
-                    "room": "films",
+                    "room": "cinema",
                     "img": "/media/chat_img/frodo.jpg",
                     "user": "user2",
                     "description": "Which film is the best in the series?",
-                    "url": "/chat/films/2/",
+                    "url": "/chat/cinema/2/",
                     "likes": 3,
                     "timestamp": "2023-08-04T20:14:30.256093Z"
                 },
                 {
                     "id": 3,
                     "title": "Friends",
-                    "room": "films",
+                    "room": "cinema",
                     "img": "/media/chat_img/default.jpg",
                     "user": "user1",
                     "description": null,
-                    "url": "/chat/films/3/",
+                    "url": "/chat/cinema/3/",
                     "likes": 0,
                     "timestamp": "2023-08-04T20:23:54.859836Z"
                 }
@@ -340,7 +340,7 @@
 ## Get list of saved chats
 -   URL: /api/chat/saved_chats/get/<room>/
     -   __room__ must have one of the following string values:
-        -   "films"
+        -   "cinema"
         -   "music"
         -   "books"
         -   "games"
@@ -507,13 +507,13 @@
 -   URL: /api/chat/my_chats/get/<room>/
 -   Request: Get(URL)
     -   __room__ must have one of the following string values:
-        -   "films"
+        -   "cinema"
         -   "music"
         -   "books"
         -   "games"
 
     ```
-    URL = "/api/chat/my_chat/get/films/"
+    URL = "/api/chat/my_chat/get/cinema/"
     response = request.get(URL)
     ```
 
@@ -530,7 +530,7 @@
                 {
                     "id": 11,
                     "title": "The office",
-                    "room": "films",
+                    "room": "cinema",
                     "img": ".../media/chat-img.jpg",
                     "user": "Carter",
                     "description": "Best character",
@@ -541,11 +541,11 @@
                 {
                     "id": 12,
                     "title": "The witcher",
-                    "room": "films",
+                    "room": "cinema",
                     "img": ".../media/chat-avatar.jpg",
                     "user": "Carter",
                     "description": "How to pass",
-                    "url": "/chat/games/12/",
+                    "url": "/chat/cinema/12/",
                     "likes": 5,
                     "timestamp": "2023-09-29T09:10:36.637421Z"
                 }
