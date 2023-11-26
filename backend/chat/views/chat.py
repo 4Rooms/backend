@@ -332,3 +332,32 @@ class SavedChatSearchGetAPIView(generics.GenericAPIView):
         serializer = SavedChatSerializer(self.queryset, context={"request": request}, many=True)
         page = self.paginate_queryset(serializer.data)
         return self.get_paginated_response(page)
+
+
+class MyChatSearchGetAPIView(generics.GenericAPIView):
+    """API to get my chats with searched phrase in title"""
+
+    permission_classes = (IsAuthenticated, IsEmailConfirm)
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    serializer_class = ChatSerializer
+    http_method_names = ["get"]
+
+    @extend_schema(
+        tags=["Chat"],
+    )
+    def get(self, request, room_name, phrase):
+        """Get my chat list from a certain room with searched phrase in title"""
+
+        logger.info(f"Chat search, room_name: {room_name}, sorting_name: {phrase}")
+
+        # if wrong room name
+        if (room_name, room_name) not in CHOICE_ROOM:
+            return Response(
+                {"type": "client_error", "errors": [{"detail": "wrong room"}]}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # get chats, serialize, and return list of chats by pagination
+        self.queryset = Chat.objects.filter(user=request.user, room=room_name, title__contains=phrase).order_by("-id")
+        serializer = ChatSerializer(self.queryset, context={"request": request}, many=True)
+        page = self.paginate_queryset(serializer.data)
+        return self.get_paginated_response(page)
