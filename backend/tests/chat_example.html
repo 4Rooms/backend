@@ -184,6 +184,7 @@
         <div class="input-message">
             <form onsubmit="sendMessage(); return false;">
                 <input type="text" id="message-input" placeholder="Type your message...">
+                <input type="file" id="files-input" multiple />
                 <button type="submit">Send</button>
             </form>
         </div>
@@ -492,26 +493,46 @@
             chatDropdown.selectedIndex = 0;
         }
 
-        function sendMessage() {
+        async function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('Error reading the file.'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function sendMessage() {
             const input = document.getElementById('message-input');
             const selectedChatId = document.getElementById('selected-chat').value;
 
             if (!selectedChatId) {
                 console.error('Please select a chat before sending a message.');
-                return;
+                return false;
             }
+
+            const files = document.getElementById('files-input').files;
+            console.log('files', files);
 
             const message = {
                 event_type: 'chat_message',
                 message: {
                     chat: selectedChatId,
                     text: input.value,
+                    attachments: await Promise.all(Array.from(files).map(async (file) => ({
+                        name: file.name,
+                        content: await readFile(file),
+                    }))),
                 },
             };
 
             socket.send(JSON.stringify(message));
             input.value = '';
+            document.getElementById('files-input').value = '';
+
+            return false;
         }
+
 
         // On click Del btn -> send "message_was_deleted" event on server
         function delMsg(btn, msgId) {

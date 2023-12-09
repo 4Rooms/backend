@@ -1,4 +1,6 @@
+import base64
 import logging
+from io import BytesIO
 from typing import Optional
 
 from channels.db import database_sync_to_async
@@ -9,6 +11,8 @@ from chat.models.message import Message
 from chat.models.onlineUser import OnlineUser
 from chat.models.reaction import Reaction
 from chat.serializers.message import MessageSerializer, WebsocketMessageSerializer
+from django.core.files.uploadedfile import InMemoryUploadedFile
+from files.services.file_upload import FileUploadService
 
 logger = logging.getLogger(__name__)
 
@@ -177,7 +181,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return
 
         # Save valid msg to db
-        saved_message = await self._save_message(valid_message)
+        saved_message = await self._save_message(valid_message, content.get("message", {}).get("attachments", []))
 
         # Send message to group
         msg_json = await self._serialize_message(saved_message)
@@ -195,6 +199,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def _validate(self, content) -> Optional[Message]:
+        """Validate websocket message and chat message"""
+
         # Validate websocket message
         websocket_message = WebsocketMessageSerializer(data=content)
         if not websocket_message.is_valid():
@@ -210,8 +216,36 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         return message
 
     @database_sync_to_async
-    def _save_message(self, message):
+    def _save_message(self, message, attachments):
         """Save MSG to DB"""
+
+        # save attachments
+        files = []
+        for attachment in attachments:
+            try:
+                # each attachment is a dict with keys: name, content
+                # 'attachments': [{'name': '2023-08-13_23-49.png', 'content': 'data:image/png;base64,iVBO...'}]
+                _, data = attachment["content"].split(",", 1)
+                file_content = base64.b64decode(data)
+                file_name = attachment["name"]
+                file_type = attachment["content"].split(";")[0].split("/")[1]
+                in_memory_file = InMemoryUploadedFile(
+                    file=BytesIO(file_content),
+                    field_name=None,
+                    name=file_name,
+                    content_type=file_type,
+                    size=len(file_content),
+                    charset=None,
+                )
+
+                service = FileUploadService(user=self._user, file_obj=in_memory_file)
+                file = service.create()
+                files.append(file)
+            except Exception as e:
+                logger.error(f"Error while saving attachment: {e}")
+
+        message.validated_data["attachments"] = files
+        # save message
         return message.save()
 
     async def send_message(self, event):
