@@ -17,6 +17,7 @@ class MessageSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField(source="get_user_name")
     user_avatar = serializers.SerializerMethodField(source="get_user_avatar")
     reactions = serializers.SerializerMethodField(source="get_reactions")
+    attachments = serializers.SerializerMethodField(source="get_attachments")
 
     class Meta:
         model = Message
@@ -51,6 +52,14 @@ class MessageSerializer(serializers.ModelSerializer):
             serializer = ReactionSerializer(reactions, many=True)
             return serializer.data
         return None
+
+    def get_attachments(self, obj) -> list[str]:
+        """Return URL to attachments"""
+
+        if isinstance(obj, Message):
+            attachments = obj.attachments.all()
+            return [get_full_file_url(attachment.file.url) for attachment in attachments]
+        return []
 
 
 class WebsocketMessageSerializer(serializers.Serializer):

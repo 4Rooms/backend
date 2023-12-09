@@ -1,6 +1,7 @@
 from chat.models.chat import Chat
 from django.contrib.auth import get_user_model
 from django.db import models
+from files.models import File
 
 
 class Message(models.Model):
@@ -11,6 +12,7 @@ class Message(models.Model):
     text = models.TextField(max_length=792, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_deleted = models.BooleanField(default=False)
+    attachments = models.ManyToManyField(File, blank=True)
 
     class Meta:
         app_label = "chat"
