@@ -104,14 +104,16 @@
     data = {"username": "userName", "email": "userEmail"}
     response = request.put(URL, data)
     ```
-
+-   In case of email changing, a link to confirm the email will be sent to the new email.  
+    The email will be changed and confirmed only after the user follows the link.   
+    If the user does not follow the link, his email will not be changed to a new one.  
 -   Successful response:
     -   Status code: 200.
     -   Response body:
 
         ```json
         {
-            "message": "Email, Username updated successfully"
+            "message": "User updated successfully"
         }
         ```
 

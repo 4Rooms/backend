@@ -1,6 +1,12 @@
 import logging
 
-from accounts.models import PasswordResetToken, Profile, User
+from accounts.models import (
+    ChangedEmail,
+    EmailConfirmationToken,
+    PasswordResetToken,
+    Profile,
+    User,
+)
 from accounts.serializers import (
     ChangePasswordSerializer,
     EmailSerializer,
@@ -9,7 +15,9 @@ from accounts.serializers import (
     UpdateUserDataSerializer,
     UserSerializer,
 )
+from accounts.services.email import send_confirmation_email
 from chat.permissions import IsEmailConfirm
+from config.utils import get_ui_host
 from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -62,6 +70,21 @@ class UserAPIView(APIView):
             # is it another user
             if user.id != registered_user[0].id:
                 raise ValidationError("Email already exists.")
+        # if new email was posted
+        else:
+            # save new email in ChangedEmail DB
+            # if ChangedEmail object exists with old email we change old email to new
+            new_email_obj = ChangedEmail.objects.filter(user=user).first()
+            if new_email_obj:
+                new_email_obj.email = new_email
+                new_email_obj.save()
+            else:
+                new_email_obj, _ = ChangedEmail.objects.get_or_create(user=user, email=new_email)
+
+            # get token for email confirmation
+            token, _ = EmailConfirmationToken.objects.get_or_create(user=user)
+            # send on new email confirmation letter with link
+            send_confirmation_email(address=new_email, token_id=token.pk, ui_host=get_ui_host(request))
 
         # if username is already in use
         registered_user = User.objects.filter(username=new_username)
@@ -69,10 +92,10 @@ class UserAPIView(APIView):
             if user.id != registered_user[0].id:
                 raise ValidationError("Username already registered.")
 
-        user.email = new_email
+        # user.email = new_email
         user.username = new_username
         user.save()
-        return Response({"message": "Email, Username updated successfully"}, status=status.HTTP_200_OK)
+        return Response({"message": "User updated successfully"}, status=status.HTTP_200_OK)
 
 
 @extend_schema_view(

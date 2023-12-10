@@ -1,6 +1,6 @@
 import logging
 
-from accounts.models import EmailConfirmationToken, User
+from accounts.models import ChangedEmail, EmailConfirmationToken, User
 from accounts.serializers import UserSerializer
 from accounts.services.email import send_confirmation_email
 from config.utils import get_ui_host
@@ -78,6 +78,15 @@ class ConfirmEmailApiView(APIView):
             # We check whether there is such a token
             token = EmailConfirmationToken.objects.get(pk=token_id)
             user = token.user
+
+            # if it is email changing from old registered user
+            changing_email_user = ChangedEmail.objects.filter(user=user).first()
+            if changing_email_user:
+                new_email = changing_email_user.email
+                user.email = new_email
+                user.save()
+                changing_email_user.delete()
+
             user.is_email_confirmed = True
             user.save()
 
