@@ -10,14 +10,7 @@ to receive the following structure from the client:
  "event_type": "chat_message",
   "message": {
     "chat": 39,
-    "id": 133,
-    "is_deleted": false,
-    "reactions": [],
-    "text": "hi",
-    "timestamp": "2023-11-09T18:03:11.236195Z",
-    "user": 6,
-    "user_avatar": "https://.../avatar.jpg",
-    "user_name": "Terry"
+    "text": "Hi"
   }
 }
 ```

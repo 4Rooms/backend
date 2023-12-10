@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from accounts.user_manager import UserManager
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
@@ -99,3 +100,13 @@ class Profile(models.Model):
     @property
     def filename(self):
         return os.path.basename(self.avatar.name)
+
+
+class ChangedEmail(models.Model):
+    """New email for changing"""
+
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, null=True)
+    email = models.EmailField(unique=True)
+
+    class Meta:
+        app_label = "accounts"
