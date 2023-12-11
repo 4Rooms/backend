@@ -115,7 +115,7 @@ class ChatPostAPIView(generics.GenericAPIView):
                     raise ValidationError(f"File size must be less than {settings.MAX_FILE_SIZE} bytes")
                 img = resize_in_memory_uploaded_file(img, 200)
             else:
-                img = DefaultAvatars().get_random_chat_avatar().as_posix()
+                img = DefaultAvatars().get_chat_avatar(room_name).as_posix()
                 logger.info(f"Post chat. No image provided. Using default avatar: {img}")
 
             description = serializer.validated_data.get("description", None)

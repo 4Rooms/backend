@@ -13,6 +13,7 @@ from chat.models.reaction import Reaction
 from chat.serializers.message import MessageSerializer, WebsocketMessageSerializer
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from files.services.file_upload import FileUploadService
+from files.utils import get_full_file_url
 
 logger = logging.getLogger(__name__)
 
@@ -346,7 +347,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     def get_user_avatar(self, user):
-        return user.profile.avatar.url
+        return get_full_file_url(user.profile.avatar.url)
 
     @database_sync_to_async
     def get_user_username(self, user):
@@ -364,7 +365,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 {
                     "id": online_user.user.id,
                     "username": online_user.user.username,
-                    "avatar": online_user.user.profile.avatar.url,
+                    "avatar": get_full_file_url(online_user.user.profile.avatar.url),
                 }
             )
         return online_users
