@@ -80,7 +80,16 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard(self._group_name, self.channel_name)
 
     async def receive_json(self, content):
-        logger.debug(f"Receive msg. User {self._user}. Chat {self._chat_id}. Room {self._room_name}. Content {content}")
+        logger.debug(
+            f"Received msg."
+            + f" User '{self._user}'."
+            + f" Chat '{self._chat_id}'."
+            + f" Room '{self._room_name}'."
+            + f" Event '{content.get('event_type', None)}'."
+            + f" ChatID: '{content.get('message', {}).get('chat', None)}'."
+            + f" Text: '{content.get('message', {}).get('text', '')[:200]}'."
+            + f" Attachments: '{len(content.get('message', {}).get('attachments', []))}'."
+        )
 
         # delete msg event
         if content.get("event_type", None) == "message_was_deleted" and content.get("id", None):
@@ -223,13 +232,22 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # save attachments
         files = []
         for attachment in attachments:
+            logger.info(f"Processing attachment with name: '{attachment.get('name', None)}'")
             try:
+                logger.debug(f" - Content sample: {attachment.get('content', None)[:64]}")
+
+                file_name = attachment["name"]
                 # each attachment is a dict with keys: name, content
                 # 'attachments': [{'name': '2023-08-13_23-49.png', 'content': 'data:image/png;base64,iVBO...'}]
                 _, data = attachment["content"].split(",", 1)
+                logger.debug(f" - Content length before decoding: {len(data)}")
+
                 file_content = base64.b64decode(data)
-                file_name = attachment["name"]
+                logger.debug(f" - Content length after decoding: {len(file_content)}")
+
                 file_type = attachment["content"].split(";")[0].split("/")[1]
+                logger.debug(f" - File type: {file_type}")
+
                 in_memory_file = InMemoryUploadedFile(
                     file=BytesIO(file_content),
                     field_name=None,
