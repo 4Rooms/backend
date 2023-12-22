@@ -178,7 +178,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                     "type": "send_message_reaction",
                     "id": content["id"],
                     "reaction": content["reaction"],
-                    "user": self._user,
+                    "username": self._user.username,
                     "event_type": event_type,
                 },
             )
@@ -350,7 +350,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             "event_type": event["event_type"],
             "id": event["id"],
             "reaction": event["reaction"],
-            "user": event["user"].username,
+            "user": event["username"],
         }
 
         await self.send_json(msg_reaction_event)
