@@ -22,7 +22,7 @@ class FileUploadService:
     def create(self, file_name: str = "", file_type: str = "") -> File:
         if self.file_obj.size > settings.MAX_FILE_SIZE:
             logger.error(f"File is too large. Size: {self.file_obj.size}")
-            raise ValidationError(f"File is too large.")
+            raise ValidationError("File is too large")
 
         if not file_name:
             logger.debug(f"File name not provided. Using {self.file_obj.name}")

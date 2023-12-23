@@ -1,5 +1,6 @@
 # WebSocket Events
 
+## Chat Events
 
 ### Event chat_message
 If the client has sent the message to chat, the server expects 
@@ -20,6 +21,7 @@ If the message passes validation the event with the following structure is sent 
 
 ```json
 {
+  "event_type": "chat_message",
   "message": {
     "id": 40,
     "user_name": "user3",
@@ -30,7 +32,6 @@ If the message passes validation the event with the following structure is sent 
     "chat": 1,
     "user": 3,
   },
-  "event_type": "chat_message",
   "timestamp": "2023-09-26T14:17:44.250236Z"
 }
 ```
@@ -232,5 +233,23 @@ in the chat if the user has already reacted to that message with a posted emoji:
   "reaction": "👍",
   "user": "Terry",
   "timestamp": "2023-09-26T14:17:44.250236Z"
+}
+```
+
+## Error Event
+
+If the server could not process any websocket message received from a user, the server will
+reply with `error` event type:
+
+```json
+{
+  "event_type": "error",
+  "error_message": "Error message",
+  "details": {
+    "user_id": 0,
+    "user_name": "username",
+    "chat_id": 0,
+    "message_id": 0
+  }
 }
 ```
