@@ -157,7 +157,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
                 self._group_name,
                 {
                     "type": "send_liked_chat",
-                    "user": self._user,
+                    "username": self._user.username,
                     "event_type": event_type,
                 },
             )
@@ -336,10 +336,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.send_json(deleted_chat_event)
 
     async def send_liked_chat(self, event):
-        logger.debug(f"Event chat_was_liked. Sending liked Chat: {self._chat_id} by user: {event['user'].username}")
-
-        liked_chat_event = {"event_type": event["event_type"], "id": self._chat_id, "user": event["user"].username}
-
+        logger.debug(f"Event chat_was_liked. Sending liked Chat: {self._chat_id} by user: {event['username']}")
+        liked_chat_event = {"event_type": event["event_type"], "id": self._chat_id, "user": event["username"]}
         await self.send_json(liked_chat_event)
 
     # send_message_reaction
