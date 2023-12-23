@@ -18,6 +18,12 @@ from files.utils import get_full_file_url
 logger = logging.getLogger(__name__)
 
 
+class WesocketException(Exception):
+    def __init__(self, error_message, message_id=None):
+        self.error_message = error_message
+        self.message_id = message_id
+
+
 class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self._user = self.scope["user"]
@@ -91,6 +97,26 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             + f" Attachments: '{len(content.get('message', {}).get('attachments', []))}'."
         )
 
+        try:
+            await self.process_received_content(content)
+        except Exception as e:
+            logger.error(f"Error while processing received content: {e}")
+            data = {
+                "event_type": "error",
+                "error_message": f"Error in websocket processor: {e}",
+                "details": {"user_id": self._user.id, "user_name": self._user.username, "chat_id": self._chat_id},
+            }
+
+            if isinstance(e, WesocketException):
+                data["error_message"] = e.error_message
+                if e.message_id is not None:
+                    data["details"]["message_id"] = e.message_id
+
+            await self.send_json(data)
+
+    async def process_received_content(self, content):
+        """Process received content"""
+
         # delete msg event
         if content.get("event_type", None) == "message_was_deleted" and content.get("id", None):
             logger.debug(f"Message_was_deleted event. Content: {content}")
@@ -118,10 +144,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             valid_message = await self._validate(
                 {"event_type": "chat_message", "message": {"chat": self._chat_id, "text": content["new_text"]}}
             )
-
-            if valid_message is None:
-                logger.debug(f"Update message event. Invalid message.")
-                return
 
             await self.update_message(content["id"], content["new_text"])
             await self.channel_layer.group_send(
@@ -186,9 +208,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         # Validate received msg
         valid_message = await self._validate(content)
-        if valid_message is None:
-            logger.debug(f"Invalid received msg")
-            return
 
         # Save valid msg to db
         saved_message = await self._save_message(valid_message, content.get("message", {}).get("attachments", []))
@@ -215,13 +234,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         websocket_message = WebsocketMessageSerializer(data=content)
         if not websocket_message.is_valid():
             logger.error(f"INVALID MESSAGE: User: {self._user}. Chat {self._chat_id}. {websocket_message.errors}")
-            return None
+            raise WesocketException("Invalid Websocket message: " + str(websocket_message.errors))
 
         # Validate chat message
         message = MessageSerializer(data=websocket_message.data["message"], context={"user": self._user})
         if not message.is_valid():
             logger.error(f"INVALID MESSAGE: User: {self._user}. Msg: {content}. Chat: {self._chat_id}.")
-            return None
+            raise WesocketException("Invalid message: " + str(message.errors))
 
         return message
 
@@ -233,35 +252,46 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         files = []
         for attachment in attachments:
             logger.info(f"Processing attachment with name: '{attachment.get('name', None)}'")
+            logger.debug(f" - Content sample: {attachment.get('content', None)[:64]}")
+
+            if "name" not in attachment:
+                raise WesocketException("Attachment name is required")
+
+            if "content" not in attachment:
+                raise WesocketException("Attachment content is required")
+
+            file_name = attachment["name"]
+            # each attachment is a dict with keys: name, content
+            # 'attachments': [{'name': '2023-08-13_23-49.png', 'content': 'data:image/png;base64,iVBO...'}]
             try:
-                logger.debug(f" - Content sample: {attachment.get('content', None)[:64]}")
-
-                file_name = attachment["name"]
-                # each attachment is a dict with keys: name, content
-                # 'attachments': [{'name': '2023-08-13_23-49.png', 'content': 'data:image/png;base64,iVBO...'}]
                 _, data = attachment["content"].split(",", 1)
-                logger.debug(f" - Content length before decoding: {len(data)}")
+            except Exception:
+                raise WesocketException("Attachment content is invalid")
 
-                file_content = base64.b64decode(data)
-                logger.debug(f" - Content length after decoding: {len(file_content)}")
+            logger.debug(f" - Content length before decoding: {len(data)}")
 
+            file_content = base64.b64decode(data)
+            logger.debug(f" - Content length after decoding: {len(file_content)}")
+
+            try:
                 file_type = attachment["content"].split(";")[0].split("/")[1]
-                logger.debug(f" - File type: {file_type}")
+            except Exception:
+                raise WesocketException("Attachment content is invalid")
 
-                in_memory_file = InMemoryUploadedFile(
-                    file=BytesIO(file_content),
-                    field_name=None,
-                    name=file_name,
-                    content_type=file_type,
-                    size=len(file_content),
-                    charset=None,
-                )
+            logger.debug(f" - File type: {file_type}")
 
-                service = FileUploadService(user=self._user, file_obj=in_memory_file)
-                file = service.create()
-                files.append(file)
-            except Exception as e:
-                logger.error(f"Error while saving attachment: {e}")
+            in_memory_file = InMemoryUploadedFile(
+                file=BytesIO(file_content),
+                field_name=None,
+                name=file_name,
+                content_type=file_type,
+                size=len(file_content),
+                charset=None,
+            )
+
+            service = FileUploadService(user=self._user, file_obj=in_memory_file)
+            file = service.create()
+            files.append(file)
 
         message.validated_data["attachments"] = files
         # save message
@@ -401,12 +431,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         if not msg:
             logger.debug(f"Delete_message. The message with the specified ID is absent")
-            return False
+            raise WesocketException("Message with the specified ID was not found", id)
 
         # Is the user from the request isn't a message author
         if self._user.username != msg.user.username:
             logger.debug(f"Delete_message. The user from the request isn't a message author")
-            return False
+            raise WesocketException("You are not the author of this message", id)
 
         msg.delete()
         logger.debug(
@@ -423,16 +453,16 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         if not msg:
             logger.debug(f"Update_message. The message with the specified ID is absent")
-            return False
+            raise WesocketException("Message with the specified ID was not found", id)
 
         if msg.is_deleted:
             logger.debug(f"Update_message. A deleted message cannot be edited")
-            return False
+            raise WesocketException("A deleted message cannot be edited because it is deleted", id)
 
         # Is the user from the request isn't a message author
         if self._user.username != msg.user.username:
             logger.debug(f"Update_message. The user from the request isn't a message author")
-            return False
+            raise WesocketException("You are not the author of this message", id)
 
         msg.text = new_text
         msg.save()
@@ -449,7 +479,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # Is the user from the request isn't a chat author
         if self._user.username != chat.user.username:
             logger.debug(f"Delete_chat. The user from the request isn't a chat author")
-            return False
+            raise WesocketException("You are not the author of this chat")
 
         chat.delete()
         logger.debug(f"Delete_chat. The Chat: {self._chat_id} was deleted in room: {self._room_name}")
@@ -462,7 +492,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         Return 'chat_was_unliked' and del like if this user already liked this chat."""
 
         chat_like = ChatLike.objects.filter(user=user, chat_id=self._chat_id).first()
-        print("!!! chat_like !!!", chat_like)
+        logger.debug(f"Like_chat. The Chat: {self._chat_id} was liked in room: {self._room_name}")
 
         if not chat_like:
             new, _ = ChatLike.objects.get_or_create(user=user, chat_id=self._chat_id)
