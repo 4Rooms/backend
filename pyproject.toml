@@ -7,7 +7,7 @@ include = ["doc/*.md"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-Django = "^4.2.2"
+Django = "^5.0"
 djangorestframework = "^3.14.0"
 python-dotenv = "^1.0.0"
 django-rest-knox = "^4.2.0"
