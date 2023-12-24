@@ -22,6 +22,7 @@ from django.conf import settings
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
+from emails.services.email_verify import EmailVerify
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import RetrieveUpdateAPIView, UpdateAPIView
@@ -33,6 +34,8 @@ from rest_framework.views import APIView
 from backend.accounts.services.email import send_password_reset_email
 from backend.config.utils import get_ui_host
 from backend.files.services.images import resize_in_memory_uploaded_file
+
+logger = logging.getLogger(__name__)
 
 
 class UserAPIView(APIView):
@@ -70,21 +73,26 @@ class UserAPIView(APIView):
             # is it another user
             if user.id != registered_user[0].id:
                 raise ValidationError("Email already exists.")
-        # if new email was posted
-        else:
-            # save new email in ChangedEmail DB
-            # if ChangedEmail object exists with old email we change old email to new
-            new_email_obj = ChangedEmail.objects.filter(user=user).first()
-            if new_email_obj:
-                new_email_obj.email = new_email
-                new_email_obj.save()
-            else:
-                new_email_obj, _ = ChangedEmail.objects.get_or_create(user=user, email=new_email)
 
-            # get token for email confirmation
-            token, _ = EmailConfirmationToken.objects.get_or_create(user=user)
-            # send on new email confirmation letter with link
-            send_confirmation_email(address=new_email, token_id=token.pk, ui_host=get_ui_host(request))
+        # if new email was posted
+
+        # check if email is allowed
+        email_verifier = EmailVerify(data.validated_data["email"])
+        email_verifier.check()
+
+        # save new email in ChangedEmail DB
+        # if ChangedEmail object exists with old email we change old email to new
+        new_email_obj = ChangedEmail.objects.filter(user=user).first()
+        if new_email_obj:
+            new_email_obj.email = new_email
+            new_email_obj.save()
+        else:
+            new_email_obj, _ = ChangedEmail.objects.get_or_create(user=user, email=new_email)
+
+        # get token for email confirmation
+        token, _ = EmailConfirmationToken.objects.get_or_create(user=user)
+        # send on new email confirmation letter with link
+        send_confirmation_email(address=new_email, token_id=token.pk, ui_host=get_ui_host(request))
 
         # if username is already in use
         registered_user = User.objects.filter(username=new_username)

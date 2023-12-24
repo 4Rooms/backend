@@ -7,6 +7,7 @@ from config.utils import get_ui_host
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from drf_spectacular.utils import OpenApiParameter, extend_schema
+from emails.services.email_verify import EmailVerify
 from registration.serializers import (
     ConfirmationEmailRequestSerializer,
     EmailConfirmationResponseSerializer,
@@ -35,6 +36,10 @@ class RegisterUserView(APIView):
         serializer = UserSerializer(data=request.data)
         if not serializer.is_valid():
             raise ValidationError(serializer.errors)
+
+        # check if email is allowed
+        email_verifier = EmailVerify(serializer.validated_data["email"])
+        email_verifier.check()
 
         # if email is already in use
         if User.objects.filter(email=request.data["email"]).exists():

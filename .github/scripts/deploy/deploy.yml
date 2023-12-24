@@ -68,6 +68,10 @@
           STAFF_USERS: "{{ STAFF_USERS }}"
           REDIS_HOST: "redis-{{ img_name }}"
           DJANGO_SETTINGS_MODULE: "config.settings_prod"
+          EMA_URL: "{{ EMA_URL }}"
+          EMA_DOMAIN_URL: "{{ EMA_DOMAIN_URL }}"
+          FORBIDDEN_COUNTRIES: "{{ FORBIDDEN_COUNTRIES }}"
+          FORBIDDEN_EMAILS: "{{ FORBIDDEN_EMAILS }}"
 
         mounts:
           - type: volume
