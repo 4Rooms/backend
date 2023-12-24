@@ -78,6 +78,10 @@ AUTHENTICATION_BACKENDS = [
 
 STAFF_USERS = os.environ.get("STAFF_USERS", "").split(",")
 DJANGO_HOST = os.environ.get("DJANGO_HOST")
+EMA_URL = os.environ.get("EMA_URL", None)
+EMA_DOMAIN_URL = os.environ.get("EMA_DOMAIN_URL", None)
+FORBIDDEN_EMAILS = os.environ.get("FORBIDDEN_EMAILS", "").split(",")
+FORBIDDEN_COUNTRIES = os.environ.get("FORBIDDEN_COUNTRIES", "").split(",")
 
 SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.social_details",
@@ -110,9 +114,10 @@ INSTALLED_APPS = [
     "social_django",
     # my apps
     "accounts",
-    "login",
     "chat",
+    "emails",
     "files",
+    "login",
 ]
 
 MIDDLEWARE = [

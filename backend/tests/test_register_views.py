@@ -4,7 +4,7 @@ from django.urls import reverse
 from .conftest import UserForTests
 
 
-# run test with different origins
+@pytest.mark.django_db
 @pytest.mark.parametrize(
     "origin",
     [
@@ -30,6 +30,7 @@ def test_register_user_view_is_working(client, test_user: UserForTests, origin):
     assert response.status_code == 200
 
 
+@pytest.mark.django_db
 def test_register_user_view_no_double_email(client, test_user: UserForTests):
     """Test that it is not possible to register a user with a used email"""
     # user is registered in conftest.py
@@ -38,5 +39,15 @@ def test_register_user_view_no_double_email(client, test_user: UserForTests):
     # try to post user with same email
     url = reverse("register")
     body = {"username": test_user.username, "email": test_user.email, "password": test_user.password}
+    response = client.post(url, body, format="json", headers={"origin": "http://localhost:8000"})
+    assert response.status_code == 400
+
+
+@pytest.mark.django_db
+def test_register_fail_with_forbidden_email(client):
+    """Test that it is not possible to register a user with a forbidden email"""
+    # try to post user with forbidden email
+    url = reverse("register")
+    body = {"username": "test", "email": "username@example.com", "password": "ncajdfn2134b"}
     response = client.post(url, body, format="json", headers={"origin": "http://localhost:8000"})
     assert response.status_code == 400
