@@ -65,13 +65,11 @@ class UserAPIView(APIView):
 
         new_email = data.validated_data.get("email", None)
         if new_email:
-            user = User.objects.get(email=request.user.email)
-
             # if email is already in use
             registered_user = User.objects.filter(email=new_email)
             if registered_user.exists():
                 # is it another user
-                if user.id != registered_user[0].id:
+                if request.user.id != registered_user[0].id:
                     raise ValidationError("Email already exists.")
 
             # check if email is allowed
@@ -80,15 +78,15 @@ class UserAPIView(APIView):
 
             # save new email in ChangedEmail DB
             # if ChangedEmail object exists with old email we change old email to new
-            new_email_obj = ChangedEmail.objects.filter(user=user).first()
+            new_email_obj = ChangedEmail.objects.filter(user=request.user).first()
             if new_email_obj:
                 new_email_obj.email = new_email
                 new_email_obj.save()
             else:
-                new_email_obj, _ = ChangedEmail.objects.get_or_create(user=user, email=new_email)
+                new_email_obj, _ = ChangedEmail.objects.get_or_create(user=request.user, email=new_email)
 
             # get token for email confirmation
-            token, _ = EmailConfirmationToken.objects.get_or_create(user=user)
+            token, _ = EmailConfirmationToken.objects.get_or_create(user=request.user)
             # send on new email confirmation letter with link
             send_confirmation_email(address=new_email, token_id=token.pk, ui_host=get_ui_host(request))
 
@@ -96,7 +94,7 @@ class UserAPIView(APIView):
         if new_username:
             registered_user = User.objects.filter(username=new_username)
             if registered_user.exists():
-                if user.id != registered_user[0].id:
+                if request.user.id != registered_user[0].id:
                     raise ValidationError("Username already registered.")
 
             request.user.username = new_username
