@@ -169,7 +169,7 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
             raise ValidationError(serializer.errors)
 
         logger.debug(f"Validated date: {serializer.validated_data}")
-        chat_img = serializer.validated_data.get("img", None)
+        chat_img = request.data.get("img", None)
 
         if chat_img:
             logger.debug(f"Chat img: {chat_img}")
