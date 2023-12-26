@@ -11,6 +11,7 @@ from chat.models.message import Message
 from chat.models.onlineUser import OnlineUser
 from chat.models.reaction import Reaction
 from chat.serializers.message import MessageSerializer, WebsocketMessageSerializer
+from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from files.services.file_upload import FileUploadService
 from files.utils import get_full_file_url
@@ -477,12 +478,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         chat = Chat.objects.get(pk=self._chat_id)
 
         # Is the user from the request isn't a chat author
-        if self._user.username != chat.user.username:
+        if self._user.username != chat.user.username and self._user.email not in settings.STAFF_USERS:
             logger.debug(f"Delete_chat. The user from the request isn't a chat author")
             raise WesocketException("You are not the author of this chat")
 
         chat.delete()
-        logger.debug(f"Delete_chat. The Chat: {self._chat_id} was deleted in room: {self._room_name}")
+        logger.info(f"Delete_chat. The Chat: {self._chat_id} was deleted in room: {self._room_name}")
         return True
 
     # like_chat
