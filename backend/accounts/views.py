@@ -63,46 +63,48 @@ class UserAPIView(APIView):
         if not data.is_valid():
             raise ValidationError(data.errors)
 
-        new_email = data.validated_data["email"]
-        new_username = data.validated_data["username"]
-        user = User.objects.get(email=request.user.email)
+        new_email = data.validated_data.get("email", None)
+        if new_email:
+            user = User.objects.get(email=request.user.email)
 
-        # if email is already in use
-        registered_user = User.objects.filter(email=new_email)
-        if registered_user.exists():
-            # is it another user
-            if user.id != registered_user[0].id:
-                raise ValidationError("Email already exists.")
+            # if email is already in use
+            registered_user = User.objects.filter(email=new_email)
+            if registered_user.exists():
+                # is it another user
+                if user.id != registered_user[0].id:
+                    raise ValidationError("Email already exists.")
 
-        # if new email was posted
+            # check if email is allowed
+            email_verifier = EmailVerify(data.validated_data["email"])
+            email_verifier.check()
 
-        # check if email is allowed
-        email_verifier = EmailVerify(data.validated_data["email"])
-        email_verifier.check()
+            # save new email in ChangedEmail DB
+            # if ChangedEmail object exists with old email we change old email to new
+            new_email_obj = ChangedEmail.objects.filter(user=user).first()
+            if new_email_obj:
+                new_email_obj.email = new_email
+                new_email_obj.save()
+            else:
+                new_email_obj, _ = ChangedEmail.objects.get_or_create(user=user, email=new_email)
 
-        # save new email in ChangedEmail DB
-        # if ChangedEmail object exists with old email we change old email to new
-        new_email_obj = ChangedEmail.objects.filter(user=user).first()
-        if new_email_obj:
-            new_email_obj.email = new_email
-            new_email_obj.save()
-        else:
-            new_email_obj, _ = ChangedEmail.objects.get_or_create(user=user, email=new_email)
+            # get token for email confirmation
+            token, _ = EmailConfirmationToken.objects.get_or_create(user=user)
+            # send on new email confirmation letter with link
+            send_confirmation_email(address=new_email, token_id=token.pk, ui_host=get_ui_host(request))
 
-        # get token for email confirmation
-        token, _ = EmailConfirmationToken.objects.get_or_create(user=user)
-        # send on new email confirmation letter with link
-        send_confirmation_email(address=new_email, token_id=token.pk, ui_host=get_ui_host(request))
+        new_username = data.validated_data.get("username", None)
+        if new_username:
+            registered_user = User.objects.filter(username=new_username)
+            if registered_user.exists():
+                if user.id != registered_user[0].id:
+                    raise ValidationError("Username already registered.")
 
-        # if username is already in use
-        registered_user = User.objects.filter(username=new_username)
-        if registered_user.exists():
-            if user.id != registered_user[0].id:
-                raise ValidationError("Username already registered.")
+            request.user.username = new_username
+            request.user.save()
 
-        # user.email = new_email
-        user.username = new_username
-        user.save()
+        if not new_email and not new_username:
+            raise ValidationError("No data to update.")
+
         return Response({"message": "User updated successfully"}, status=status.HTTP_200_OK)
 
 
