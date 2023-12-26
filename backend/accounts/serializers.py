@@ -124,5 +124,5 @@ class UpdateUserDataSerializer(serializers.Serializer):
 
     model = User
 
-    username = UserNameField(required=True)
-    email = serializers.EmailField(required=True)
+    username = UserNameField(required=False)
+    email = serializers.EmailField(required=False)
