@@ -66,11 +66,29 @@ class SavedChatSerializer(serializers.ModelSerializer):
     img = serializers.SerializerMethodField(source="get_img")
     url = serializers.SerializerMethodField(source="get_url")
     likes = serializers.SerializerMethodField(source="get_likes")
+    timestamp = serializers.SerializerMethodField(source="get_timestamp")
 
     class Meta:
         model = SavedChat
-        fields = ["id", "user", "chat", "title", "room", "description", "chat_creator", "img", "url", "likes"]
-        extra_kwargs = {"id": {"read_only": True}, "user": {"read_only": True}, "chat": {"read_only": True}}
+        fields = [
+            "id",
+            "user",
+            "chat",
+            "title",
+            "room",
+            "description",
+            "chat_creator",
+            "img",
+            "url",
+            "likes",
+            "timestamp",
+        ]
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "user": {"read_only": True},
+            "chat": {"read_only": True},
+            "timestamp": {"read_only": True},
+        }
 
     @staticmethod
     def get_title(obj) -> Optional[str]:
@@ -116,6 +134,14 @@ class SavedChatSerializer(serializers.ModelSerializer):
 
         if isinstance(obj, SavedChat):
             return obj.chat.url
+        return None
+
+    @staticmethod
+    def get_timestamp(obj) -> Optional[str]:
+        """Return creation date of chat"""
+
+        if isinstance(obj, SavedChat):
+            return obj.chat.timestamp
         return None
 
     @staticmethod
