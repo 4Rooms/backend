@@ -104,7 +104,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             logger.error(f"Error while processing received content: {e}")
             data = {
                 "event_type": "error",
-                "error_message": f"Error in websocket processor: {e}",
+                "error_message": e.message if hasattr(e, "message") else str(e),
                 "details": {"user_id": self._user.id, "user_name": self._user.username, "chat_id": self._chat_id},
             }
 
@@ -234,8 +234,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # Validate websocket message
         websocket_message = WebsocketMessageSerializer(data=content)
         if not websocket_message.is_valid():
-            logger.error(f"INVALID MESSAGE: User: {self._user}. Chat {self._chat_id}. {websocket_message.errors}")
-            raise WesocketException("Invalid Websocket message: " + str(websocket_message.errors))
+            logger.error(f"INVALID MESSAGE: User: {self._user}. Chat {self._chat_id}. Err: {websocket_message.errors}")
+            raise WesocketException(self.errors_to_str(websocket_message.errors))
 
         # Validate chat message
         message = MessageSerializer(data=websocket_message.data["message"], context={"user": self._user})
@@ -520,3 +520,19 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             msg_reaction.delete()
             logger.debug(f"Message_reaction. The user: {user} msg: {id}, reaction: {reaction} was deleted")
             return "message_reaction_was_deleted"
+
+    def errors_to_str(self, errors):
+        res = []
+
+        def _errors_to_list(err):
+            if isinstance(err, list):
+                return "\n".join(err)
+            elif isinstance(err, dict):
+                return self.errors_to_str(err)
+            else:
+                return str(err)
+
+        for field, error in errors.items():
+            res.append(f"{field}: {_errors_to_list(error)}")
+
+        return "\n".join(res)
