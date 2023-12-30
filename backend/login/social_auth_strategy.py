@@ -27,6 +27,7 @@ class AuthStrategy(DjangoStrategy):
         Create a user and set is_email_confirmed to True
         """
         user = super().create_user(*args, **{**kwargs, **{"is_email_confirmed": True}})
+        logger.info(f"{user} Social auth: create_user")
         return user
 
     def redirect(self, url):
