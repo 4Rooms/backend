@@ -50,6 +50,7 @@ class UserAPIView(APIView):
         tags=["Account"],
     )
     def get(self, request):
+        logger.debug(f"{request.user} requested user data")
         serializer = UserSerializer(request.user, many=False)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -60,6 +61,7 @@ class UserAPIView(APIView):
     def put(self, request):
         """Update user email/username"""
 
+        logger.debug(f"{request.user} requested user data update, data: {request.data}")
         data = UpdateUserDataSerializer(data=request.data)
         if not data.is_valid():
             raise ValidationError(data.errors)
@@ -104,6 +106,7 @@ class UserAPIView(APIView):
         if not new_email and not new_username:
             raise ValidationError("No data to update.")
 
+        logger.info(f"{request.user} user data updated successfully")
         return Response({"message": "User updated successfully"}, status=status.HTTP_200_OK)
 
 
@@ -125,6 +128,7 @@ class ProfileAPIView(RetrieveUpdateAPIView):
         tags=["Account"],
     )
     def get_object(self):
+        logger.debug(f"{self.request.user} requested profile data")
         return self.request.user.profile
 
     @extend_schema(
@@ -137,6 +141,7 @@ class ProfileAPIView(RetrieveUpdateAPIView):
     def put(self, request, *args, **kwargs):
         """Update user avatar"""
 
+        logger.debug(f"{request.user} requested profile data update, data: {request.data}")
         serializer = ProfileSerializer(self.get_object(), data=request.data, context={"request": request})
 
         if not serializer.is_valid():
@@ -153,6 +158,7 @@ class ProfileAPIView(RetrieveUpdateAPIView):
         serializer.validated_data["avatar"] = resize_in_memory_uploaded_file(avatar, 200)
         serializer.save()
 
+        logger.info(f"{request.user} profile data updated successfully")
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -175,23 +181,24 @@ class ChangePasswordAPIView(UpdateAPIView):
     def update(self, request, *args, **kwargs):
         """Change password"""
 
+        logger.debug(f"{request.user} requested password change")
         self.user = self.request.user
         serializer = ChangePasswordSerializer(data=request.data)
 
         if not serializer.is_valid():
-            logging.error(f"Update password. serializer.is_valid() -> false")
+            logging.error(f"{request.user} Update password. serializer.is_valid() -> false")
             raise ValidationError(serializer.errors)
 
         # check old password
         if not self.user.check_password(serializer.data.get("old_password")):
-            logging.error(f"Update password. Invalid old password")
+            logging.error(f"{request.user} Update password. Invalid old password")
             raise ValidationError("Wrong old password")
 
         # validate password
         try:
             validate_password(request.data["new_password"], self.user)
         except DjangoValidationError as error:
-            logging.error(f"Update password. Invalid new password")
+            logging.error(f"{request.user} Update password. Invalid new password")
             raise ValidationError(error.messages) from None
 
         # set_password also hashes the password that the user will get
@@ -199,6 +206,7 @@ class ChangePasswordAPIView(UpdateAPIView):
         self.user.save()
 
         data = {"message": "Password updated successfully"}
+        logger.info(f"{request.user} Update password. Success")
         return Response(data=data, status=status.HTTP_200_OK)
 
 
@@ -220,10 +228,11 @@ class RequestPasswordResetAPIView(APIView):
         ),
     )
     def post(self, request):
+        logger.debug(f"{request.user} Password reset request: {request.data}")
         serializer = RequestPasswordResetAPIView.serializer_class(data=request.data)
 
         if not serializer.is_valid():
-            logging.warning(f"Password reset request with invalid email: {serializer.errors}")
+            logging.warning(f"{request.user} Password reset request with invalid email: {serializer.errors}")
             raise ValidationError(serializer.errors)
 
         email = serializer.data.get("email")
@@ -231,7 +240,7 @@ class RequestPasswordResetAPIView(APIView):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            logging.warning(f"Password reset request for non-existent email: {email}")
+            logging.error(f"{request.user} Password reset request for non-existent email: {email}")
             raise ValidationError("User with this email does not exist") from None
 
         # send reset password email if user exists and email is confirmed
@@ -239,10 +248,11 @@ class RequestPasswordResetAPIView(APIView):
             token = PasswordResetToken.objects.create(user=user)
             send_password_reset_email(address=email, reset_password_token=token.pk, ui_host=get_ui_host(request))
         else:
-            logging.warning(f"Password reset request for unconfirmed email: {email}")
-            raise ValidationError("Email is not confirmed.")
+            logging.warning(f"{request.user} Password reset request for unconfirmed email: {email}")
+            raise ValidationError(f"Email is not confirmed.")
 
         msg = "If this email exists, a password reset email has been sent"
+        logger.info(f"{request.user} Password reset request. Success")
         return Response({"message": msg}, status=status.HTTP_200_OK)
 
 
@@ -264,9 +274,11 @@ class PasswordResetAPIView(APIView):
         ),
     )
     def post(self, request):
+        logger.debug(f"{request.user} Password reset: {request.data}")
         serializer = PasswordResetSerializer(data=request.data)
 
         if not serializer.is_valid():
+            logging.warning(f"{request.user} Password reset with invalid data: {serializer.errors}")
             raise ValidationError(serializer.errors)
 
         token_id = serializer.data.get("token_id")
@@ -275,10 +287,10 @@ class PasswordResetAPIView(APIView):
         try:
             token = PasswordResetToken.objects.get(pk=token_id)
         except PasswordResetToken.DoesNotExist:
-            logging.warning(f"Password reset with invalid token: {token_id}")
+            logging.warning(f"{request.user} Password reset with invalid token: {token_id}")
             raise ValidationError("Invalid token.") from None
         except DjangoValidationError as error:
-            logging.error(f"Password reset with invalid token: {token_id}")
+            logging.error(f"{request.user} Password reset with invalid token: {token_id}")
             raise ValidationError(error) from None
 
         user = token.user
@@ -286,14 +298,16 @@ class PasswordResetAPIView(APIView):
         try:
             validate_password(password, user)
         except DjangoValidationError as error:
-            logging.error(f"Password reset with invalid password.")
+            logging.error(f"{request.user} Password reset with invalid password.")
             raise ValidationError(error) from None
 
         # set_password also hashes the password that the user will get
         user.set_password(password)
         user.save()
+        logger.info(f"{request.user} Password reset. Success")
 
         token.delete()
+        logger.info(f"{request.user} Password reset token deleted")
 
         data = {"message": "Password reset successfully"}
         return Response(data=data, status=status.HTTP_200_OK)

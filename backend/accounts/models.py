@@ -47,7 +47,7 @@ class User(AbstractUser, PermissionsMixin):
         app_label = "accounts"
 
     def __str__(self):
-        return f"{self.username}"
+        return f"[{self.username}, {self.email}, {self.is_email_confirmed}]"
 
 
 class EmailConfirmationToken(models.Model):

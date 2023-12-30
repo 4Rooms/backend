@@ -1,5 +1,9 @@
+import logging
+
 from accounts.models import User
 from django.db.models import Q
+
+logger = logging.getLogger(__name__)
 
 
 class AuthBackend(object):
@@ -18,7 +22,9 @@ class AuthBackend(object):
         """
 
         try:
-            return User.objects.get(pk=user_id)
+            user = User.objects.get(pk=user_id)
+            logger.debug(f"{user} AuthBackend get_user")
+            return user
         except User.DoesNotExist:
             return None
 
@@ -29,13 +35,13 @@ class AuthBackend(object):
 
         try:
             user = User.objects.get(Q(username=username) | Q(email=username))
-            # print("AuthBackend", user)
-
+            logger.debug(f"{user} AuthBackend authenticate")
         except User.DoesNotExist:
+            logger.error(f"User {username} does not exist")
             return None
 
         if user.check_password(password):
+            logger.debug(f"{user} AuthBackend authenticate: return user")
             return user
 
-        else:
-            return None
+        return None

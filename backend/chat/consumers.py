@@ -36,12 +36,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         self._username = await self.get_user_username(self._user)
 
-        logger.debug(f"User {self._user} wants to connect to websocket")
+        logger.debug(f"{self._user} WS connect.")
 
         self._room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self._chat_id = self.scope["url_route"]["kwargs"]["chat_id"]
         self._group_name = f"{self._room_name}-{self._chat_id}"
-        logger.info(f"CONNECT: User {self._user}. Chat {self._chat_id}. Channel: {self.channel_name}")
+        logger.info(f"{self._user}. Chat {self._chat_id}. Channel: {self.channel_name}")
 
         await self.accept()
         # Send Event connected_user
@@ -58,17 +58,17 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             },
         )
         # Add a user to a group of users in that chat
-        logger.debug(f"Adding user to group: {self._group_name}")
+        logger.debug(f"{self._user} Adding user to group: {self._group_name}")
         await self.channel_layer.group_add(self._group_name, self.channel_name)
         # Add user as online user in DB
-        logger.debug(f"Adding user as online user in DB")
+        logger.debug(f"{self._user} Adding user as online user in DB")
         await self.create_online_user()
         # Send yourself Event online_user_list
-        logger.debug(f"Sending online_user_list event to chat: {self._chat_id} in room: {self._room_name}")
+        logger.debug(f"{self._user} Sending online_user_list event to chat: {self._chat_id} in room: {self._room_name}")
         await self.send_online_user_list()
 
     async def disconnect(self, code):
-        logger.info(f"DISCONNECT: User {self._user}. Chat {self._chat_id}. Room {self._room_name}")
+        logger.info(f"{self._user} DISCONNECT: Chat {self._chat_id}. Room {self._room_name}")
 
         # Delete user as online user from DB
         await self.delete_online_user()
@@ -101,7 +101,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         try:
             await self.process_received_content(content)
         except Exception as e:
-            logger.error(f"Error while processing received content: {e}")
+            logger.error(f"{self._user} Error while processing received content: {e}")
             data = {
                 "event_type": "error",
                 "error_message": e.message if hasattr(e, "message") else str(e),
@@ -120,7 +120,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         # delete msg event
         if content.get("event_type", None) == "message_was_deleted" and content.get("id", None):
-            logger.debug(f"Message_was_deleted event. Content: {content}")
+            logger.debug(f"{self._user} Message_was_deleted event. Content: {content}")
 
             await self.delete_message(content["id"])
             await self.channel_layer.group_send(
@@ -139,7 +139,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             and content.get("id", None)
             and content.get("new_text", None)
         ):
-            logger.debug(f"Message_was_updated event. Content: {content}")
+            logger.debug(f"{self._user} Message_was_updated event. Content: {content}")
 
             # validate msg
             valid_message = await self._validate(
@@ -160,7 +160,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         # delete chat event
         if content.get("event_type", None) == "chat_was_deleted":
-            logger.debug(f"Chat_was_deleted event. Content: {content}")
+            logger.debug(f"{self._user} Chat_was_deleted event. Content: {content}")
             await self.delete_chat()
             await self.channel_layer.group_send(
                 self._group_name,
@@ -173,7 +173,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         # chat was liked event
         if content.get("event_type", None) == "chat_was_liked/unliked":
-            logger.debug(f"chat_was_liked/unliked event. Content: {content}")
+            logger.debug(f"{self._user} chat_was_liked/unliked event. Content: {content}")
 
             event_type = await self.like_chat(self._user)
             await self.channel_layer.group_send(
@@ -192,7 +192,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             and content.get("id", None)
             and content.get("reaction", None)
         ):
-            logger.debug(f"message_reaction event. Content: {content}")
+            logger.debug(f"{self._user} message_reaction event. Content: {content}")
 
             event_type = await self.message_reaction(content["id"], content["reaction"], self._user)
             await self.channel_layer.group_send(
@@ -234,13 +234,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # Validate websocket message
         websocket_message = WebsocketMessageSerializer(data=content)
         if not websocket_message.is_valid():
-            logger.error(f"INVALID MESSAGE: User: {self._user}. Chat {self._chat_id}. Err: {websocket_message.errors}")
+            logger.error(f"{self._user} INVALID MESSAGE: Chat {self._chat_id}. Err: {websocket_message.errors}")
             raise WesocketException(self.errors_to_str(websocket_message.errors))
 
         # Validate chat message
         message = MessageSerializer(data=websocket_message.data["message"], context={"user": self._user})
         if not message.is_valid():
-            logger.error(f"INVALID MESSAGE: User: {self._user}. Msg: {content}. Chat: {self._chat_id}.")
+            logger.error(f"{self._user} INVALID MESSAGE: Msg: {content}. Chat: {self._chat_id}.")
             raise WesocketException("Invalid message: " + str(message.errors))
 
         return message

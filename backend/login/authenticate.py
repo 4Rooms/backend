@@ -10,15 +10,19 @@ class CustomJWTAuthentication(JWTAuthentication):
     """Custom JWT authentication"""
 
     def authenticate(self, request):
-        raw_token = self._get_raw_token(request)
+        try:
+            raw_token = self._get_raw_token(request)
 
-        if raw_token is None:
-            logger.warning("No token found")
-            return None, None
+            if raw_token is None:
+                logger.warning("No token found")
+                return None, None
 
-        validated_token = self.get_validated_token(raw_token)
-        user = self.get_user(validated_token)
-        logger.debug(f"User {user} authenticated")
+            validated_token = self.get_validated_token(raw_token)
+            user = self.get_user(validated_token)
+            logger.debug(f"{user} authenticated")
+        except Exception as e:
+            logger.error(f"Authentication failed: {e}")
+            raise e
 
         return user, validated_token
 
@@ -32,17 +36,20 @@ class CustomJWTAuthentication(JWTAuthentication):
         if isinstance(request_data, Request):
             header = self.get_header(request_data)
             raw_token = self.get_raw_token(header if header is not None else "")
+            logger.debug(f"Raw token found in request")
         else:
             # websocket
             if isinstance(request_data, dict):
                 headers = dict(request_data["headers"])
                 if b"Authorization" in headers:
                     raw_token = self.get_raw_token(dict(request_data["headers"])[b"Authorization"])
+                    logger.debug(f"Raw token found in Authorization header")
                 else:
                     if "query_string" in request_data:
                         token = request_data["query_string"].decode("utf-8").split("=")
                         if len(token) == 2:
                             if token[0] == "token":
                                 raw_token = token[1]
+                                logger.debug(f"Raw token found in query string")
 
         return raw_token
