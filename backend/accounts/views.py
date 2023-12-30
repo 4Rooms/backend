@@ -1,4 +1,5 @@
 import logging
+import math
 
 from accounts.models import (
     ChangedEmail,
@@ -143,7 +144,11 @@ class ProfileAPIView(RetrieveUpdateAPIView):
 
         avatar = serializer.validated_data["avatar"]
         if avatar.size > settings.MAX_FILE_SIZE:
-            raise ValidationError(f"File size must be less than {settings.MAX_FILE_SIZE} bytes")
+            msg = (
+                f"Avatar file is too large: {math.ceil(avatar.size / 1024 / 1024)} MB."
+                + f" Must be less than {settings.MAX_FILE_SIZE / 1024 / 1024} MB"
+            )
+            raise ValidationError(msg)
 
         serializer.validated_data["avatar"] = resize_in_memory_uploaded_file(avatar, 200)
         serializer.save()
