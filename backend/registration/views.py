@@ -18,8 +18,19 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 logger = logging.getLogger(__name__)
+
+
+def get_tokens(user):
+    """Get tokens for user"""
+
+    refresh = RefreshToken.for_user(user)
+    return {
+        "refresh": str(refresh),
+        "access": str(refresh.access_token),
+    }
 
 
 class RegisterUserView(APIView):
@@ -95,7 +106,10 @@ class ConfirmEmailApiView(APIView):
             user.is_email_confirmed = True
             user.save()
 
-            resp_serializer = ConfirmEmailApiView.serializer_class(instance={"is_email_confirmed": True})
+            tokens = get_tokens(user)
+            resp_serializer = ConfirmEmailApiView.serializer_class(
+                instance={"is_email_confirmed": True, "token": tokens["access"]}
+            )
             return Response(data=resp_serializer.data, status=status.HTTP_200_OK)
         except EmailConfirmationToken.DoesNotExist as ex:
             logger.error(ex)
