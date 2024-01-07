@@ -1,3 +1,5 @@
+import logging
+
 from accounts.serializers import LoginDataSerializer, UserSerializer
 from drf_spectacular.utils import extend_schema, inline_serializer
 from login.authentication_backend import AuthBackend
@@ -10,14 +12,19 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+logger = logging.getLogger(__name__)
+
 
 def get_tokens(user):
     """Get tokens for user"""
 
     refresh = RefreshToken.for_user(user)
+    access_token = str(refresh.access_token)
+
+    logger.info(f"{user} got tokens {access_token[:25]}...{access_token[-25:]}")
     return {
         "refresh": str(refresh),
-        "access": str(refresh.access_token),
+        "access": access_token,
     }
 
 
@@ -34,6 +41,8 @@ class LoginAPIView(APIView):
     )
     def post(self, request, format=None):
         """Authenticate the user, set the access token and return a user info"""
+
+        logger.debug(f"Login request.")
 
         # authenticate user
         data = request.data
