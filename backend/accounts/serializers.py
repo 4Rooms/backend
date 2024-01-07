@@ -113,7 +113,7 @@ class LoginDataSerializer(serializers.Serializer):
 
     model = User
 
-    username = UserNameField(required=True)
+    username = serializers.CharField(required=True, max_length=128)
     password = serializers.CharField(required=True, max_length=128)
 
 
