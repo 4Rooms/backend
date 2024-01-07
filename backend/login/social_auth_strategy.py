@@ -34,18 +34,19 @@ class AuthStrategy(DjangoStrategy):
         """
         Redirect to a custom url after login and set a JWT token
         """
+        current_user = self.request.user if (self.request and hasattr(self.request, "user")) else None
 
-        logger.info(f"Google auth redirecting to {url}")
+        logger.info(f"{current_user} Google auth redirecting to {url}")
 
         if urlparse(url).hostname == "accounts.google.com":
-            logger.info(f"This is a redirect to Google auth")
+            logger.info(f"{current_user} This is a redirect to Google auth")
             return HttpResponseRedirect(url)
 
         redirect_url = resolve_url(url)
         if redirect_url == settings.LOGIN_REDIRECT_URL:
-            logger.info(f"Redirecting url is LOGIN_REDIRECT_URL")
+            logger.info(f"{current_user} Redirecting url is LOGIN_REDIRECT_URL")
             redirect_url = urljoin(get_ui_host(self.request, always_frontend_ui=True), redirect_url)
-            logger.info(f"Setting redirect_url to {redirect_url}")
+            logger.info(f"{current_user} Setting redirect_url to {redirect_url}")
 
         user = self.request.user
         token = RefreshToken.for_user(user).access_token
@@ -53,5 +54,5 @@ class AuthStrategy(DjangoStrategy):
         redirect_url = urljoin(redirect_url, f"?token={token}")
         response = HttpResponseRedirect(redirect_url)
 
-        logger.info(f"Redirecting to {redirect_url}")
+        logger.info(f"{current_user} Redirecting to {redirect_url}")
         return response
