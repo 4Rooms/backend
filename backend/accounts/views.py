@@ -298,16 +298,16 @@ class PasswordResetAPIView(APIView):
         try:
             validate_password(password, user)
         except DjangoValidationError as error:
-            logging.error(f"{request.user} Password reset with invalid password.")
+            logging.error(f"{user} Password reset with invalid password.")
             raise ValidationError(error) from None
 
         # set_password also hashes the password that the user will get
         user.set_password(password)
         user.save()
-        logger.info(f"{request.user} Password reset. Success")
+        logger.info(f"{user} Password reset. Success")
 
         token.delete()
-        logger.info(f"{request.user} Password reset token deleted")
+        logger.info(f"{user} Password reset token deleted")
 
         data = {"message": "Password reset successfully"}
         return Response(data=data, status=status.HTTP_200_OK)

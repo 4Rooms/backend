@@ -36,16 +36,18 @@ class ChatGetAPIView(generics.GenericAPIView):
     def get(self, request, room_name, sorting_name):
         """Get a chat list from a certain room sorted by a certain criterion (sorting_name)"""
 
-        logger.info(f"Get chat, room_name: {room_name}, sorting_name: {sorting_name}")
+        logger.info(f"{request.user} Get chat, room_name: {room_name}, sorting_name: {sorting_name}")
 
         # if wrong room name
         if (room_name, room_name) not in CHOICE_ROOM:
+            logger.error(f"{request.user} Get chat, wrong room name: {room_name}")
             return Response(
                 {"type": "client_error", "errors": {"detail": "wrong room"}}, status=status.HTTP_400_BAD_REQUEST
             )
 
         # if wrong sorting_name name
         if sorting_name not in ["new", "popular", "old"]:
+            logger.error(f"{request.user} Get chat, wrong sorting_name: {sorting_name}")
             return Response(
                 {"type": "client_error", "errors": {"detail": "wrong sorting_name"}}, status=status.HTTP_400_BAD_REQUEST
             )
@@ -99,6 +101,7 @@ class ChatPostAPIView(generics.GenericAPIView):
 
         # if wrong room name
         if (room_name, room_name) not in CHOICE_ROOM:
+            logger.error(f"{request.user} Post chat, wrong room name: {room_name}")
             return Response(
                 {"type": "client_error", "errors": [{"detail": "wrong room"}]}, status=status.HTTP_400_BAD_REQUEST
             )
@@ -129,10 +132,12 @@ class ChatPostAPIView(generics.GenericAPIView):
             )
             serializer.update_url(obj=new_chat)
 
+            logger.info(f"{request.user} Post chat, new chat: {new_chat}")
             return Response(
                 {"chat": ChatSerializer(new_chat, context={"request": request}).data}, status=status.HTTP_201_CREATED
             )
 
+        logger.error(f"{request.user} Post chat, serializer errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -162,13 +167,13 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
     def patch(self, request, *args, **kwargs):
         """Update chat description/image"""
 
-        logger.info(f"PATCH CHAT: Request data: {request.data}")
+        logger.debug(f"{request.user} PATCH CHAT: Request data: {request.data}")
         serializer = ChatSerializerForChatUpdate(self.get_object(), data=request.data, context={"request": request})
 
         if not serializer.is_valid():
             raise ValidationError(serializer.errors)
 
-        logger.debug(f"Validated date: {serializer.validated_data}")
+        logger.debug(f"{request.user} Validated data: {serializer.validated_data}")
         chat_img = request.data.get("img", None)
 
         if chat_img:
@@ -176,7 +181,7 @@ class UpdateDeleteChatApiView(generics.RetrieveUpdateDestroyAPIView):
             serializer.validated_data["img"] = resize_in_memory_uploaded_file(chat_img, 200)
 
         serializer.save()
-
+        logger.info(f"{request.user} PATCH CHAT: {serializer.data}")
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -196,6 +201,7 @@ class GetSavedChatApiView(generics.GenericAPIView):
 
         # if wrong room name
         if (room_name, room_name) not in CHOICE_ROOM:
+            logger.error(f"{request.user} Get saved chat, wrong room name: {room_name}")
             return Response(
                 {"type": "client_error", "errors": [{"detail": "wrong room"}]}, status=status.HTTP_400_BAD_REQUEST
             )
@@ -228,9 +234,11 @@ class PostSavedChatApiView(generics.GenericAPIView):
     def post(self, request):
         """Create a saved chat for the user from the request"""
 
+        logger.info(f"{request.user} Post saved chat, request data: {request.data}")
         chat_id = request.data["chat_id"]
         chat = Chat.objects.get(pk=chat_id)
         saved_chat, _ = SavedChat.objects.get_or_create(user=request.user, chat=chat)
+        logger.info(f"{request.user} Post saved chat, saved chat: {saved_chat}")
         return Response(
             {"saved_chat": SavedChatSerializer(saved_chat, context={"request": request}).data},
             status=status.HTTP_201_CREATED,
