@@ -186,7 +186,7 @@ class ChangePasswordAPIView(UpdateAPIView):
         serializer = ChangePasswordSerializer(data=request.data)
 
         if not serializer.is_valid():
-            logging.error(f"{request.user} Update password. serializer.is_valid() -> false")
+            logging.error(f"{request.user} Update password. Invalid data: {serializer.errors}")
             raise ValidationError(serializer.errors)
 
         # check old password
