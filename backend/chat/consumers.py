@@ -493,7 +493,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         Return 'chat_was_unliked' and del like if this user already liked this chat."""
 
         chat_like = ChatLike.objects.filter(user=user, chat_id=self._chat_id).first()
-        logger.debug(f"Like_chat. The Chat: {self._chat_id} was liked in room: {self._room_name}")
+        logger.debug(f"{user} Like_chat. Chat: {self._chat_id}. Room: {self._room_name}")
 
         if not chat_like:
             new, _ = ChatLike.objects.get_or_create(user=user, chat_id=self._chat_id)

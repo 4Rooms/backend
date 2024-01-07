@@ -125,8 +125,9 @@ class SavedChatSerializer(serializers.ModelSerializer):
     def get_img(self, obj) -> Optional[str]:
         """Return url of chat img"""
 
-        if obj.chat:
+        if obj.chat and obj.chat.img:
             return get_full_file_url(obj.chat.img.url)
+        return None
 
     @staticmethod
     def get_url(obj) -> Optional[str]:
@@ -148,4 +149,4 @@ class SavedChatSerializer(serializers.ModelSerializer):
     def get_likes(obj) -> str:
         """Return number of likes"""
 
-        return ChatLike.objects.filter(chat__pk=obj.pk).count()
+        return ChatLike.objects.filter(chat__pk=obj.chat_id).count()
