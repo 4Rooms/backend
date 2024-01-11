@@ -231,17 +231,26 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     def _validate(self, content) -> Optional[Message]:
         """Validate websocket message and chat message"""
 
+        def _content():
+            return str(content)[:200]
+
         # Validate websocket message
         websocket_message = WebsocketMessageSerializer(data=content)
         if not websocket_message.is_valid():
-            logger.error(f"{self._user} INVALID MESSAGE: Chat {self._chat_id}. Err: {websocket_message.errors}")
+            logger.error(
+                f"{self._user} INVALID MESSAGE: Msg: {_content()}. Chat {self._chat_id}. Err: {websocket_message.errors}"
+            )
             raise WesocketException(self.errors_to_str(websocket_message.errors))
 
         # Validate chat message
         message = MessageSerializer(data=websocket_message.data["message"], context={"user": self._user})
         if not message.is_valid():
-            logger.error(f"{self._user} INVALID MESSAGE: Msg: {content}. Chat: {self._chat_id}.")
+            logger.error(f"{self._user} INVALID MESSAGE: Msg: {_content()}. Chat: {self._chat_id}.")
             raise WesocketException("Invalid message: " + str(message.errors))
+
+        if not content.get("message", {}).get("text", None) and not content.get("message", {}).get("attachments", None):
+            logger.error(f"{self._user} INVALID MESSAGE: Msg: {_content()}. Chat: {self._chat_id}.")
+            raise WesocketException("Invalid message: text or attachments is required")
 
         return message
 
