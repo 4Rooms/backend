@@ -23,7 +23,7 @@ from .conftest import get_msgs, print_msgs
                     "text": "",
                 },
             },
-            "message: text: This field may not be blank.\nchat: This field may not be null.",
+            "message: chat: This field may not be null.",
         ),
         (
             {
@@ -43,7 +43,7 @@ from .conftest import get_msgs, print_msgs
                     "text": "",
                 },
             },
-            "message: text: This field may not be blank.",
+            "Invalid message: text or attachments is required",
         ),
         (
             {
