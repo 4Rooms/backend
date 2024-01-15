@@ -8,7 +8,7 @@ from .utils import get_upload_path
 class File(models.Model):
     file = models.FileField(upload_to=get_upload_path, blank=True, null=True)
 
-    original_file_name = models.TextField()
+    original_file_name = models.TextField(blank=True, null=True)
 
     file_name = models.CharField(max_length=255, unique=True)
     file_type = models.CharField(max_length=255)

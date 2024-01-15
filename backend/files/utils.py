@@ -5,8 +5,8 @@ from uuid import uuid4
 from django.conf import settings
 
 
-def generate_file_name(name):
-    return f"{uuid4().hex}" + pathlib.Path(name).suffix
+def generate_file_name(name, file_type=None):
+    return f"{uuid4().hex}." + file_type or pathlib.Path(name).suffix
 
 
 def get_upload_path(instance, filename):
