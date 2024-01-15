@@ -75,7 +75,7 @@ from .conftest import get_msgs, print_msgs
                     ],
                 },
             },
-            "File 'photo.png' is too large: 11 MB. Must be less than 1 MB",
+            "File is too big: 11 MB. Must be less than 1 MB",
         ),
     ],
 )

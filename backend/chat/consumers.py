@@ -14,6 +14,7 @@ from chat.serializers.message import MessageSerializer, WebsocketMessageSerializ
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from files.services.file_upload import FileUploadService
+from files.services.images import get_image_format
 from files.utils import get_full_file_url
 
 logger = logging.getLogger(__name__)
@@ -270,7 +271,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             if "content" not in attachment:
                 raise WesocketException("Attachment content is required")
 
-            file_name = attachment["name"]
             # each attachment is a dict with keys: name, content
             # 'attachments': [{'name': '2023-08-13_23-49.png', 'content': 'data:image/png;base64,iVBO...'}]
             try:
@@ -283,24 +283,26 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             file_content = base64.b64decode(data)
             logger.debug(f" - Content length after decoding: {len(file_content)}")
 
-            try:
-                file_type = attachment["content"].split(";")[0].split("/")[1]
-            except Exception:
-                raise WesocketException("Attachment content is invalid")
-
-            logger.debug(f" - File type: {file_type}")
-
             in_memory_file = InMemoryUploadedFile(
-                file=BytesIO(file_content),
+                name="tmp",
                 field_name=None,
-                name=file_name,
-                content_type=file_type,
+                content_type=None,
+                file=BytesIO(file_content),
                 size=len(file_content),
                 charset=None,
             )
 
             service = FileUploadService(user=self._user, file_obj=in_memory_file)
-            file = service.create()
+
+            try:
+                format = get_image_format(in_memory_file)
+                in_memory_file.content_type = format
+                logger.debug(f" - File format: {format}")
+            except Exception:
+                logger.error(f" - File is not an image.")
+                raise WesocketException("File is not an image or image format is not supported.") from None
+
+            file = service.create(file_type=format)
             files.append(file)
 
         message.validated_data["attachments"] = files

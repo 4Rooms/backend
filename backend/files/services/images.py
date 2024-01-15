@@ -1,7 +1,24 @@
+import logging
 from io import BytesIO
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
+
+logger = logging.getLogger(__name__)
+
+
+def get_image_format(file: InMemoryUploadedFile) -> str:
+    """
+    Return the format of the image or throw an error if the format is not supported.
+    """
+
+    # Create a PIL Image object from the InMemoryUploadedFile
+    img = Image.open(file)
+    img.verify()
+
+    # Get the format of the image
+    img_format = img.format
+    return img_format
 
 
 def resize_image(image: Image, length: int) -> Image:
