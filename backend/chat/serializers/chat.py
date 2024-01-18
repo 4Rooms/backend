@@ -10,12 +10,13 @@ class ChatSerializer(serializers.ModelSerializer):
     """Chat Serializer"""
 
     user = serializers.SerializerMethodField(source="get_user")
+    user_id = serializers.SerializerMethodField(source="get_user_id")
     img = serializers.SerializerMethodField(source="get_img")
     likes = serializers.SerializerMethodField(source="get_likes")
 
     class Meta:
         model = Chat
-        fields = ["id", "title", "room", "img", "user", "description", "url", "timestamp", "likes"]
+        fields = ["id", "title", "room", "img", "user", "user_id", "description", "url", "timestamp", "likes"]
         read_only_fields = ["id", "user", "timestamp", "url", "room"]
 
     @staticmethod
@@ -32,6 +33,13 @@ class ChatSerializer(serializers.ModelSerializer):
 
         if obj.user:
             return obj.user.username
+
+    @staticmethod
+    def get_user_id(obj) -> str:
+        """Return user id"""
+
+        if obj.user:
+            return obj.user.id
 
     def get_img(self, obj) -> Optional[str]:
         """Return url of chat img"""
@@ -63,6 +71,7 @@ class SavedChatSerializer(serializers.ModelSerializer):
     room = serializers.SerializerMethodField(source="get_room")
     description = serializers.SerializerMethodField(source="get_description")
     chat_creator = serializers.SerializerMethodField(source="get_chat_creator")
+    chat_creator_id = serializers.SerializerMethodField(source="get_chat_creator_id")
     img = serializers.SerializerMethodField(source="get_img")
     url = serializers.SerializerMethodField(source="get_url")
     likes = serializers.SerializerMethodField(source="get_likes")
@@ -78,6 +87,7 @@ class SavedChatSerializer(serializers.ModelSerializer):
             "room",
             "description",
             "chat_creator",
+            "chat_creator_id",
             "img",
             "url",
             "likes",
@@ -120,6 +130,14 @@ class SavedChatSerializer(serializers.ModelSerializer):
 
         if isinstance(obj, SavedChat):
             return obj.chat.user.username
+        return None
+
+    @staticmethod
+    def get_chat_creator_id(obj) -> Optional[str]:
+        """Return chat creator id"""
+
+        if isinstance(obj, SavedChat):
+            return obj.chat.user.id
         return None
 
     def get_img(self, obj) -> Optional[str]:
