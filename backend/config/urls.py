@@ -18,7 +18,6 @@ Including another URLconf
 from pathlib import Path
 
 from django.conf.urls.static import static
-from django.contrib import admin
 from django.http import HttpResponse
 from django.urls import include, path, re_path
 from drf_spectacular.views import (
@@ -32,7 +31,6 @@ from backend.config import settings
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
     path("api/", include("login.urls")),
     path("api/", include("registration.urls")),
     path("api/", include("chat.urls")),
