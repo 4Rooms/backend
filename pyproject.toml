@@ -27,7 +27,7 @@ PyYAML = "^6.0.1"
 aiohttp = {extras = ["speedups"], version = "^3.9.1"}
 
 [tool.poetry.dev-dependencies]
-black = "^23.3.0"
+black = "^24.1.1"
 isort = "^5.12.0"
 autoflake = "^2.1.1"
 pytest-django = "^4.6.0"
