@@ -22,7 +22,7 @@ pillow = "^10.0.0"
 daphne = "^4.0.0"
 channels = "^4.0.0"
 channels-redis = "^4.1.0"
-drf-standardized-errors = {extras = ["openapi"], version = "^0.12.5"}
+drf-standardized-errors = {extras = ["openapi"], version = "^0.13.0"}
 PyYAML = "^6.0.1"
 aiohttp = {extras = ["speedups"], version = "^3.9.1"}
 
